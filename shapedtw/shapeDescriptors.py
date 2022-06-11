@@ -35,9 +35,9 @@ class RawSubsequenceDescriptor(ShapeDescriptor):
 class PAADescriptor(ShapeDescriptor):
 
     """
-    Piecewise aggregation approximation is an y=variant shape descriptor. Given subsequence is split
+    Piecewise aggregation approximation is an y-variant shape descriptor. Given subsequence is split
     into m equally length chunks. For each of the chunks mean values of temporal points falling within
-    an interval is calculated and a vector af mean values is used as an shape descriptor.
+    an interval is calculated and a vector af mean values is used as a shape descriptor.
 
     Length of intervals is specified by "piecewise_aggregation_window" argument provided in the class
     constructor. If it is impossible to split array into chunks of equal length, then the last chunk
@@ -47,10 +47,10 @@ class PAADescriptor(ShapeDescriptor):
     def __init__(self, piecewise_aggregation_window: int = 2):
         self.piecewise_aggregation_window = piecewise_aggregation_window
 
-    def subsequence_is_shorter_than_chunk_size(self, ts_subsequence: array) -> bool:
+    def subsequence_is_shorter_than_window_size(self, ts_subsequence: array) -> bool:
         return len(ts_subsequence) < self.piecewise_aggregation_window
 
-    def split_into_chunks(self, ts_subsequence: array) -> List[array]:
+    def split_into_windows(self, ts_subsequence: array) -> List[array]:
         indices_to_split = np.arange(
             self.piecewise_aggregation_window,
             len(ts_subsequence),
@@ -59,20 +59,20 @@ class PAADescriptor(ShapeDescriptor):
         return np.split(ts_subsequence, indices_to_split)
 
     @staticmethod
-    def get_chunks_means(chunks):
-        chunks_means = array([np.mean(chunk) for chunk in chunks])
-        return chunks_means
+    def get_windows_means(windows):
+        windows_means = array([np.mean(window) for window in windows])
+        return windows_means
 
     def get_shape_descriptor(self, ts_subsequence: array) -> array:
 
-        if self.subsequence_is_shorter_than_chunk_size(ts_subsequence):
-            error_msg = "Subsequence length: {0}, chunk size: {1}".format(
+        if self.subsequence_is_shorter_than_window_size(ts_subsequence):
+            error_msg = "Subsequence length: {0}, window size: {1}".format(
                 len(ts_subsequence),
                 self.piecewise_aggregation_window
             )
             raise SubsequenceShorterThanWindow(error_msg)
 
-        chunks = self.split_into_chunks(ts_subsequence)
-        paa_descriptor = self.get_chunks_means(chunks)
+        windows = self.split_into_windows(ts_subsequence)
+        paa_descriptor = self.split_into_windows(windows)
 
         return paa_descriptor
