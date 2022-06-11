@@ -130,3 +130,6 @@ dmypy.json
 
 # .idea folder
 .idea/
+
+# Jupyter notebooks
+*.ipynb

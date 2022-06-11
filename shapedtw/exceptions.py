@@ -1,0 +1,2 @@
+class SubsequenceShorterThanWindow(Exception):
+    pass
