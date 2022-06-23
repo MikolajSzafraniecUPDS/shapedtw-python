@@ -4,7 +4,8 @@ from pywt import Wavelet, wavedec
 from abc import abstractmethod
 from numpy import array
 from typing import List
-from .exceptions import SubsequenceShorterThanWindow
+from scipy.stats import linregress
+from .exceptions import SubsequenceShorterThanWindow, SubsequenceTooShort
 
 
 class ShapeDescriptor:
@@ -23,10 +24,20 @@ class ShapeDescriptor:
         pass
 
     @staticmethod
+    def _subsequence_is_shorter_than_window_size(subsequence_len: int, window_size: int) -> bool:
+        return subsequence_len < window_size
+
+    @staticmethod
     def _split_into_windows(ts_subsequence: array, window_size: int) -> List[array]:
+
+        subsequence_len = len(ts_subsequence)
+
+        if ShapeDescriptor._subsequence_is_shorter_than_window_size(subsequence_len, window_size):
+            raise SubsequenceShorterThanWindow(subsequence_len, window_size)
+
         indices_to_split = np.arange(
             window_size,
-            len(ts_subsequence),
+            subsequence_len,
             window_size
         )
         return np.split(ts_subsequence, indices_to_split)
@@ -45,7 +56,7 @@ class RawSubsequenceDescriptor(ShapeDescriptor):
 class PAADescriptor(ShapeDescriptor):
 
     """
-    Piecewise aggregation approximation is an y-variant shape descriptor. Given subsequence is split
+    Piecewise aggregation approximation is an y-shift variant shape descriptor. Given subsequence is split
     into m equally length chunks. For each of the chunks mean values of temporal points falling within
     an interval is calculated and a vector af mean values is used as a shape descriptor.
 
@@ -57,23 +68,12 @@ class PAADescriptor(ShapeDescriptor):
     def __init__(self, piecewise_aggregation_window: int = 2):
         self.piecewise_aggregation_window = piecewise_aggregation_window
 
-    def _subsequence_is_shorter_than_window_size(self, ts_subsequence: array) -> bool:
-        return len(ts_subsequence) < self.piecewise_aggregation_window
-
     @staticmethod
-    def _get_windows_means(windows):
+    def _get_windows_means(windows: List[array]) -> array:
         windows_means = array([np.mean(window) for window in windows])
         return windows_means
 
     def get_shape_descriptor(self, ts_subsequence: array) -> array:
-
-        if self._subsequence_is_shorter_than_window_size(ts_subsequence):
-            error_msg = "Subsequence length: {0}, window size: {1}".format(
-                len(ts_subsequence),
-                self.piecewise_aggregation_window
-            )
-            raise SubsequenceShorterThanWindow(error_msg)
-
         windows = self._split_into_windows(ts_subsequence, self.piecewise_aggregation_window)
         paa_descriptor = self._get_windows_means(windows)
 
@@ -82,14 +82,15 @@ class PAADescriptor(ShapeDescriptor):
 class DWTDescriptor(ShapeDescriptor):
 
     """
-    Discrete Wavelet Transform (DWT) is another widely used
+    Definition after Zhao and Itti:
+    'Discrete Wavelet Transform (DWT) is another widely used
     technique to approximate time series instances. Again, here we use
     DWT to approximate subsequences. Concretely, we use a Haar
     wavelet basis (as a default) to decompose each subsequence si into 3 levels.
     The detail wavelet coefficients of all three levels and the approximation
     coefficients of the third level are concatenated to form the
     approximation, which is used the shape descriptor di of si, i.e.,
-    F(·) = DWT, di = DWT (si).
+    F(·) = DWT, di = DWT (si).'
     """
 
     def __init__(self, wave_type: str = "haar", mode: str = "sym", level: int = 3):
@@ -99,6 +100,81 @@ class DWTDescriptor(ShapeDescriptor):
 
     def get_shape_descriptor(self, ts_subsequence: array) -> array:
         wavelet = Wavelet(self.wave_type)
-        coefs_list = wavedec(ts_subsequence, wavelet, mode=self.mode, level = self.level)
+        coefs_list = wavedec(ts_subsequence, wavelet, mode=self.mode, level=self.level)
         dwt_descriptor = np.concatenate(coefs_list)
         return dwt_descriptor
+
+class SlopeDescriptor(ShapeDescriptor):
+
+    """
+    Slope descriptor is a shape descriptor that is invariant to y-shift. It means, that
+    two subsequences of the same shape which values are shifted on y axis by some delta
+    will be characterized by equal descriptors despite this difference.
+
+    Definition after Zhao and Itti:
+    'Given a l-dimensional subsequence si, it is divided into m (m ≤ l)
+    equal-lengthed intervals. Within each interval, we employ the total
+    least square (TLS) line fitting approach [11] to fit a line according
+    to points falling within that interval. By concatenating the slopes
+    of the fitted lines from all intervals, we obtain a m-dimensional
+    vector representation, which is the slope representation of si, i.e.,
+    F(·) = Slope, di = Slope(si).'
+    """
+
+    def __init__(self, slope_window: int = 2):
+        self.slope_window = slope_window
+
+    @staticmethod
+    def _get_single_slope(input_vector: array) -> array:
+        vector_length = len(input_vector)
+        x_vec = np.arange(vector_length)
+        linregress_res = linregress(x = x_vec, y = input_vector)
+        return linregress_res.slope
+
+    @staticmethod
+    def _get_windows_slopes(windows: List[array]) -> array:
+        windows_slopes = array([SlopeDescriptor._get_single_slope(window) for window in windows])
+        return windows_slopes
+
+    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+        windows = self._split_into_windows(ts_subsequence, self.slope_window)
+        slope_descriptor = self._get_windows_slopes(windows)
+
+        return slope_descriptor
+
+class DerivativeShapeDescriptor(ShapeDescriptor):
+
+    """
+    Definition after Zhao and Itti:
+    'Similar to Slope, Derivative is y-shift invariant if it is used to
+    represent shapes. Given a subsequence s, its first-order derivative
+    sequence is s′, where s′ is the first order derivative according
+    to time t. To keep consistent with derivatives used in derivative
+    Dynamic Time Warping (E. Keogh and M. Pazzani. Derivative dynamic time warping. In SDM,
+    volume 1, pages 5–7. SIAM, 2001.) (dDTW), we follow their formula to
+    compute numeric derivatives.'
+    """
+
+    @staticmethod
+    def _get_first_order_diff(ts_subsequence: array) -> array:
+        return ts_subsequence[1:] - ts_subsequence[:-1]
+
+    @staticmethod
+    def _get_second_order_diff(ts_subsequence: array) -> array:
+        return (ts_subsequence[2:] - ts_subsequence[:-2]) / 2
+
+    @staticmethod
+    def _get_derivative(first_order_diff: array, second_order_diff: array) -> array:
+        return (first_order_diff[:-1] + second_order_diff) / 2
+
+    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+        subsequence_length = len(ts_subsequence)
+        if subsequence_length < 3:
+            raise SubsequenceTooShort(subsequence_size=subsequence_length, min_required=3)
+
+        first_order_diff = self._get_first_order_diff(ts_subsequence)
+        second_order_diff = self._get_second_order_diff(ts_subsequence)
+        derivative_descriptor = self._get_derivative(first_order_diff, second_order_diff)
+
+        return derivative_descriptor
+
