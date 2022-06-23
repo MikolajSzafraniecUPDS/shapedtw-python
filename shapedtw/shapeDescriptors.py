@@ -5,7 +5,7 @@ from abc import abstractmethod
 from numpy import array
 from typing import List
 from scipy.stats import linregress
-from .exceptions import SubsequenceShorterThanWindow, SubsequenceTooShort
+from .exceptions import *
 
 
 class ShapeDescriptor:
@@ -136,8 +136,15 @@ class SlopeDescriptor(ShapeDescriptor):
         windows_slopes = array([SlopeDescriptor._get_single_slope(window) for window in windows])
         return windows_slopes
 
+    def _check_windows_lengths(self, windows: List[array]) -> None:
+        windows_lengths = [len(window) for window in windows]
+        for window_len in windows_lengths:
+            if window_len == 1:
+                raise WindowOfSizeOne(self.__class__.__name__)
+
     def get_shape_descriptor(self, ts_subsequence: array) -> array:
         windows = self._split_into_windows(ts_subsequence, self.slope_window)
+        self._check_windows_lengths(windows)
         slope_descriptor = self._get_windows_slopes(windows)
 
         return slope_descriptor
@@ -178,3 +185,45 @@ class DerivativeShapeDescriptor(ShapeDescriptor):
 
         return derivative_descriptor
 
+
+class CompoundDescriptor(ShapeDescriptor):
+
+    """
+    Compound shape descriptor is a simple concatenation of provided shape descriptors. It is possible
+    to specify a weights for each of them - it is worth to do if scales of values of chosen descriptors
+    differs significantly.
+    """
+
+    def __init__(self, *shape_descriptors: List[ShapeDescriptor], descriptors_weights: List[float] = None):
+
+        descriptors_number = len(shape_descriptors)
+
+        if descriptors_weights is None:
+            descriptors_weights = [1] * descriptors_number
+
+        weights_len = len(descriptors_weights)
+
+        if weights_len != descriptors_number:
+            raise WrongWeightsNumber("Number of weights and shape descriptors must match")
+
+        for descriptor in shape_descriptors:
+            if not isinstance(descriptor, ShapeDescriptor):
+                raise NotShapeDescriptor(descriptor)
+
+        self.shape_descriptors = shape_descriptors
+        self.descriptors_weights = descriptors_weights
+
+    def _calc_descriptors(self, ts_subsequence: array) -> List[array]:
+        descriptors_list = [
+            descriptor.get_shape_descriptor(ts_subsequence) * weight for
+            (descriptor, weight) in
+            zip(self.shape_descriptors, self.descriptors_weights)
+        ]
+
+        return descriptors_list
+
+    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+        descriptors_list = self._calc_descriptors(ts_subsequence)
+        compound_descriptor = np.concatenate(descriptors_list)
+
+        return compound_descriptor

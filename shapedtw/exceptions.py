@@ -14,3 +14,20 @@ class SubsequenceTooShort(Exception):
             min_required
         )
         super().__init__(error_msg)
+
+class NotShapeDescriptor(Exception):
+    def __init__(self, obj):
+        error_msg = "Provided argument is object of class {0} instead of 'ShapeDescriptor'".format(
+            obj.__class__.__name__
+        )
+        super().__init__(error_msg)
+
+class WindowOfSizeOne(Exception):
+    def __init__(self, descriptor_class):
+        error_msg = "Window for {0} cannot be of size 1. Please specify another window width or subsequence length".format(
+            descriptor_class
+        )
+        super().__init__(error_msg)
+
+class WrongWeightsNumber(Exception):
+    pass
