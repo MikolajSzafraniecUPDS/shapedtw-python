@@ -6,6 +6,7 @@ from numpy import array
 from typing import List
 from scipy.stats import linregress
 from .exceptions import *
+from itertools import repeat
 
 
 class ShapeDescriptor:
@@ -127,8 +128,10 @@ class SlopeDescriptor(ShapeDescriptor):
     @staticmethod
     def _get_single_slope(input_vector: array) -> array:
         vector_length = len(input_vector)
+        if vector_length == 1:
+            return 0
         x_vec = np.arange(vector_length)
-        linregress_res = linregress(x = x_vec, y = input_vector)
+        linregress_res = linregress(x=x_vec, y=input_vector)
         return linregress_res.slope
 
     @staticmethod
@@ -136,15 +139,8 @@ class SlopeDescriptor(ShapeDescriptor):
         windows_slopes = array([SlopeDescriptor._get_single_slope(window) for window in windows])
         return windows_slopes
 
-    def _check_windows_lengths(self, windows: List[array]) -> None:
-        windows_lengths = [len(window) for window in windows]
-        for window_len in windows_lengths:
-            if window_len == 1:
-                raise WindowOfSizeOne(self.__class__.__name__)
-
     def get_shape_descriptor(self, ts_subsequence: array) -> array:
         windows = self._split_into_windows(ts_subsequence, self.slope_window)
-        self._check_windows_lengths(windows)
         slope_descriptor = self._get_windows_slopes(windows)
 
         return slope_descriptor
@@ -199,7 +195,7 @@ class CompoundDescriptor(ShapeDescriptor):
         descriptors_number = len(shape_descriptors)
 
         if descriptors_weights is None:
-            descriptors_weights = [1] * descriptors_number
+            descriptors_weights = list(repeat(1, descriptors_number))
 
         weights_len = len(descriptors_weights)
 
