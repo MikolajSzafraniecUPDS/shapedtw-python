@@ -2,6 +2,7 @@ import numpy as np
 
 from numpy import array
 from .exceptions import *
+from scipy.spatial.distance import cdist
 
 class Padder:
 
@@ -136,11 +137,37 @@ class UnivariateSeriesSubsequences:
             subsequence in self.subsequences
         ])
 
-        return UnivariatSeriesShapeDescriptors(shape_descriptors)
+        return UnivariateSeriesShapeDescriptors(shape_descriptors)
 
 
-class UnivariatSeriesShapeDescriptors:
+class UnivariateSeriesShapeDescriptors:
 
     def __init__(self, descriptors_array: array):
+        if self._check_dimensions_number(descriptors_array, 1):
+            descriptors_array = np.atleast_2d(descriptors_array).T
+        elif not self._check_dimensions_number(descriptors_array, 2):
+            n_dims = len(descriptors_array.shape)
+            raise TooManyDimensionsArray(self, n_dims)
         self.shape_descriptors_array = descriptors_array
 
+    @staticmethod
+    def _check_dimensions_number(descriptor_array: array, n_dim: int) -> bool:
+        return len(descriptor_array.shape) == n_dim
+
+    def _verify_other_descriptor_class(self, other_series_descriptor) -> bool:
+        return isinstance(other_series_descriptor, self.__class__)
+
+    def calc_distance_matrix(self, other_series_descriptor, dist_method: str = "euclidean") -> np.ndarray:
+        if not self._verify_other_descriptor_class(other_series_descriptor):
+            raise ObjectOfWrongClass(
+                actual_cls=other_series_descriptor.__class__,
+                expected_cls=self.__class__
+            )
+
+        distance_matrix = cdist(
+            self.shape_descriptors_array,
+            other_series_descriptor.shape_descriptors_array,
+            metric=dist_method
+        )
+
+        return distance_matrix

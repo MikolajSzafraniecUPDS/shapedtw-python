@@ -42,3 +42,21 @@ class WrongPadType(Exception):
 
 class NegativeSubsequenceWidth(Exception):
     pass
+
+
+class TooManyDimensionsArray(Exception):
+    def __init__(self, obj, n_dim):
+        error_msg = "{0} requires single or two dimensions array as an input, {1}-dimension arrat was provided".format(
+            obj.__class__.__name__,
+            n_dim
+        )
+        super().__init__(error_msg)
+
+
+class ObjectOfWrongClass(Exception):
+    def __init__(self, actual_cls, expected_cls):
+        error_msg = "Object of class {0} was provided, expected object of class {1}".format(
+            actual_cls.__name__,
+            expected_cls.__name__
+        )
+        super().__init__(error_msg)
