@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 
 from numpy import array
@@ -123,13 +125,14 @@ class SubsequenceBuilder:
         indices = np.arange(start=0, stop=self.ts_length)
         subsequences_list = [self._get_single_subsequence(ts_index) for ts_index in indices]
         subsequences_array = np.vstack(subsequences_list)
-        return UnivariateSeriesSubsequences(subsequences_array)
+        return UnivariateSeriesSubsequences(subsequences_array, origin_ts = self.time_series)
 
 
 class UnivariateSeriesSubsequences:
 
-    def __init__(self, subsequences_array: array):
+    def __init__(self, subsequences_array: array, origin_ts: array):
         self.subsequences = subsequences_array
+        self.origin_ts = origin_ts
 
     def get_shape_descriptors(self, shape_descriptor):
         shape_descriptors = np.array([
@@ -137,18 +140,19 @@ class UnivariateSeriesSubsequences:
             subsequence in self.subsequences
         ])
 
-        return UnivariateSeriesShapeDescriptors(shape_descriptors)
+        return UnivariateSeriesShapeDescriptors(shape_descriptors, self.origin_ts)
 
 
 class UnivariateSeriesShapeDescriptors:
 
-    def __init__(self, descriptors_array: array):
+    def __init__(self, descriptors_array: array, origin_ts: array):
         if self._check_dimensions_number(descriptors_array, 1):
             descriptors_array = np.atleast_2d(descriptors_array).T
         elif not self._check_dimensions_number(descriptors_array, 2):
             n_dims = len(descriptors_array.shape)
             raise TooManyDimensionsArray(self, n_dims)
         self.shape_descriptors_array = descriptors_array
+        self.origin_ts = origin_ts
 
     @staticmethod
     def _check_dimensions_number(descriptor_array: array, n_dim: int) -> bool:
@@ -157,7 +161,8 @@ class UnivariateSeriesShapeDescriptors:
     def _verify_other_descriptor_class(self, other_series_descriptor) -> bool:
         return isinstance(other_series_descriptor, self.__class__)
 
-    def calc_distance_matrix(self, other_series_descriptor, dist_method: str = "euclidean") -> np.ndarray:
+    def calc_distance_matrix(self, other_series_descriptor: UnivariateSeriesShapeDescriptors,
+                             dist_method: str = "euclidean") -> UnivariateSeriesDistanceMatrix:
         if not self._verify_other_descriptor_class(other_series_descriptor):
             raise ObjectOfWrongClass(
                 actual_cls=other_series_descriptor.__class__,
@@ -165,9 +170,17 @@ class UnivariateSeriesShapeDescriptors:
             )
 
         distance_matrix = cdist(
-            self.shape_descriptors_array,
-            other_series_descriptor.shape_descriptors_array,
+            XA=self.shape_descriptors_array,
+            XB=other_series_descriptor.shape_descriptors_array,
             metric=dist_method
         )
 
-        return distance_matrix
+        return UnivariateSeriesDistanceMatrix(distance_matrix, self.origin_ts, other_series_descriptor.origin_ts)
+
+
+class UnivariateSeriesDistanceMatrix:
+
+    def __init__(self, dist_matrix: np.ndarray, ts_x: array, ts_y: array):
+        self.dist_matrix = dist_matrix
+        self.ts_x = ts_x
+        self.ts_y = ts_y
