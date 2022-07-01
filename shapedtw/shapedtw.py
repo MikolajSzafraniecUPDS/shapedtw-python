@@ -1,10 +1,9 @@
-import numpy as np
-
 from dtw import *
 
 from shapedtw.preprocessing import *
 from shapedtw.exceptions import *
 from shapedtw.shapeDescriptors import *
+
 
 class StepPatternMatrixTransformator:
 
@@ -41,8 +40,8 @@ class StepPatternMatrixTransformator:
         segment_length = self._get_segment_length(segment_num)
         res = {
             i: {
-                "x_index": int(segment[i+1:, 1]),
-                "y_index": int(segment[i+1:, 2]),
+                "x_index": int(segment[i+1, 1]),
+                "y_index": int(segment[i+1, 2]),
                 "weight": segment[i+1, 3]
             } for i in range(segment_length)
         }
@@ -58,6 +57,7 @@ class StepPatternMatrixTransformator:
         }
 
         return res
+
 
 class DistanceReconstructor:
 
@@ -118,7 +118,7 @@ class DistanceReconstructor:
         indices_patterns = self._get_indices_patterns()
         raw_series_distance = self.distance_matrix[0,0]
         distances_list = [
-            self._calc_distance_for_given_pattern(x_ind, y_ind, indices_patterns[i+1])
+            self._calc_distance_for_given_pattern(x_ind, y_ind, indices_patterns[i])
             for (i, (x_ind, y_ind)) in enumerate(indices_pairs[1:])
         ]
 
@@ -156,8 +156,8 @@ class ShapeDTW:
             step_pattern=self.step_pattern,
             ts_x=self.ts_x,
             ts_y=self.ts_y,
-            ts_x_wp=self.dtw_results.index1,
-            ts_y_wp=self.dtw_results.index2,
+            ts_x_wp=self.dtw_results.index1s,
+            ts_y_wp=self.dtw_results.index2s,
             dist_method=dist_method
         )
 
