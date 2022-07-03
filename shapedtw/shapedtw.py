@@ -83,7 +83,9 @@ class DistanceReconstructor:
         self.step_pattern_dictionary = StepPatternMatrixTransformator(step_pattern).step_pattern_matrix_to_dict()
 
     def _calc_distance_matrix(self):
-        return cdist(np.atleast_2d(self.ts_x).T, np.atleast_2d(self.ts_y).T, metric=self.dist_method)
+        dist_matrix = DistanceMatrixCalculator(self.ts_x, self.ts_y, self.dist_method).\
+            calc_distance_matrix()
+        return dist_matrix
 
     def _calc_single_distance(self, x_index: int, y_index: int, single_pattern_dict: dict) -> float:
         target_x_index = x_index - single_pattern_dict["x_index"]

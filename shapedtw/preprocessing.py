@@ -142,6 +142,48 @@ class UnivariateSeriesSubsequences:
 
         return UnivariateSeriesShapeDescriptors(shape_descriptors, self.origin_ts)
 
+class DistanceMatrixCalculator:
+
+    def __init__(self, ts_x: array, ts_y: array, method: str = "euclidean"):
+        self.ts_x = ts_x
+        self.ts_y = ts_y
+        self.method = method
+
+    def _two_dim_at_most(self):
+        return (len(self.ts_x.shape) < 3) & (len(self.ts_y.shape) < 3)
+
+    def _series_shape_match(self):
+        return len(self.ts_x.shape) == len(self.ts_y.shape)
+
+    def _series_are_univariate(self):
+        return (len(self.ts_x.shape) == 1) & (len(self.ts_y.shape) == 1)
+
+    def _series_dimensions_match(self):
+        return self.ts_x.shape[1] == self.ts_y.shape[1]
+
+    def _verify_dimensions(self):
+
+        if not self._two_dim_at_most():
+            raise DimensionError("Only arrays of 1 and 2 dimensions are supported")
+
+        if not self._series_shape_match():
+            raise DimensionError("Number of time series dimensions doesn't match")
+
+        if not self._series_dimensions_match():
+            raise DimensionError("Number of time series columns doesn't match")
+
+    def _convert_one_dimension_series(self):
+        self.ts_x = np.atleast_2d(self.ts_x).T
+        self.ts_y = np.atleast_2d(self.ts_y).T
+
+    def calc_distance_matrix(self):
+        self._verify_dimensions()
+        if self._series_are_univariate():
+            self._convert_one_dimension_series()
+
+        dist_matrix = cdist(self.ts_x, self.ts_y, metric=self.method)
+
+        return dist_matrix
 
 class UnivariateSeriesShapeDescriptors:
 
@@ -169,11 +211,11 @@ class UnivariateSeriesShapeDescriptors:
                 expected_cls=self.__class__
             )
 
-        distance_matrix = cdist(
-            XA=self.shape_descriptors_array,
-            XB=other_series_descriptor.shape_descriptors_array,
-            metric=dist_method
-        )
+        distance_matrix = DistanceMatrixCalculator(
+            self.shape_descriptors_array,
+            other_series_descriptor.shape_descriptors_array,
+            method=dist_method
+        ).calc_distance_matrix()
 
         return UnivariateSeriesDistanceMatrix(distance_matrix, self.origin_ts, other_series_descriptor.origin_ts)
 

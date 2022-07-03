@@ -60,3 +60,6 @@ class ObjectOfWrongClass(Exception):
             expected_cls.__name__
         )
         super().__init__(error_msg)
+
+class DimensionError(Exception):
+    pass
