@@ -257,7 +257,8 @@ class MultivariateSeriesShapeDescriptors:
     def calc_accumulated_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                          dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
 
-        distance_matrices_list = self.calc_distance_matrices(series_y_descriptor, dist_method).distance_matrices_list
+        univariate_dist_matrix_obj = self.calc_distance_matrices(series_y_descriptor, dist_method).distance_matrices_list
+        distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrix_obj]
         distance_matrix = reduce(operator.add, distance_matrices_list)
 
         return MultivariateDistanceMatrixDependent(distance_matrix, self.origin_ts, series_y_descriptor.origin_ts)

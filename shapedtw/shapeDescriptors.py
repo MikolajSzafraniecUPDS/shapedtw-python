@@ -128,17 +128,17 @@ class SlopeDescriptor(ShapeDescriptor):
         self.slope_window = slope_window
 
     @staticmethod
-    def _get_single_slope(input_vector: ndarray) -> ndarray:
+    def _get_single_slope(input_vector: ndarray) -> float:
         vector_length = len(input_vector)
         if vector_length == 1:
-            return 0
+            return float(0)
         x_vec = np.arange(vector_length)
         linregress_res = linregress(x=x_vec, y=input_vector)
-        return linregress_res.slope
+        return float(linregress_res.slope)
 
     @staticmethod
     def _get_windows_slopes(windows: List[ndarray]) -> ndarray:
-        windows_slopes = ndarray([SlopeDescriptor._get_single_slope(window) for window in windows])
+        windows_slopes = np.array([SlopeDescriptor._get_single_slope(window) for window in windows])
         return windows_slopes
 
     def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
