@@ -1,7 +1,7 @@
 import numpy as np
 
 from pywt import Wavelet, wavedec
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from numpy import array
 from typing import List
 from scipy.stats import linregress
@@ -9,7 +9,7 @@ from .exceptions import *
 from itertools import repeat
 
 
-class ShapeDescriptor:
+class ShapeDescriptor(ABC):
     """
     According to Zhao and Itti concept so-called shape descriptors are the basis of the shape DTW algorithm. They allow us to
     transform subsequence of given time series to a vector of values representing it's local shape. Shape DTW algorithm uses shape
@@ -80,6 +80,7 @@ class PAADescriptor(ShapeDescriptor):
 
         return paa_descriptor
 
+
 class DWTDescriptor(ShapeDescriptor):
 
     """
@@ -104,6 +105,7 @@ class DWTDescriptor(ShapeDescriptor):
         coefs_list = wavedec(ts_subsequence, wavelet, mode=self.mode, level=self.level)
         dwt_descriptor = np.concatenate(coefs_list)
         return dwt_descriptor
+
 
 class SlopeDescriptor(ShapeDescriptor):
 
@@ -144,6 +146,7 @@ class SlopeDescriptor(ShapeDescriptor):
         slope_descriptor = self._get_windows_slopes(windows)
 
         return slope_descriptor
+
 
 class DerivativeShapeDescriptor(ShapeDescriptor):
 

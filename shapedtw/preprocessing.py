@@ -6,6 +6,7 @@ from numpy import array
 from .exceptions import *
 from scipy.spatial.distance import cdist
 from typing import List
+from abc import ABC, abstractmethod
 
 class Padder:
 
@@ -75,7 +76,14 @@ class Padder:
         return subsequence
 
 
-class SubsequenceBuilder:
+class SubsequenceBuilder(ABC):
+
+    @abstractmethod
+    def transform_time_series_to_subsequences(self):
+        pass
+
+
+class UnivariateSubsequenceBuilder(SubsequenceBuilder):
 
     """
     This class is used for the purpose of transforming univariate time
@@ -129,7 +137,7 @@ class SubsequenceBuilder:
         return UnivariateSeriesSubsequences(subsequences_array, origin_ts=self.time_series)
 
 
-class MultivariateSubsequenceBuilder:
+class MultivariateSubsequenceBuilder(SubsequenceBuilder):
 
     """
     Subsequence builder for multivariate time series
@@ -141,7 +149,7 @@ class MultivariateSubsequenceBuilder:
         self.dimensions_number = time_series.shape[1]
 
     def transform_time_series_to_subsequences(self) -> List[UnivariateSeriesSubsequences]:
-        sub_builders = [SubsequenceBuilder(self.time_series[:, i], self.subsequence_width)
+        sub_builders = [UnivariateSubsequenceBuilder(self.time_series[:, i], self.subsequence_width)
                         for i in range(self.dimensions_number)]
         subsequences = [sub_builder.transform_time_series_to_subsequences()
                         for sub_builder in sub_builders]
@@ -161,6 +169,7 @@ class UnivariateSeriesSubsequences:
         ])
 
         return UnivariateSeriesShapeDescriptors(shape_descriptors, self.origin_ts)
+
 
 class DistanceMatrixCalculator:
 
