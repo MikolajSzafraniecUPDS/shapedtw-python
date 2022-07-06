@@ -16,14 +16,14 @@ class StepPatternMatrixTransformator:
         self.step_pattern = step_pattern
         self.step_pattern_matrix = self._get_step_pattern_matrix()
 
-    def _get_step_pattern_matrix(self) -> array:
+    def _get_step_pattern_matrix(self) -> ndarray:
         step_pattern_obj = ShapeDTW._canonicalizeStepPattern(self.step_pattern)
         return step_pattern_obj.mx
 
     def _get_segments_number(self) -> int:
         return int(self.step_pattern_matrix[:, 0].max())
 
-    def _get_matrix_segment(self, segment_number: int) -> array:
+    def _get_matrix_segment(self, segment_number: int) -> ndarray:
         ind_mask = self.step_pattern_matrix[:, 0] == segment_number
         return self.step_pattern_matrix[ind_mask, :].copy()
 
@@ -68,8 +68,8 @@ class DistanceReconstructor:
 
     def __init__(self,
                  step_pattern: str,
-                 ts_x: array,
-                 ts_y: array,
+                 ts_x: ndarray,
+                 ts_y: ndarray,
                  ts_x_wp: list,
                  ts_y_wp: list,
                  dist_method: str = "euclidean"):
@@ -133,8 +133,8 @@ class ShapeDTW:
 
     def __init__(self,
                  dtw_obj: DTW,
-                 ts_x: array,
-                 ts_y: array,
+                 ts_x: ndarray,
+                 ts_y: ndarray,
                  step_pattern: str = "symmetric1",
                  dist_method: str = "euclidean"):
 
@@ -189,7 +189,7 @@ class ShapeDTW:
         self.shape_normalizedDistance = self.dtw_results.normalizedDistance
 
 
-def shape_dtw(x: array, y: array,
+def shape_dtw(x: ndarray, y: ndarray,
               subsequence_width: int,
               shape_descriptor: ShapeDescriptor,
               step_pattern: str = "symmetric2",
@@ -198,11 +198,11 @@ def shape_dtw(x: array, y: array,
     if "dist_method" not in kwargs:
         kwargs["dist_method"] = "euclidean"
 
-    ts_x_shape_descriptor = SubsequenceBuilder(x, subsequence_width).\
+    ts_x_shape_descriptor = UnivariateSubsequenceBuilder(x, subsequence_width).\
         transform_time_series_to_subsequences().\
         get_shape_descriptors(shape_descriptor)
 
-    ts_y_shape_descriptor = SubsequenceBuilder(y, subsequence_width).\
+    ts_y_shape_descriptor = UnivariateSubsequenceBuilder(y, subsequence_width).\
         transform_time_series_to_subsequences().\
         get_shape_descriptors(shape_descriptor)
 

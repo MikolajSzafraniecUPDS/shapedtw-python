@@ -2,7 +2,7 @@ import numpy as np
 
 from pywt import Wavelet, wavedec
 from abc import abstractmethod, ABC
-from numpy import array
+from numpy import ndarray
 from typing import List
 from scipy.stats import linregress
 from .exceptions import *
@@ -21,7 +21,7 @@ class ShapeDescriptor(ABC):
     """
 
     @abstractmethod
-    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+    def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
         pass
 
     @staticmethod
@@ -29,7 +29,7 @@ class ShapeDescriptor(ABC):
         return subsequence_len < window_size
 
     @staticmethod
-    def _split_into_windows(ts_subsequence: array, window_size: int) -> List[array]:
+    def _split_into_windows(ts_subsequence: ndarray, window_size: int) -> List[ndarray]:
 
         subsequence_len = len(ts_subsequence)
 
@@ -50,7 +50,7 @@ class RawSubsequenceDescriptor(ShapeDescriptor):
     The most basic shape descriptor, returning given raw subsequence itself.
     """
 
-    def get_shape_descriptor(self, time_series_subsequence: array) -> array:
+    def get_shape_descriptor(self, time_series_subsequence: ndarray) -> ndarray:
         return time_series_subsequence
 
 
@@ -70,11 +70,11 @@ class PAADescriptor(ShapeDescriptor):
         self.piecewise_aggregation_window = piecewise_aggregation_window
 
     @staticmethod
-    def _get_windows_means(windows: List[array]) -> array:
-        windows_means = array([np.mean(window) for window in windows])
+    def _get_windows_means(windows: List[ndarray]) -> ndarray:
+        windows_means = ndarray([np.mean(window) for window in windows])
         return windows_means
 
-    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+    def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
         windows = self._split_into_windows(ts_subsequence, self.piecewise_aggregation_window)
         paa_descriptor = self._get_windows_means(windows)
 
@@ -100,7 +100,7 @@ class DWTDescriptor(ShapeDescriptor):
         self.mode = mode
         self.level = level
 
-    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+    def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
         wavelet = Wavelet(self.wave_type)
         coefs_list = wavedec(ts_subsequence, wavelet, mode=self.mode, level=self.level)
         dwt_descriptor = np.concatenate(coefs_list)
@@ -128,7 +128,7 @@ class SlopeDescriptor(ShapeDescriptor):
         self.slope_window = slope_window
 
     @staticmethod
-    def _get_single_slope(input_vector: array) -> array:
+    def _get_single_slope(input_vector: ndarray) -> ndarray:
         vector_length = len(input_vector)
         if vector_length == 1:
             return 0
@@ -137,11 +137,11 @@ class SlopeDescriptor(ShapeDescriptor):
         return linregress_res.slope
 
     @staticmethod
-    def _get_windows_slopes(windows: List[array]) -> array:
-        windows_slopes = array([SlopeDescriptor._get_single_slope(window) for window in windows])
+    def _get_windows_slopes(windows: List[ndarray]) -> ndarray:
+        windows_slopes = ndarray([SlopeDescriptor._get_single_slope(window) for window in windows])
         return windows_slopes
 
-    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+    def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
         windows = self._split_into_windows(ts_subsequence, self.slope_window)
         slope_descriptor = self._get_windows_slopes(windows)
 
@@ -162,18 +162,18 @@ class DerivativeShapeDescriptor(ShapeDescriptor):
     """
 
     @staticmethod
-    def _get_first_order_diff(ts_subsequence: array) -> array:
+    def _get_first_order_diff(ts_subsequence: ndarray) -> ndarray:
         return ts_subsequence[1:] - ts_subsequence[:-1]
 
     @staticmethod
-    def _get_second_order_diff(ts_subsequence: array) -> array:
+    def _get_second_order_diff(ts_subsequence: ndarray) -> ndarray:
         return (ts_subsequence[2:] - ts_subsequence[:-2]) / 2
 
     @staticmethod
-    def _get_derivative(first_order_diff: array, second_order_diff: array) -> array:
+    def _get_derivative(first_order_diff: ndarray, second_order_diff: ndarray) -> ndarray:
         return (first_order_diff[:-1] + second_order_diff) / 2
 
-    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+    def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
         subsequence_length = len(ts_subsequence)
         if subsequence_length < 3:
             raise SubsequenceTooShort(subsequence_size=subsequence_length, min_required=3)
@@ -212,7 +212,7 @@ class CompoundDescriptor(ShapeDescriptor):
         self.shape_descriptors = shape_descriptors
         self.descriptors_weights = descriptors_weights
 
-    def _calc_descriptors(self, ts_subsequence: array) -> List[array]:
+    def _calc_descriptors(self, ts_subsequence: ndarray) -> List[ndarray]:
         descriptors_list = [
             descriptor.get_shape_descriptor(ts_subsequence) * weight for
             (descriptor, weight) in
@@ -221,7 +221,7 @@ class CompoundDescriptor(ShapeDescriptor):
 
         return descriptors_list
 
-    def get_shape_descriptor(self, ts_subsequence: array) -> array:
+    def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
         descriptors_list = self._calc_descriptors(ts_subsequence)
         compound_descriptor = np.concatenate(descriptors_list)
 

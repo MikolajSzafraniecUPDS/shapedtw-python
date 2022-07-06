@@ -61,5 +61,15 @@ class ObjectOfWrongClass(Exception):
         )
         super().__init__(error_msg)
 
+
 class DimensionError(Exception):
     pass
+
+
+class IncompatibleDimension(Exception):
+    def __init__(self, ts_x_dim, ts_y_dim):
+        error_msg = "Incompatible dimensions, series x dim = {0}, series y dim = {1}".format(
+            ts_x_dim, ts_y_dim
+        )
+
+        super().__init__(error_msg)
