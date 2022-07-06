@@ -165,7 +165,6 @@ class ShapeDTW:
 
         return dist_reconstructor.calc_raw_ts_distance()
 
-
     def _calc_raw_series_normalized_distance(self):
         step_pattern = self._canonicalizeStepPattern(self.step_pattern)
         norm = step_pattern.hint

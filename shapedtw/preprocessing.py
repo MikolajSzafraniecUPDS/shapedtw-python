@@ -5,6 +5,7 @@ import numpy as np
 from numpy import array
 from .exceptions import *
 from scipy.spatial.distance import cdist
+from typing import List
 
 class Padder:
 
@@ -121,11 +122,30 @@ class SubsequenceBuilder:
 
         return subsequence
 
-    def transform_time_series_to_subsequences(self):
+    def transform_time_series_to_subsequences(self) -> UnivariateSeriesSubsequences:
         indices = np.arange(start=0, stop=self.ts_length)
         subsequences_list = [self._get_single_subsequence(ts_index) for ts_index in indices]
         subsequences_array = np.vstack(subsequences_list)
-        return UnivariateSeriesSubsequences(subsequences_array, origin_ts = self.time_series)
+        return UnivariateSeriesSubsequences(subsequences_array, origin_ts=self.time_series)
+
+
+class MultivariateSubsequenceBuilder:
+
+    """
+    Subsequence builder for multivariate time series
+    """
+
+    def __init__(self, time_series: array, subsequence_width):
+        self.time_series = time_series
+        self.subsequence_width = subsequence_width
+        self.dimensions_number = time_series.shape[1]
+
+    def transform_time_series_to_subsequences(self) -> List[UnivariateSeriesSubsequences]:
+        sub_builders = [SubsequenceBuilder(self.time_series[:, i], self.subsequence_width)
+                        for i in range(self.dimensions_number)]
+        subsequences = [sub_builder.transform_time_series_to_subsequences()
+                        for sub_builder in sub_builders]
+        return subsequences
 
 
 class UnivariateSeriesSubsequences:
