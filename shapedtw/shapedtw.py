@@ -3,6 +3,7 @@ from dtw import *
 from shapedtw.preprocessing import *
 from shapedtw.exceptions import *
 from shapedtw.shapeDescriptors import *
+from .utils import Utils
 
 
 class StepPatternMatrixTransformator:
@@ -17,7 +18,7 @@ class StepPatternMatrixTransformator:
         self.step_pattern_matrix = self._get_step_pattern_matrix()
 
     def _get_step_pattern_matrix(self) -> ndarray:
-        step_pattern_obj = ShapeDTW._canonicalizeStepPattern(self.step_pattern)
+        step_pattern_obj = Utils.canonicalizeStepPattern(self.step_pattern)
         return step_pattern_obj.mx
 
     def _get_segments_number(self) -> int:
@@ -144,14 +145,6 @@ class ShapeDTW:
         self.step_pattern = step_pattern
         self.dist_method = dist_method
         self.set_distance()
-
-    @staticmethod
-    def _canonicalizeStepPattern(s):
-        """Return object by string"""
-        if hasattr(s, "mx"):
-            return s
-        else:
-            return getattr(sys.modules["dtw.stepPattern"], s)
 
     def _calc_raw_series_distance(self, dist_method: str = "euclidean"):
         dist_reconstructor = DistanceReconstructor(

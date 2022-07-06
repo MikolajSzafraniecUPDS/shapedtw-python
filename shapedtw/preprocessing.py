@@ -11,6 +11,7 @@ from typing import List
 from abc import ABC, abstractmethod
 from .shapeDescriptors import ShapeDescriptor
 from functools import reduce
+from .utils import Utils
 
 class Padder:
 
@@ -212,18 +213,10 @@ class UnivariateSeriesShapeDescriptors:
     def _check_dimensions_number(descriptor_array: ndarray, n_dim: int) -> bool:
         return len(descriptor_array.shape) == n_dim
 
-    def _verify_other_descriptor_class(self, other_series_descriptor) -> None:
-        are_same_class =  isinstance(other_series_descriptor, self.__class__)
-        if not are_same_class:
-            raise ObjectOfWrongClass(
-                actual_cls=other_series_descriptor.__class__,
-                expected_cls=self.__class__
-            )
-
     def calc_distance_matrix(self, series_y_descriptor: UnivariateSeriesShapeDescriptors,
                              dist_method: str = "euclidean") -> UnivariateSeriesDistanceMatrix:
 
-        self._verify_other_descriptor_class(series_y_descriptor)
+        Utils.verify_classes_compatibility(self, series_y_descriptor)
 
         distance_matrix = DistanceMatrixCalculator(
             self.shape_descriptors_array,
@@ -249,18 +242,10 @@ class MultivariateSeriesShapeDescriptors:
         if ts_x_dim != ts_y_dim:
             raise IncompatibleDimension(ts_x_dim, ts_y_dim)
 
-    def _verify_other_descriptor_class(self, other_series_descriptor) -> None:
-        are_same_class = isinstance(other_series_descriptor, self.__class__)
-        if not are_same_class:
-            raise ObjectOfWrongClass(
-                actual_cls=other_series_descriptor.__class__,
-                expected_cls=self.__class__
-            )
-
     def calc_distance_matrices(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                dist_method: str = "euclidean") -> MultivariateDistanceMatrixIndependent:
 
-        self._verify_other_descriptor_class(series_y_descriptor)
+        Utils.verify_classes_compatibility(self, series_y_descriptor)
         self._verify_dimension_compatibility(series_y_descriptor)
 
         distance_matrices_list = [ts_x_descriptor.calc_distance_matrix(ts_y_descriptor, dist_method)
@@ -276,6 +261,7 @@ class MultivariateSeriesShapeDescriptors:
         distance_matrix = reduce(operator.add, distance_matrices_list)
 
         return MultivariateDistanceMatrixDependent(distance_matrix, self.origin_ts, series_y_descriptor.origin_ts)
+
 
 class DistanceMatrixCalculator:
 
