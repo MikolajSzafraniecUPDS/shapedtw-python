@@ -240,7 +240,7 @@ class MultivariateSeriesShapeDescriptors:
         ts_x_dim = len(self)
         ts_y_dim = len(other)
         if ts_x_dim != ts_y_dim:
-            raise IncompatibleDimension(ts_x_dim, ts_y_dim)
+            raise IncompatibleDimensionality(ts_x_dim, ts_y_dim)
 
     def calc_distance_matrices(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                dist_method: str = "euclidean") -> MultivariateDistanceMatrixIndependent:

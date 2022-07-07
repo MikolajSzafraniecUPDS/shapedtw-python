@@ -1,10 +1,12 @@
+from __future__ import  annotations
+
 from dtw import *
 
 from shapedtw.preprocessing import *
 from shapedtw.exceptions import *
 from shapedtw.shapeDescriptors import *
 from .utils import Utils
-
+from dataclasses import dataclass
 
 class StepPatternMatrixTransformator:
 
@@ -130,21 +132,30 @@ class DistanceReconstructor:
         return raw_series_distance
 
 
+@dataclass
+class ShapeDTWResults:
+
+    distance: float
+    normalizedDistance: float
+    shape_distance: float
+    shape_normalizedDistance: float
+
 class ShapeDTW:
 
     def __init__(self,
-                 dtw_obj: DTW,
                  ts_x: ndarray,
                  ts_y: ndarray,
-                 step_pattern: str = "symmetric1",
-                 dist_method: str = "euclidean"):
+                 step_pattern: str = "symmetric2",
+                 dist_method: str = "euclidean",
+                 dtw_res: DTW | List[DTW] = None,
+                 shape_dtw_results: ShapeDTWResults = None):
 
-        self.dtw_results = dtw_obj
+        self.dtw_results = dtw_res
         self.ts_x = ts_x
         self.ts_y = ts_y
         self.step_pattern = step_pattern
         self.dist_method = dist_method
-        self.set_distance()
+        self.shape_dtw_results = shape_dtw_results
 
     def _calc_raw_series_distance(self, dist_method: str = "euclidean"):
         dist_reconstructor = DistanceReconstructor(
@@ -158,52 +169,96 @@ class ShapeDTW:
 
         return dist_reconstructor.calc_raw_ts_distance()
 
-    def _calc_raw_series_normalized_distance(self):
-        step_pattern = self._canonicalizeStepPattern(self.step_pattern)
+    def _calc_raw_series_normalized_distance(self, distance: float):
+        step_pattern = Utils.canonicalizeStepPattern(self.step_pattern)
         norm = step_pattern.hint
 
         n, m = len(self.ts_x), len(self.ts_y)
 
         if norm == "N+M":
-            normalized_distance = self.distance / (n + m)
+            normalized_distance = distance / (n + m)
         elif norm == "N":
-            normalized_distance = self.distance / n
+            normalized_distance = distance / n
         elif norm == "M":
-            normalized_distance = self.distance / m
+            normalized_distance = distance / m
         else:
             normalized_distance = np.nan
 
         return normalized_distance
 
-    def set_distance(self):
-        self.distance = self._calc_raw_series_distance(self.dist_method)
-        self.normalizedDistance = self._calc_raw_series_normalized_distance()
-        self.shape_distance = self.dtw_results.distance
-        self.shape_normalizedDistance = self.dtw_results.normalizedDistance
+    def get_results(self):
+        distance = self._calc_raw_series_distance(self.dist_method)
+        normalized_distance = self._calc_raw_series_normalized_distance(distance)
+        shape_distance = self.dtw_results.distance
+        shape_normalized_distance = self.dtw_results.normalizedDistance
+
+        self.shape_dtw_results = ShapeDTWResults(
+            distance, normalized_distance,
+            shape_distance, shape_normalized_distance
+        )
+
+
+class UnivariateShapeDTW(ShapeDTW):
+
+    def __init__(self,
+                 ts_x: ndarray,
+                 ts_y: ndarray,
+                 step_pattern: str = "symmetric2",
+                 dist_method: str = "euclidean",
+                 dtw_results: DTW = None):
+
+        super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results)
+
+    def calc_shape_dtw(self,
+                       subsequence_width: int,
+                       shape_descriptor: ShapeDescriptor,
+                       **kwargs):
+
+        ts_x_shape_descriptor = UnivariateSubsequenceBuilder(self.ts_x, subsequence_width). \
+            transform_time_series_to_subsequences(). \
+            get_shape_descriptors(shape_descriptor)
+
+        ts_y_shape_descriptor = UnivariateSubsequenceBuilder(self.ts_y, subsequence_width). \
+            transform_time_series_to_subsequences(). \
+            get_shape_descriptors(shape_descriptor)
+
+        distance_matrix = ts_x_shape_descriptor.calc_distance_matrix(
+            ts_y_shape_descriptor, dist_method=self.dist_method
+        )
+
+        dtw_results = dtw(distance_matrix.dist_matrix,
+                          step_pattern=self.step_pattern,
+                          **kwargs)
+
+        self.dtw_results = dtw_results
+        self.get_results()
+
+        return self
 
 
 def shape_dtw(x: ndarray, y: ndarray,
               subsequence_width: int,
               shape_descriptor: ShapeDescriptor,
               step_pattern: str = "symmetric2",
+              dist_method="euclidean",
+              multivariate_version: str = "dependent",
               **kwargs):
 
-    if "dist_method" not in kwargs:
-        kwargs["dist_method"] = "euclidean"
+    Utils.verify_shape_compatibility(ts_x=x, ts_y=y)
 
-    ts_x_shape_descriptor = UnivariateSubsequenceBuilder(x, subsequence_width).\
-        transform_time_series_to_subsequences().\
-        get_shape_descriptors(shape_descriptor)
+    ts_x_shape = x.shape
 
-    ts_y_shape_descriptor = UnivariateSubsequenceBuilder(y, subsequence_width).\
-        transform_time_series_to_subsequences().\
-        get_shape_descriptors(shape_descriptor)
+    if ts_x_shape == 1:
+        shape_dtw_obj = UnivariateShapeDTW(
+            ts_x=x, ts_y=y,
+            step_pattern=step_pattern,
+            dist_method=dist_method
+        )
 
-    distance_matrix = ts_x_shape_descriptor.calc_distance_matrix(
-        ts_y_shape_descriptor, dist_method=kwargs["dist_method"]
+    shape_dtw_results = shape_dtw_obj.calc_shape_dtw(
+        subsequence_width=subsequence_width,
+        shape_descriptor=shape_descriptor,
+        **kwargs
     )
-
-    dtw_results = dtw(distance_matrix.dist_matrix, step_pattern=step_pattern, **kwargs)
-    shape_dtw_results = ShapeDTW(dtw_results, x, y, step_pattern, kwargs["dist_method"])
 
     return shape_dtw_results
