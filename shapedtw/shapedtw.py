@@ -1,4 +1,4 @@
-from __future__ import  annotations
+from __future__ import annotations
 
 from dtw import *
 
@@ -77,8 +77,8 @@ class DistanceReconstructor:
                  ts_y_wp: list,
                  dist_method: str = "euclidean"):
 
-        self.ts_x = ts_x,
-        self.ts_y = ts_y,
+        self.ts_x = ts_x
+        self.ts_y = ts_y
         self.ts_x_warping_path = ts_x_wp
         self.ts_y_warping_path = ts_y_wp
         self.dist_method = dist_method
@@ -136,9 +136,9 @@ class DistanceReconstructor:
 class ShapeDTWResults:
 
     distance: float
-    normalizedDistance: float
+    normalized_distance: float
     shape_distance: float
-    shape_normalizedDistance: float
+    shape_normalized_distance: float
 
 class ShapeDTW:
 
@@ -186,7 +186,7 @@ class ShapeDTW:
 
         return normalized_distance
 
-    def get_results(self):
+    def calc_distances(self):
         distance = self._calc_raw_series_distance(self.dist_method)
         normalized_distance = self._calc_raw_series_normalized_distance(distance)
         shape_distance = self.dtw_results.distance
@@ -231,7 +231,61 @@ class UnivariateShapeDTW(ShapeDTW):
                           **kwargs)
 
         self.dtw_results = dtw_results
-        self.get_results()
+        self.calc_distances()
+
+        return self
+
+
+class MultivariateShapeDTWDependent(ShapeDTW):
+
+    def __init__(self,
+                 ts_x: ndarray,
+                 ts_y: ndarray,
+                 step_pattern: str = "symmetric2",
+                 dist_method: str = "euclidean",
+                 dtw_results: DTW = None):
+
+        super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results)
+
+    def _calc_raw_series_distance(self, dist_method: str = "euclidean"):
+        n_dim = self.ts_x.shape[1]
+        dist_reconstructors = [
+            DistanceReconstructor(step_pattern=self.step_pattern,
+                                  ts_x=self.ts_x[:, ind].copy(),
+                                  ts_y=self.ts_y[:, ind].copy(),
+                                  ts_x_wp=self.dtw_results.index1s,
+                                  ts_y_wp=self.dtw_results.index2s,
+                                  dist_method=self.dist_method)
+            for ind in range(n_dim)
+        ]
+
+        distances = [
+            dist_reconstructor.calc_raw_ts_distance()
+            for dist_reconstructor in dist_reconstructors
+        ]
+
+        return sum(distances)
+
+    def calc_shape_dtw(self,
+                       subsequence_width: int,
+                       shape_descriptor: ShapeDescriptor,
+                       **kwargs):
+
+        ts_x_shape_descriptor = MultivariateSubsequenceBuilder(self.ts_x, subsequence_width). \
+            transform_time_series_to_subsequences(). \
+            get_shape_descriptors(shape_descriptor)
+
+        ts_y_shape_descriptor = MultivariateSubsequenceBuilder(self.ts_y, subsequence_width). \
+            transform_time_series_to_subsequences(). \
+            get_shape_descriptors(shape_descriptor)
+
+        dist_matrix = ts_x_shape_descriptor.calc_accumulated_distance_matrix(
+            ts_y_shape_descriptor
+        )
+
+        dtw_results = dtw(dist_matrix.distance_matrix, **kwargs)
+        self.dtw_results = dtw_results
+        self.calc_distances()
 
         return self
 
@@ -250,6 +304,12 @@ def shape_dtw(x: ndarray, y: ndarray,
 
     if ts_x_shape == 1:
         shape_dtw_obj = UnivariateShapeDTW(
+            ts_x=x, ts_y=y,
+            step_pattern=step_pattern,
+            dist_method=dist_method
+        )
+    elif multivariate_version == "dependent":
+        shape_dtw_obj = MultivariateShapeDTWDependent(
             ts_x=x, ts_y=y,
             step_pattern=step_pattern,
             dist_method=dist_method

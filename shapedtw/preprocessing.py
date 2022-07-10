@@ -252,12 +252,18 @@ class MultivariateSeriesShapeDescriptors:
                                   for (ts_x_descriptor, ts_y_descriptor)
                                   in zip(self.descriptors_list, series_y_descriptor.descriptors_list)]
 
-        return MultivariateDistanceMatrixIndependent(distance_matrices_list, self.origin_ts, series_y_descriptor.origin_ts)
+        return MultivariateDistanceMatrixIndependent(
+            distance_matrices_list,
+            self.origin_ts,
+            series_y_descriptor.origin_ts
+        )
 
     def calc_accumulated_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                          dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
 
-        univariate_dist_matrix_obj = self.calc_distance_matrices(series_y_descriptor, dist_method).distance_matrices_list
+        univariate_dist_matrix_obj = self.calc_distance_matrices(
+            series_y_descriptor,
+            dist_method).distance_matrices_list
         distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrix_obj]
         distance_matrix = reduce(operator.add, distance_matrices_list)
 
@@ -291,8 +297,9 @@ class DistanceMatrixCalculator:
         if not self._series_shape_match():
             raise DimensionError("Number of time series dimensions doesn't match")
 
-        if not self._series_dimensions_match():
-            raise DimensionError("Number of time series columns doesn't match")
+        if not self._series_are_univariate():
+            if not self._series_dimensions_match():
+                raise DimensionError("Number of time series columns doesn't match")
 
     def _convert_one_dimension_series(self):
         self.ts_x = np.atleast_2d(self.ts_x).T

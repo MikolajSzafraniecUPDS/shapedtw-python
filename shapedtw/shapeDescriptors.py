@@ -71,7 +71,7 @@ class PAADescriptor(ShapeDescriptor):
 
     @staticmethod
     def _get_windows_means(windows: List[ndarray]) -> ndarray:
-        windows_means = ndarray([np.mean(window) for window in windows])
+        windows_means = np.array([np.mean(window) for window in windows])
         return windows_means
 
     def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
