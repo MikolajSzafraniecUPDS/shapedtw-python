@@ -247,25 +247,6 @@ class MultivariateShapeDTWDependent(ShapeDTW):
 
         super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results)
 
-    def _calc_raw_series_distance(self, dist_method: str = "euclidean"):
-        n_dim = self.ts_x.shape[1]
-        dist_reconstructors = [
-            DistanceReconstructor(step_pattern=self.step_pattern,
-                                  ts_x=self.ts_x[:, ind].copy(),
-                                  ts_y=self.ts_y[:, ind].copy(),
-                                  ts_x_wp=self.dtw_results.index1s,
-                                  ts_y_wp=self.dtw_results.index2s,
-                                  dist_method=self.dist_method)
-            for ind in range(n_dim)
-        ]
-
-        distances = [
-            dist_reconstructor.calc_raw_ts_distance()
-            for dist_reconstructor in dist_reconstructors
-        ]
-
-        return sum(distances)
-
     def calc_shape_dtw(self,
                        subsequence_width: int,
                        shape_descriptor: ShapeDescriptor,
