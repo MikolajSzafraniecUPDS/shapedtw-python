@@ -258,8 +258,8 @@ class MultivariateSeriesShapeDescriptors:
             series_y_descriptor.origin_ts
         )
 
-    def calc_accumulated_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
-                                         dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
+    def calc_summed_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
+                                    dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
 
         univariate_dist_matrix_obj = self.calc_distance_matrices(
             series_y_descriptor,

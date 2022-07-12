@@ -260,7 +260,7 @@ class MultivariateShapeDTWDependent(ShapeDTW):
             transform_time_series_to_subsequences(). \
             get_shape_descriptors(shape_descriptor)
 
-        dist_matrix = ts_x_shape_descriptor.calc_accumulated_distance_matrix(
+        dist_matrix = ts_x_shape_descriptor.calc_summed_distance_matrix(
             ts_y_shape_descriptor
         )
 
