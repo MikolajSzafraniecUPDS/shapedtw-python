@@ -82,3 +82,11 @@ class IncompatibleSeriesNumber(DimensionError):
         )
 
         super().__init__(error_msg)
+
+
+class ShapeDTWNotCalculatedYet(Exception):
+    pass
+
+
+class DistanceSettingNotPossible(Exception):
+    pass

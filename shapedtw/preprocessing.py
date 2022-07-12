@@ -261,14 +261,14 @@ class MultivariateSeriesShapeDescriptors:
     def calc_summed_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                     dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
 
-        univariate_dist_matrix_obj = self.calc_distance_matrices(
+        univariate_dist_matrices = self.calc_distance_matrices(
             series_y_descriptor,
             dist_method).distance_matrices_list
         if dist_method == "euclidean":
-            distance_matrices_list = [uni_mat.dist_matrix**2 for uni_mat in univariate_dist_matrix_obj]
+            distance_matrices_list = [uni_mat.dist_matrix**2 for uni_mat in univariate_dist_matrices]
             distance_matrix = np.sqrt(reduce(operator.add, distance_matrices_list))
         else:
-            distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrix_obj]
+            distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrices]
             distance_matrix = reduce(operator.add, distance_matrices_list)
 
         return MultivariateDistanceMatrixDependent(distance_matrix, self.origin_ts, series_y_descriptor.origin_ts)
