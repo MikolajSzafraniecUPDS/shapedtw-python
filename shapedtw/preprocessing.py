@@ -13,6 +13,7 @@ from .shapeDescriptors import ShapeDescriptor
 from functools import reduce
 from .utils import Utils
 
+
 class Padder:
 
     """
@@ -35,7 +36,7 @@ class Padder:
         elif pad_side == "right":
             n_padded = (ts_index+1)-self.ts_length+self.subsequence_width
         else:
-            raise WrongPadType("Pad type must bo one of ('left', 'rigth')")
+            raise WrongPadType("Pad type must bo one of ('left', 'right')")
 
         return n_padded
 
@@ -43,7 +44,7 @@ class Padder:
         n_padded = self._get_pad_number(ts_index, "left")
         last_ind = ts_index+self.subsequence_width+1
         ts_first_observation = self.time_series[0]
-        first_observation_repeated = np.repeat(ts_first_observation,n_padded)
+        first_observation_repeated = np.repeat(ts_first_observation, n_padded)
         subsequence = np.concatenate(
             (first_observation_repeated, self.time_series[0:last_ind])
         )
@@ -55,7 +56,7 @@ class Padder:
         n_padded = self._get_pad_number(ts_index, "right")
         first_ind = ts_index-self.subsequence_width
         ts_last_observation = self.time_series[ts_len-1]
-        ts_last_repeated = np.repeat(ts_last_observation,n_padded)
+        ts_last_repeated = np.repeat(ts_last_observation, n_padded)
         subsequence = np.concatenate(
             (self.time_series[first_ind:], ts_last_repeated)
         )
@@ -65,11 +66,11 @@ class Padder:
     def pad_both_side(self, ts_index: int) -> ndarray:
         ts_len = len(self.time_series)
         n_padded_left = self._get_pad_number(ts_index, "left")
-        n_padded_rigth = self._get_pad_number(ts_index, "right")
+        n_padded_right = self._get_pad_number(ts_index, "right")
         ts_first_observation = self.time_series[0]
         ts_last_observation = self.time_series[ts_len-1]
         ts_first_observation_repeated = np.repeat(ts_first_observation, n_padded_left)
-        ts_last_observation_repeated = np.repeat(ts_last_observation, n_padded_rigth)
+        ts_last_observation_repeated = np.repeat(ts_last_observation, n_padded_right)
         subsequence = np.concatenate(
             (
                 ts_first_observation_repeated,

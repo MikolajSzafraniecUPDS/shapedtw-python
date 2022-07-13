@@ -4,6 +4,7 @@ import numpy as np
 
 from .exceptions import ObjectOfWrongClass, IncompatibleDimensionality, IncompatibleSeriesNumber
 
+
 class Utils:
 
     @staticmethod

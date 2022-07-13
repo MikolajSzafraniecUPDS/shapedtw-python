@@ -11,9 +11,9 @@ from itertools import repeat
 
 class ShapeDescriptor(ABC):
     """
-    According to Zhao and Itti concept so-called shape descriptors are the basis of the shape DTW algorithm. They allow us to
-    transform subsequence of given time series to a vector of values representing it's local shape. Shape DTW algorithm uses shape
-    descriptors instead of raw time series values to calculate optimal warping path.
+    According to Zhao and Itti concept so-called shape descriptors are the basis of the shape DTW algorithm. They allow
+    us to transform subsequence of given time series to a vector of values representing it's local shape.
+    Shape DTW algorithm uses shape descriptors instead of raw time series values to calculate optimal warping path.
 
     There are a few shape descriptors described in the Zhao and Itti paper and one can define his own descriptor.
     ShapeDescriptor is an abstract class, intended to be a parent class for all of the shape descriptors. It forces

@@ -3,15 +3,15 @@ from __future__ import annotations
 from dtw import *
 
 from shapedtw.preprocessing import *
-from shapedtw.exceptions import *
 from shapedtw.shapeDescriptors import *
 from .utils import Utils
 from dataclasses import dataclass
 
+
 class StepPatternMatrixTransformator:
 
     """
-    Class for transfoming step pattern matrix to more convenient
+    Class for transforming step pattern matrix to more convenient
     form of dictionary
     """
 
@@ -99,7 +99,7 @@ class DistanceReconstructor:
     def _calc_distance_for_given_pattern(self, x_index: int, y_index: int, pattern: tuple) -> float:
         pattern_segment = self.step_pattern_dictionary[pattern]
         pattern_distance = sum([
-            self._calc_single_distance(x_index,y_index,pattern_segment[key])
+            self._calc_single_distance(x_index, y_index, pattern_segment[key])
             for key in pattern_segment
         ])
         return pattern_distance
@@ -121,7 +121,7 @@ class DistanceReconstructor:
     def calc_raw_ts_distance(self):
         indices_pairs = self._get_indices_pairs()
         indices_patterns = self._get_indices_patterns()
-        raw_series_distance = self.distance_matrix[0,0]
+        raw_series_distance = self.distance_matrix[0, 0]
         distances_list = [
             self._calc_distance_for_given_pattern(x_ind, y_ind, indices_patterns[i])
             for (i, (x_ind, y_ind)) in enumerate(indices_pairs[1:])
@@ -139,6 +139,7 @@ class ShapeDTWResults:
     normalized_distance: float
     shape_distance: float
     shape_normalized_distance: float
+
 
 class ShapeDTW:
 
