@@ -383,7 +383,7 @@ def shape_dtw(x: ndarray, y: ndarray,
 
     Utils.verify_shape_compatibility(ts_x=x, ts_y=y)
 
-    ts_x_shape = x.shape
+    ts_x_shape = len(x.shape)
 
     if ts_x_shape == 1:
         shape_dtw_obj = UnivariateShapeDTW(
