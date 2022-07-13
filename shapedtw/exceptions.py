@@ -60,3 +60,33 @@ class ObjectOfWrongClass(Exception):
             expected_cls.__name__
         )
         super().__init__(error_msg)
+
+
+class DimensionError(Exception):
+    pass
+
+
+class IncompatibleDimensionality(DimensionError):
+    def __init__(self, ts_x_dim, ts_y_dim):
+        error_msg = "Incompatible dimensionality, series x dim = {0}d, series y dim = {1}d".format(
+            ts_x_dim, ts_y_dim
+        )
+
+        super().__init__(error_msg)
+
+
+class IncompatibleSeriesNumber(DimensionError):
+    def __init__(self, ts_x_series_num, ts_y_series_num):
+        error_msg = "Incompatible number of series, series x = {0}, series y = {1}".format(
+            ts_x_series_num, ts_y_series_num
+        )
+
+        super().__init__(error_msg)
+
+
+class ShapeDTWNotCalculatedYet(Exception):
+    pass
+
+
+class DistanceSettingNotPossible(Exception):
+    pass
