@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import matplotlib.pyplot as plt
 from dtw import *
 
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
 from .utils import Utils
 from dataclasses import dataclass
+from .dtwPlot import *
 
 
 class StepPatternMatrixTransformator:
@@ -232,6 +234,41 @@ class ShapeDTW:
     shape_distance = property(_get_shape_descriptor_distance, _set_distance)
     shape_normalized_distance = property(_get_shape_descriptor_normalized_distance, _set_distance)
 
+    def plot(self, plot_type, **kwargs):
+        if plot_type == "alignment":
+            return self._dtw_plot_alignment(**kwargs)
+        elif plot_type == "twoway":
+            return self._dtw_plot_twoway(**kwargs)
+        elif plot_type == "threeway":
+            return self._dtw_plot_threeway(**kwargs)
+        else:
+            return self._dtw_plot_density(**kwargs)
+
+    def _dtw_plot_alignment(self, **kwargs):
+        return dtwPlotAlignment(self._dtw_results, **kwargs)
+
+    def _dtw_plot_twoway(self, **kwargs):
+        return dtwPlotTwoWay(
+            self._dtw_results,
+            xts=self.ts_x,
+            yts=self.ts_y,
+            **kwargs
+        )
+
+    def _dtw_plot_threeway(self, **kwargs):
+        return dtwPlotThreeWay(
+            self._dtw_results,
+            xts=self.ts_x,
+            yts=self.ts_y,
+            **kwargs
+        )
+
+    def _dtw_plot_density(self, **kwargs):
+        return dtwPlotDensity(
+            self._dtw_results,
+            **kwargs
+        )
+
 
 class UnivariateShapeDTW(ShapeDTW):
 
@@ -305,6 +342,22 @@ class MultivariateShapeDTWDependent(ShapeDTW):
 
         return self
 
+    def _dtw_plot_twoway(self, fig_width=15, **kwargs):
+
+        dim_num = self.ts_x.shape[1]
+        fig, ax = plt.subplots(dim_num, 1, figsize=(fig_width, dim_num*5))
+
+        for i in range(dim_num):
+            dtwPlotTwoWay(
+                self._dtw_results,
+                xts=self.ts_x[:, i],
+                yts=self.ts_y[:, i],
+                axis=ax[i],
+                **kwargs
+            )
+
+        plt.show()
+
 
 class MultivariateShapeDTWIndependent(ShapeDTW):
 
@@ -371,6 +424,15 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         self._shape_dtw_results = self._calc_distances()
 
         return self
+
+    def _dtw_plot_alignment(self, **kwargs):
+
+        dtw_res_list_len = len(self._dtw_results)
+        fig, ax = plt.subplots(1, dtw_res_list_len)
+        for i in range(dtw_res_list_len):
+            dtwPlotAlignment(self._dtw_results[i], axis=ax[i], **kwargs)
+
+        plt.show()
 
 
 def shape_dtw(x: ndarray, y: ndarray,
