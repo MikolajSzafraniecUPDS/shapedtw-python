@@ -342,10 +342,10 @@ class MultivariateShapeDTWDependent(ShapeDTW):
 
         return self
 
-    def _dtw_plot_twoway(self, fig_width=15, **kwargs):
+    def _dtw_plot_twoway(self, fig_width=15, fig_height=5, **kwargs):
 
         dim_num = self.ts_x.shape[1]
-        fig, ax = plt.subplots(dim_num, 1, figsize=(fig_width, dim_num*5))
+        fig, ax = plt.subplots(dim_num, 1, figsize=(fig_width, dim_num*fig_height))
 
         for i in range(dim_num):
             dtwPlotTwoWay(
@@ -353,6 +353,24 @@ class MultivariateShapeDTWDependent(ShapeDTW):
                 xts=self.ts_x[:, i],
                 yts=self.ts_y[:, i],
                 axis=ax[i],
+                **kwargs
+            )
+
+        plt.show()
+
+    def _dtw_plot_threeway(self, fig_width=10, fig_height=10, **kwargs):
+        dim_num = self.ts_x.shape[1]
+        fig = plt.figure(figsize=(fig_width, dim_num*fig_height), constrained_layout=True)
+        outer_fig = fig.add_gridspec(nrows=dim_num, ncols=1, height_ratios=[1]*dim_num, hspace=2)
+        for i in range(dim_num):
+            inner = outer_fig[i].subgridspec(2, 2,
+                               width_ratios=[1, 3],
+                               height_ratios=[3, 1])
+            dtwPlotThreeWay(
+                self._dtw_results,
+                xts=self.ts_x[:, i],
+                yts=self.ts_y[:, i],
+                inner_figure=inner,
                 **kwargs
             )
 

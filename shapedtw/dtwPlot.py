@@ -212,7 +212,7 @@ When ``offset`` is set values on the left axis only apply to the query.
     # plt.show()
     # return ax
 
-def dtwPlotThreeWay(d, axis = None,
+def dtwPlotThreeWay(d, inner_figure = None,
                     xts=None, yts=None,
                     match_indices=None,
                     match_col="gray",
@@ -283,13 +283,23 @@ title_margin :
     nn1 = numpy.arange(nn)
     mm1 = numpy.arange(mm)
 
-    fig = plt.figure()
-    gs = gridspec.GridSpec(2, 2,
-                           width_ratios=[1, 3],
-                           height_ratios=[3, 1])
-    axr = plt.subplot(gs[0])
-    ax = plt.subplot(gs[1])
-    axq = plt.subplot(gs[3])
+    if inner_figure is None:
+        fig = plt.figure()
+        gs = gridspec.GridSpec(2, 2,
+                               width_ratios=[1, 3],
+                               height_ratios=[3, 1])
+
+        axr = plt.subplot(gs[0])
+        ax = plt.subplot(gs[1])
+        axq = plt.subplot(gs[3])
+    else:
+        axr = plt.subplot(inner_figure[0])
+        ax = plt.subplot(inner_figure[1])
+        axq = plt.subplot(inner_figure[3])
+
+    # axr = plt.subplot(gs[0])
+    # ax = plt.subplot(gs[1])
+    # axq = plt.subplot(gs[3])
 
     axq.plot(nn1, xts)  # query, horizontal, bottom
     axq.set_xlabel(xlab)
@@ -318,9 +328,8 @@ title_margin :
     lc = mc.LineCollection(col, linewidths=1, linestyles=":", colors=match_col)
     ax.add_collection(lc)
 
-    plt.show()
-    return ax
-
+    # plt.show()
+    # return ax
 
 def dtwPlotDensity(d, axis = None,
                    normalize=False,
