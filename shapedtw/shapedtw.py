@@ -443,12 +443,60 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
         return self
 
-    def _dtw_plot_alignment(self, **kwargs):
+    def _dtw_plot_alignment(self, fig_width=6, fig_height=5, **kwargs):
 
-        dtw_res_list_len = len(self._dtw_results)
-        fig, ax = plt.subplots(1, dtw_res_list_len)
-        for i in range(dtw_res_list_len):
+        dim_num = self.ts_x.shape[1]
+        fig, ax = plt.subplots(dim_num, 1, figsize=(fig_width, dim_num*fig_height))
+        for i in range(dim_num):
             dtwPlotAlignment(self._dtw_results[i], axis=ax[i], **kwargs)
+
+        plt.show()
+
+    def _dtw_plot_twoway(self, fig_width=15, fig_height=5, **kwargs):
+
+        dim_num = self.ts_x.shape[1]
+        fig, ax = plt.subplots(dim_num, 1, figsize=(fig_width, dim_num*fig_height))
+
+        for i in range(dim_num):
+            dtwPlotTwoWay(
+                self._dtw_results[i],
+                xts=self.ts_x[:, i],
+                yts=self.ts_y[:, i],
+                axis=ax[i],
+                **kwargs
+            )
+
+        plt.show()
+
+    def _dtw_plot_threeway(self, fig_width=10, fig_height=10, **kwargs):
+        dim_num = self.ts_x.shape[1]
+        fig = plt.figure(figsize=(fig_width, dim_num*fig_height), constrained_layout=True)
+        outer_fig = fig.add_gridspec(nrows=dim_num, ncols=1, height_ratios=[1]*dim_num, hspace=2)
+        for i in range(dim_num):
+            inner = outer_fig[i].subgridspec(2, 2,
+                               width_ratios=[1, 3],
+                               height_ratios=[3, 1])
+            dtwPlotThreeWay(
+                self._dtw_results[i],
+                xts=self.ts_x[:, i],
+                yts=self.ts_y[:, i],
+                inner_figure=inner,
+                **kwargs
+            )
+
+        plt.show()
+
+    def _dtw_plot_density(self, fig_width=10, fig_height=10, **kwargs):
+
+        dim_num = self.ts_x.shape[1]
+        fig, ax = plt.subplots(dim_num, 1, figsize=(fig_width, dim_num * fig_height))
+
+        for i in range(dim_num):
+            dtwPlotDensity(
+                self._dtw_results[i],
+                axis=ax[i],
+                **kwargs
+            )
 
         plt.show()
 
