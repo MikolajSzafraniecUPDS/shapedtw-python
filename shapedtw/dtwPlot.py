@@ -209,7 +209,8 @@ When ``offset`` is set values on the left axis only apply to the query.
     lc = mc.LineCollection(col, linewidths=1, linestyles=":", colors=match_col)
     ax.add_collection(lc)
 
-    # plt.show()
+    if axis is None:
+        plt.show()
     # return ax
 
 def dtwPlotThreeWay(d, inner_figure = None,
@@ -328,7 +329,8 @@ title_margin :
     lc = mc.LineCollection(col, linewidths=1, linestyles=":", colors=match_col)
     ax.add_collection(lc)
 
-    # plt.show()
+    if inner_figure is None:
+        plt.show()
     # return ax
 
 def dtwPlotDensity(d, axis = None,
@@ -375,7 +377,6 @@ long (>2 steps) horizontal stretches are allowed within the window.
 >>> dtwPlotDensity(ita)				     # doctest: +SKIP
 """
     # ENDIMPORT
-    import matplotlib.pyplot as plt
 
     try:
         cm = d.costMatrix
@@ -394,7 +395,10 @@ long (>2 steps) horizontal stretches are allowed within the window.
         elif norm == "M":
             cm = cm / (col + 1)
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    if axis is None:
+        fig, ax = plt.subplots(figsize=(6, 6))
+    else:
+        ax = axis
 
     ax.imshow(cm.T, origin="lower", cmap=plt.get_cmap("terrain"))
     co = ax.contour(cm.T, colors="black", linewidths=1)
@@ -405,5 +409,5 @@ long (>2 steps) horizontal stretches are allowed within the window.
     ax.set_xlabel(xlab)
     ax.set_ylabel(ylab)
 
-    plt.show()
-    return ax
+    if axis is None:
+        plt.show()
