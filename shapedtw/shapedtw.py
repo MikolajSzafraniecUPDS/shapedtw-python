@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import matplotlib.pyplot as plt
 from dtw import *
 
 from shapedtw.preprocessing import *
@@ -355,22 +354,27 @@ class MultivariateShapeDTWDependent(ShapeDTW):
                 axis=ax[i],
                 **kwargs
             )
+            ax[i].set_title("Dimension " + str(i+1), fontsize=15)
 
+        plt.subplots_adjust(hspace=0.4)
         plt.show()
 
     def _dtw_plot_threeway(self, fig_width=10, fig_height=10, **kwargs):
         dim_num = self.ts_x.shape[1]
         fig = plt.figure(figsize=(fig_width, dim_num*fig_height), constrained_layout=True)
         outer_fig = fig.add_gridspec(nrows=dim_num, ncols=1, height_ratios=[1]*dim_num, hspace=2)
+        ax = []
         for i in range(dim_num):
             inner = outer_fig[i].subgridspec(2, 2,
                                width_ratios=[1, 3],
                                height_ratios=[3, 1])
+
             dtwPlotThreeWay(
                 self._dtw_results,
                 xts=self.ts_x[:, i],
                 yts=self.ts_y[:, i],
                 inner_figure=inner,
+                dim_num=i+1,
                 **kwargs
             )
 
@@ -449,7 +453,9 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         fig, ax = plt.subplots(dim_num, 1, figsize=(fig_width, dim_num*fig_height))
         for i in range(dim_num):
             dtwPlotAlignment(self._dtw_results[i], axis=ax[i], **kwargs)
+            ax[i].set_title("Dimension " + str(i + 1), fontsize=15)
 
+        plt.subplots_adjust(hspace=0.4)
         plt.show()
 
     def _dtw_plot_twoway(self, fig_width=15, fig_height=5, **kwargs):
@@ -465,7 +471,9 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                 axis=ax[i],
                 **kwargs
             )
+            ax[i].set_title("Dimension " + str(i + 1), fontsize=15)
 
+        plt.subplots_adjust(hspace=0.4)
         plt.show()
 
     def _dtw_plot_threeway(self, fig_width=10, fig_height=10, **kwargs):
@@ -481,6 +489,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                 xts=self.ts_x[:, i],
                 yts=self.ts_y[:, i],
                 inner_figure=inner,
+                dim_num=i + 1,
                 **kwargs
             )
 
@@ -497,7 +506,9 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                 axis=ax[i],
                 **kwargs
             )
+            ax[i].set_title("Dimension " + str(i + 1), fontsize=15)
 
+        plt.subplots_adjust(hspace=0.1)
         plt.show()
 
 

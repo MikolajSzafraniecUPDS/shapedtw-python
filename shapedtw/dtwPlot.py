@@ -214,6 +214,7 @@ When ``offset`` is set values on the left axis only apply to the query.
     # return ax
 
 def dtwPlotThreeWay(d, inner_figure = None,
+                    dim_num=None,
                     xts=None, yts=None,
                     match_indices=None,
                     match_col="gray",
@@ -296,6 +297,7 @@ title_margin :
     else:
         axr = plt.subplot(inner_figure[0])
         ax = plt.subplot(inner_figure[1])
+        ax.set_title("Dimension " + str(dim_num), fontsize=15)
         axq = plt.subplot(inner_figure[3])
 
     # axr = plt.subplot(gs[0])
