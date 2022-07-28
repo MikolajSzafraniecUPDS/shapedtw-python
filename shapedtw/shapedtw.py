@@ -262,6 +262,11 @@ class ShapeDTW:
         res = row_ind + col_ind
         return res
 
+    @staticmethod
+    def _clean_unnecessary_ax(axis_to_clean, total_dim_num: int):
+        ax_ind = ShapeDTW._get_ax_indices(total_dim_num, total_dim_num)
+        axis_to_clean[ax_ind].remove()
+
     def _get_dtw_res_list(self):
         res = self._dtw_results[0] if isinstance(self._dtw_results, list) else self._dtw_results
         return res
@@ -392,6 +397,9 @@ class MultivariateShapeDTWDependent(ShapeDTW):
             )
             ax[ax_ind].set_title("Dimension " + str(dim_number+1), fontsize=15)
 
+        if Utils.is_odd(total_dim_num):
+            self._clean_unnecessary_ax(ax, total_dim_num)
+
         plt.subplots_adjust(hspace=0.4)
         plt.show()
 
@@ -429,6 +437,9 @@ class MultivariateShapeDTWDependent(ShapeDTW):
                 dim_num=dim_number+1,
                 **kwargs
             )
+
+        # if Utils.is_odd(total_dim_num):
+        #     self._clean_unnecessary_ax(outer_fig, total_dim_num)
 
         plt.show()
 
@@ -516,6 +527,9 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
             dtwPlotAlignment(self._dtw_results[dim_number], axis=ax[ax_ind], **kwargs)
             ax[ax_ind].set_title("Dimension " + str(dim_number + 1), fontsize=15)
 
+        if Utils.is_odd(total_dim_num):
+            self._clean_unnecessary_ax(ax, total_dim_num)
+
         plt.subplots_adjust(hspace=0.4)
         plt.show()
 
@@ -543,6 +557,9 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                 **kwargs
             )
             ax[ax_ind].set_title("Dimension " + str(dim_number + 1), fontsize=15)
+
+        if Utils.is_odd(total_dim_num):
+            self._clean_unnecessary_ax(ax, total_dim_num)
 
         plt.subplots_adjust(hspace=0.4)
         plt.show()
@@ -584,9 +601,12 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                 **kwargs
             )
 
+        # if Utils.is_odd(total_dim_num):
+        #     self._clean_unnecessary_ax(outer_fig, total_dim_num)
+
         plt.show()
 
-    def _dtw_plot_density(self, fig_width=5, fig_height=10, **kwargs):
+    def _dtw_plot_density(self, fig_width=5, fig_height=6, **kwargs):
 
         total_dim_num = self.ts_x.shape[1]
 
@@ -606,6 +626,9 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                 **kwargs
             )
             ax[ax_ind].set_title("Dimension " + str(dim_number + 1), fontsize=15)
+
+        if Utils.is_odd(total_dim_num):
+            self._clean_unnecessary_ax(ax, total_dim_num)
 
         plt.subplots_adjust(hspace=0.1)
         plt.show()
