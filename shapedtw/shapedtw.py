@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 from dtw import *
-import math
 
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
 from .utils import Utils
 from dataclasses import dataclass
-from .dtwPlot import *
 
 
 class StepPatternMatrixTransformator:
@@ -234,72 +232,6 @@ class ShapeDTW:
     shape_distance = property(_get_shape_descriptor_distance, _set_distance)
     shape_normalized_distance = property(_get_shape_descriptor_normalized_distance, _set_distance)
 
-    def plot(self, plot_type, **kwargs):
-        if plot_type == "alignment":
-            return self._dtw_plot_alignment(**kwargs)
-        elif plot_type == "twoway":
-            return self._dtw_plot_twoway(**kwargs)
-        elif plot_type == "threeway":
-            return self._dtw_plot_threeway(**kwargs)
-        else:
-            return self._dtw_plot_density(**kwargs)
-
-    def _get_figure_nrow(self):
-        dim_num = self.ts_x.shape[1]
-        res = 1 if dim_num < 2 else math.ceil(dim_num/2)
-        return res
-
-    def _get_figure_ncol(self):
-        dim_num = self.ts_x.shape[1]
-        res = 1 if dim_num < 2 else 2
-        return res
-
-    @staticmethod
-    def _get_ax_indices(dim_num: int, total_dim_num: int):
-        row_ind = () if total_dim_num < 3 else (dim_num // 2, )
-        col_ind = (dim_num % 2, )
-
-        res = row_ind + col_ind
-        return res
-
-    @staticmethod
-    def _clean_unnecessary_ax(axis_to_clean, total_dim_num: int):
-        ax_ind = ShapeDTW._get_ax_indices(total_dim_num, total_dim_num)
-        axis_to_clean[ax_ind].remove()
-
-    def _get_dtw_res_list(self):
-        res = self._dtw_results[0] if isinstance(self._dtw_results, list) else self._dtw_results
-        return res
-
-    def _dtw_plot_alignment(self, **kwargs):
-        dtw_res = self._get_dtw_res_list()
-        return dtwPlotAlignment(dtw_res, **kwargs)
-
-    def _dtw_plot_twoway(self, **kwargs):
-        dtw_res = self._get_dtw_res_list()
-        return dtwPlotTwoWay(
-            dtw_res,
-            xts=self.ts_x,
-            yts=self.ts_y,
-            **kwargs
-        )
-
-    def _dtw_plot_threeway(self, **kwargs):
-        dtw_res = self._get_dtw_res_list()
-        return dtwPlotThreeWay(
-            dtw_res,
-            xts=self.ts_x,
-            yts=self.ts_y,
-            **kwargs
-        )
-
-    def _dtw_plot_density(self, **kwargs):
-        dtw_res = self._get_dtw_res_list()
-        return dtwPlotDensity(
-            dtw_res,
-            **kwargs
-        )
-
 
 class UnivariateShapeDTW(ShapeDTW):
 
@@ -373,76 +305,6 @@ class MultivariateShapeDTWDependent(ShapeDTW):
 
         return self
 
-    def _dtw_plot_twoway(self, fig_width=8, fig_height=5, **kwargs):
-
-        total_dim_num = self.ts_x.shape[1]
-
-        if total_dim_num == 1:
-            return super()._dtw_plot_twoway(**kwargs)
-
-        fig_nrow = self._get_figure_nrow()
-        fig_ncol = self._get_figure_ncol()
-
-        fig, ax = plt.subplots(ncols=fig_ncol, nrows=fig_nrow, figsize=(fig_width*fig_ncol, fig_nrow*fig_height))
-
-        for dim_number in range(total_dim_num):
-            ax_ind = self._get_ax_indices(dim_number, total_dim_num)
-
-            dtwPlotTwoWay(
-                self._dtw_results,
-                xts=self.ts_x[:, dim_number],
-                yts=self.ts_y[:, dim_number],
-                axis=ax[ax_ind],
-                **kwargs
-            )
-            ax[ax_ind].set_title("Dimension " + str(dim_number+1), fontsize=15)
-
-        if Utils.is_odd(total_dim_num):
-            self._clean_unnecessary_ax(ax, total_dim_num)
-
-        plt.subplots_adjust(hspace=0.4)
-        plt.show()
-
-    def _dtw_plot_threeway(self, fig_width=7, fig_height=7, **kwargs):
-        total_dim_num = self.ts_x.shape[1]
-
-        if total_dim_num == 1:
-            return super()._dtw_plot_threeway(**kwargs)
-
-        fig_nrow = self._get_figure_nrow()
-        fig_ncol = self._get_figure_ncol()
-
-        fig = plt.figure(figsize=(fig_width*fig_ncol, fig_nrow*fig_height), constrained_layout=True)
-        outer_fig = fig.add_gridspec(nrows=fig_nrow, ncols=fig_ncol, height_ratios=[1]*fig_nrow, hspace=2)
-
-        for dim_number in range(total_dim_num):
-
-            ax_ind = self._get_ax_indices(dim_number, total_dim_num)
-            # Operation necessary due to the 'Unrecognized subplot spec' error
-            # for 2-dimensional time series
-            if len(ax_ind) == 1:
-                ax_ind = ax_ind[0]
-
-            inner = outer_fig[ax_ind].subgridspec(
-                2, 2,
-                width_ratios=[1, 3],
-                height_ratios=[3, 1]
-            )
-
-            dtwPlotThreeWay(
-                self._dtw_results,
-                xts=self.ts_x[:, dim_number],
-                yts=self.ts_y[:, dim_number],
-                inner_figure=inner,
-                dim_num=dim_number+1,
-                **kwargs
-            )
-
-        # if Utils.is_odd(total_dim_num):
-        #     self._clean_unnecessary_ax(outer_fig, total_dim_num)
-
-        plt.show()
-
 
 class MultivariateShapeDTWIndependent(ShapeDTW):
 
@@ -509,129 +371,6 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         self._shape_dtw_results = self._calc_distances()
 
         return self
-
-    def _dtw_plot_alignment(self, fig_width=6, fig_height=5, **kwargs):
-
-        total_dim_num = self.ts_x.shape[1]
-
-        if total_dim_num == 1:
-            return super()._dtw_plot_alignment(**kwargs)
-
-        fig_nrow = self._get_figure_nrow()
-        fig_ncol = self._get_figure_ncol()
-
-        fig, ax = plt.subplots(nrows=fig_nrow, ncols=fig_ncol, figsize=(fig_width*fig_ncol, fig_nrow*fig_height))
-
-        for dim_number in range(total_dim_num):
-            ax_ind = self._get_ax_indices(dim_number, total_dim_num)
-            dtwPlotAlignment(self._dtw_results[dim_number], axis=ax[ax_ind], **kwargs)
-            ax[ax_ind].set_title("Dimension " + str(dim_number + 1), fontsize=15)
-
-        if Utils.is_odd(total_dim_num):
-            self._clean_unnecessary_ax(ax, total_dim_num)
-
-        plt.subplots_adjust(hspace=0.4)
-        plt.show()
-
-    def _dtw_plot_twoway(self, fig_width=8, fig_height=5, **kwargs):
-
-        total_dim_num = self.ts_x.shape[1]
-
-        if total_dim_num == 1:
-            return super()._dtw_plot_twoway(**kwargs)
-
-        fig_nrow = self._get_figure_nrow()
-        fig_ncol = self._get_figure_ncol()
-
-        fig, ax = plt.subplots(nrows=fig_nrow, ncols=fig_ncol, figsize=(fig_width*fig_ncol, fig_nrow*fig_height))
-
-        for dim_number in range(total_dim_num):
-
-            ax_ind = self._get_ax_indices(dim_number, total_dim_num)
-
-            dtwPlotTwoWay(
-                self._dtw_results[dim_number],
-                xts=self.ts_x[:, dim_number],
-                yts=self.ts_y[:, dim_number],
-                axis=ax[ax_ind],
-                **kwargs
-            )
-            ax[ax_ind].set_title("Dimension " + str(dim_number + 1), fontsize=15)
-
-        if Utils.is_odd(total_dim_num):
-            self._clean_unnecessary_ax(ax, total_dim_num)
-
-        plt.subplots_adjust(hspace=0.4)
-        plt.show()
-
-
-    def _dtw_plot_threeway(self, fig_width=7, fig_height=7, **kwargs):
-
-        total_dim_num = self.ts_x.shape[1]
-
-        if total_dim_num == 1:
-            return super()._dtw_plot_threeway(**kwargs)
-
-        fig_nrow = self._get_figure_nrow()
-        fig_ncol = self._get_figure_ncol()
-
-        fig = plt.figure(figsize=(fig_width*fig_ncol, fig_nrow*fig_height), constrained_layout=True)
-        outer_fig = fig.add_gridspec(nrows=fig_nrow, ncols=fig_ncol, height_ratios=[1]*fig_nrow, hspace=2)
-
-        for dim_number in range(total_dim_num):
-
-            ax_ind = self._get_ax_indices(dim_number, total_dim_num)
-            # Operation necessary due to the 'Unrecognized subplot spec' error
-            # for 2-dimensional time series
-            if len(ax_ind) == 1:
-                ax_ind = ax_ind[0]
-
-            inner = outer_fig[ax_ind].subgridspec(
-                2, 2,
-                width_ratios=[1, 3],
-                height_ratios=[3, 1]
-            )
-
-            dtwPlotThreeWay(
-                self._dtw_results[dim_number],
-                xts=self.ts_x[:, dim_number],
-                yts=self.ts_y[:, dim_number],
-                inner_figure=inner,
-                dim_num=dim_number + 1,
-                **kwargs
-            )
-
-        # if Utils.is_odd(total_dim_num):
-        #     self._clean_unnecessary_ax(outer_fig, total_dim_num)
-
-        plt.show()
-
-    def _dtw_plot_density(self, fig_width=5, fig_height=6, **kwargs):
-
-        total_dim_num = self.ts_x.shape[1]
-
-        if total_dim_num == 1:
-            return super()._dtw_plot_density(**kwargs)
-
-        fig_nrow = self._get_figure_nrow()
-        fig_ncol = self._get_figure_ncol()
-
-        fig, ax = plt.subplots(nrows=fig_nrow, ncols=fig_ncol, figsize=(fig_width*fig_ncol, fig_nrow*fig_height))
-
-        for dim_number in range(total_dim_num):
-            ax_ind = self._get_ax_indices(dim_number, total_dim_num)
-            dtwPlotDensity(
-                self._dtw_results[dim_number],
-                axis=ax[ax_ind],
-                **kwargs
-            )
-            ax[ax_ind].set_title("Dimension " + str(dim_number + 1), fontsize=15)
-
-        if Utils.is_odd(total_dim_num):
-            self._clean_unnecessary_ax(ax, total_dim_num)
-
-        plt.subplots_adjust(hspace=0.1)
-        plt.show()
 
 
 def shape_dtw(x: ndarray, y: ndarray,
