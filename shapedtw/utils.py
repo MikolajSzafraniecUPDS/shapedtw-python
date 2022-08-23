@@ -45,3 +45,7 @@ class Utils:
             ts_y_n_series = ts_y_shape[1]
             if ts_x_n_series != ts_y_n_series:
                 raise IncompatibleSeriesNumber(ts_x_n_series, ts_y_n_series)
+
+    @staticmethod
+    def is_odd(num):
+        return num & 0x1
