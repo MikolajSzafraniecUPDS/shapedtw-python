@@ -217,7 +217,11 @@ class UnivariateSeriesShapeDescriptors:
     def calc_distance_matrix(self, series_y_descriptor: UnivariateSeriesShapeDescriptors,
                              dist_method: str = "euclidean") -> UnivariateSeriesDistanceMatrix:
 
-        Utils.verify_classes_compatibility(self, series_y_descriptor)
+        if not Utils.are_objects_of_same_classes(self, series_y_descriptor):
+            raise ObjectOfWrongClass(
+                actual_cls=series_y_descriptor.__class__,
+                expected_cls=self.__class__
+            )
 
         distance_matrix = DistanceMatrixCalculator(
             self.shape_descriptors_array,
@@ -246,7 +250,12 @@ class MultivariateSeriesShapeDescriptors:
     def calc_distance_matrices(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                dist_method: str = "euclidean") -> MultivariateDistanceMatrixIndependent:
 
-        Utils.verify_classes_compatibility(self, series_y_descriptor)
+        if not Utils.are_objects_of_same_classes(self, series_y_descriptor):
+            raise ObjectOfWrongClass(
+                actual_cls=series_y_descriptor.__class__,
+                expected_cls=self.__class__
+            )
+
         self._verify_dimension_compatibility(series_y_descriptor)
 
         distance_matrices_list = [ts_x_descriptor.calc_distance_matrix(ts_y_descriptor, dist_method)
