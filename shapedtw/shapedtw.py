@@ -381,7 +381,11 @@ def shape_dtw(x: ndarray, y: ndarray,
               multivariate_version: str = "dependent",
               **kwargs):
 
-    Utils.verify_shape_compatibility(ts_x=x, ts_y=y)
+    if not Utils.number_of_dimensions_equal(x, y):
+        raise IncompatibleDimensionality(x, y)
+
+    if not Utils.number_of_series_equal(x, y):
+        raise IncompatibleSeriesNumber(x, y)
 
     ts_x_shape = len(x.shape)
 
