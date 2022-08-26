@@ -124,6 +124,6 @@ class TestOddChecker(unittest.TestCase):
         test_2 = Utils.is_odd(2)
         test_4 = Utils.is_odd(4)
         test_56 = Utils.is_odd(56)
-        self.assertTrue(all(
+        self.assertFalse(any(
             [test_2, test_4, test_56]
         ))
