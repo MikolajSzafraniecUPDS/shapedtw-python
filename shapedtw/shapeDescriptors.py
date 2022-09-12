@@ -5,7 +5,7 @@ from abc import abstractmethod, ABC
 from numpy import ndarray
 from typing import List
 from scipy.stats import linregress
-from .exceptions import *
+from shapedtw.exceptions import *
 from itertools import repeat
 
 

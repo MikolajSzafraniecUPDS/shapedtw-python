@@ -5,13 +5,13 @@ import operator
 import numpy as np
 
 from numpy import ndarray
-from .exceptions import *
+from shapedtw.exceptions import *
 from scipy.spatial.distance import cdist
 from typing import List
 from abc import ABC, abstractmethod
-from .shapeDescriptors import ShapeDescriptor
+from shapedtw.shapeDescriptors import ShapeDescriptor
 from functools import reduce
-from .utils import Utils
+from shapedtw.utils import Utils
 
 
 class Padder:

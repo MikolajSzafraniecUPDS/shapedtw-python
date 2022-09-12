@@ -4,7 +4,7 @@ from dtw import *
 
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
-from .utils import Utils
+from shapedtw.utils import Utils
 from dataclasses import dataclass
 
 

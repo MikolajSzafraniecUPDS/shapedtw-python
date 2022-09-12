@@ -2,9 +2,9 @@ import unittest
 
 import numpy as np
 
-from shapedtw.utils import Utils
+from shapedtw.utils import *
 from dtw import stepPattern
-from shapedtw.exceptions import TooManyDimensions, IncompatibleDimensionality
+#from shapedtw.exceptions import TooManyDimensions, IncompatibleDimensionality
 
 
 class TestStepPatternCanonicalization(unittest.TestCase):
@@ -127,3 +127,6 @@ class TestOddChecker(unittest.TestCase):
         self.assertFalse(any(
             [test_2, test_4, test_56]
         ))
+
+if __name__ == '__main__':
+    unittest.main()

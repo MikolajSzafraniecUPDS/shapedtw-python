@@ -2,7 +2,7 @@ import sys
 
 import numpy as np
 
-from .exceptions import IncompatibleDimensionality, TooManyDimensions
+from exceptions import IncompatibleDimensionality, TooManyDimensions
 
 
 class Utils:

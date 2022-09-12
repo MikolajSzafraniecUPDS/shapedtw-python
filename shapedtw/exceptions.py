@@ -1,5 +1,7 @@
 import numpy as np
-from utils import Utils
+
+def get_number_of_dimensions(x: np.ndarray) -> int:
+    return len(x.shape)
 
 class SubsequenceShorterThanWindow(Exception):
     def __init__(self, subsequence_size: int, window_size: int):
@@ -72,8 +74,8 @@ class DimensionError(Exception):
 class TooManyDimensions(DimensionError):
 
     def __init__(self, ts_x, ts_y):
-        ts_x_dim_number = Utils.get_number_of_dimensions(ts_x)
-        ts_y_dim_number = Utils.get_number_of_dimensions(ts_y)
+        ts_x_dim_number = get_number_of_dimensions(ts_x)
+        ts_y_dim_number = get_number_of_dimensions(ts_y)
 
         error_msg = """Only arrays which have 1 or 2 dimensions are supported.
                     "Number of x dims = {0}, number of y dims = {1}""".format(ts_x_dim_number, ts_y_dim_number)
@@ -83,8 +85,8 @@ class TooManyDimensions(DimensionError):
 
 class IncompatibleDimensionality(DimensionError):
     def __init__(self, ts_x, ts_y):
-        ts_x_dim_number = Utils.get_number_of_dimensions(ts_x)
-        ts_y_dim_number = Utils.get_number_of_dimensions(ts_y)
+        ts_x_dim_number = get_number_of_dimensions(ts_x)
+        ts_y_dim_number = get_number_of_dimensions(ts_y)
 
         error_msg = "Incompatible dimensionality, series x dim = {0}d, series y dim = {1}d".format(
             ts_x_dim_number, ts_y_dim_number
