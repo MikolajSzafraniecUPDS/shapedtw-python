@@ -1,7 +1,5 @@
 import unittest
 
-import numpy as np
-
 from shapedtw.utils import *
 from dtw import stepPattern
 #from shapedtw.exceptions import TooManyDimensions, IncompatibleDimensionality
