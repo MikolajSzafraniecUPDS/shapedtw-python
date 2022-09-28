@@ -2,7 +2,6 @@ import unittest
 
 from shapedtw.utils import *
 from dtw import stepPattern
-#from shapedtw.exceptions import TooManyDimensions, IncompatibleDimensionality
 
 
 class TestStepPatternCanonicalization(unittest.TestCase):
