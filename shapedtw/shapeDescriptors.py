@@ -95,7 +95,7 @@ class DWTDescriptor(ShapeDescriptor):
     F(·) = DWT, di = DWT (si).'
     """
 
-    def __init__(self, wave_type: str = "haar", mode: str = "sym", level: int = 3):
+    def __init__(self, wave_type: str = "haar", mode: str = "symmetric", level: int = 3):
         self.wave_type = wave_type
         self.mode = mode
         self.level = level

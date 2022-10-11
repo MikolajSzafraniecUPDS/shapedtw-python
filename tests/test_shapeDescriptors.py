@@ -73,5 +73,79 @@ class TestShapeDescriptorAbstract(unittest.TestCase):
             self._compare_lists_of_arryas(test_res, expected_res)
         )
 
+class TestRawSubsequenceDescriptor(unittest.TestCase):
+
+    def test_one_unit_subsequence(self):
+        input_subsequence = np.array([1])
+        expected_subsequence = np.copy(input_subsequence)
+        raw_descriptor = RawSubsequenceDescriptor()
+        self.assertTrue(
+            all(
+                raw_descriptor.get_shape_descriptor(input_subsequence) ==
+                expected_subsequence
+            )
+        )
+
+    def test_multiple_units_subsequence(self):
+        input_subsequence = np.array([1, 2, 3, 0.9])
+        expected_subsequence = np.copy(input_subsequence)
+        raw_descriptor = RawSubsequenceDescriptor()
+        self.assertTrue(
+            all(
+                raw_descriptor.get_shape_descriptor(input_subsequence) ==
+                expected_subsequence
+            )
+        )
+
+class TestPAADescriptor(unittest.TestCase):
+
+    def test_subsequence_even_length(self):
+        input_subsequence = np.array([1, 2, 3, 4, 5, 6])
+        expected_output = np.array([1.5, 3.5, 5.5])
+        paa_descriptor = PAADescriptor(piecewise_aggregation_window=2)
+        self.assertTrue(
+            all(
+                paa_descriptor.get_shape_descriptor(input_subsequence) ==
+                expected_output
+            )
+        )
+
+    def test_subsequence_odd_length(self):
+        input_subsequence = np.array([1, 2, 3, 4, 5])
+        expected_output = np.array([1.5, 3.5, 5])
+        paa_descriptor = PAADescriptor(piecewise_aggregation_window=2)
+        self.assertTrue(
+            all(
+                paa_descriptor.get_shape_descriptor(input_subsequence) ==
+                expected_output
+            )
+        )
+
+class TestDWTDescriptor(unittest.TestCase):
+
+    def test_subsequence_even_length(self):
+        input_subsequence = np.array([1, 2, 3, 4])
+        expected_output = np.array([7.07106781,  0.0, -2.0, -0.70710678, -0.70710678])
+        dwt_desc = DWTDescriptor()
+        self.assertTrue(
+            np.allclose(
+                dwt_desc.get_shape_descriptor(input_subsequence),
+                expected_output
+            )
+        )
+
+    def test_subsequence_odd_length(self):
+        input_subsequence = np.array([1, 2, 3, 4, 5])
+        expected_output = np.array(
+            [10.60660172, -3.53553391, -2.0,  0.0, -0.70710678, -0.70710678,  0.0]
+        )
+        dwt_desc = DWTDescriptor()
+        self.assertTrue(
+            np.allclose(
+                dwt_desc.get_shape_descriptor(input_subsequence),
+                expected_output
+            )
+        )
+
 if __name__ == '__main__':
     unittest.main()
