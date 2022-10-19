@@ -180,14 +180,58 @@ class TestSlopeDescriptor(unittest.TestCase):
         )
 
     def test_slope_window_smaller_than_2_error(self):
-
         with self.assertRaises(WrongSlopeWindow):
             slope_desc = SlopeDescriptor(slope_window=1)
 
     def test_slope_window_not_int_error(self):
-
         with self.assertRaises(WrongSlopeWindow):
             slope_desc = SlopeDescriptor(slope_window=2.5)
+
+
+class TestDerivativeDescriptor(unittest.TestCase):
+
+    deriv_desc = DerivativeShapeDescriptor()
+
+    def test_subsequence_too_short(self):
+        with self.assertRaises(SubsequenceTooShort):
+            input_subsequence = np.array([1., 3.5])
+            self.deriv_desc.get_shape_descriptor(input_subsequence)
+
+    def test_subsequence_minimum_length(self):
+        input_subsequence = np.array([1,2,3])
+        expected_output = np.array([1.])
+        self.assertTrue(
+            np.allclose(
+                self.deriv_desc.get_shape_descriptor(
+                    input_subsequence
+                ),
+                expected_output
+            )
+        )
+
+    def test_subsequence_even_length(self):
+        input_subsequence = np.array([1, 0, 5, 3, 6, 2])
+        expected_output = np.array([0.5,  3.25, -0.75,  1.25])
+        self.assertTrue(
+            np.allclose(
+                self.deriv_desc.get_shape_descriptor(
+                    input_subsequence
+                ),
+                expected_output
+            )
+        )
+
+    def test_subsequence_odd_length(self):
+        input_subsequence = np.array([1, 0, 5, 3, 6])
+        expected_output = np.array([0.5, 3.25, -0.75])
+        self.assertTrue(
+            np.allclose(
+                self.deriv_desc.get_shape_descriptor(
+                    input_subsequence
+                ),
+                expected_output
+            )
+        )
 
 if __name__ == '__main__':
     unittest.main()
