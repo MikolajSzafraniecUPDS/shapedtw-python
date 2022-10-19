@@ -1,5 +1,7 @@
 import unittest
 
+import numpy as np
+
 from shapedtw.shapeDescriptors import *
 
 
@@ -146,6 +148,46 @@ class TestDWTDescriptor(unittest.TestCase):
                 expected_output
             )
         )
+
+class TestSlopeDescriptor(unittest.TestCase):
+
+    def test_subsequence_even_length(self):
+        input_subsequence = np.array([1, 1, 1, 2, 1, 0, 0, 10])
+        expected_output = np.array(
+            [0., 1., -1., 10.]
+        )
+
+        slope_desc = SlopeDescriptor(slope_window=2)
+        self.assertTrue(
+            np.allclose(
+                slope_desc.get_shape_descriptor(input_subsequence),
+                expected_output
+            )
+        )
+
+    def test_subsequence_odd_length(self):
+        input_subsequence = np.array([1, 1, 1, 2, 1, 0, 5.])
+        expected_output = np.array(
+            [0., 1., -1., 0.]
+        )
+
+        slope_desc = SlopeDescriptor(slope_window=2)
+        self.assertTrue(
+            np.allclose(
+                slope_desc.get_shape_descriptor(input_subsequence),
+                expected_output
+            )
+        )
+
+    def test_slope_window_smaller_than_2_error(self):
+
+        with self.assertRaises(WrongSlopeWindow):
+            slope_desc = SlopeDescriptor(slope_window=1)
+
+    def test_slope_window_not_int_error(self):
+
+        with self.assertRaises(WrongSlopeWindow):
+            slope_desc = SlopeDescriptor(slope_window=2.5)
 
 if __name__ == '__main__':
     unittest.main()

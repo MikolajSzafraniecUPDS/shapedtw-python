@@ -114,3 +114,17 @@ class ShapeDTWNotCalculatedYet(Exception):
 
 class DistanceSettingNotPossible(Exception):
     pass
+
+
+class ShapeDescriptorError(Exception):
+    pass
+
+
+class WrongSlopeWindow(ShapeDescriptorError):
+
+    def __init__(self, slope_window):
+        error_msg = "Slope window must be integer greater than 1, got {0} instead".format(
+            slope_window
+        )
+
+        super().__init__(error_msg)

@@ -125,7 +125,14 @@ class SlopeDescriptor(ShapeDescriptor):
     """
 
     def __init__(self, slope_window: int = 2):
+        if not self._is_slope_correct(slope_window):
+            raise WrongSlopeWindow(slope_window)
         self.slope_window = slope_window
+
+    @staticmethod
+    def _is_slope_correct(slope_window):
+        slope_correct = isinstance(slope_window, int) and slope_window > 1
+        return slope_correct
 
     @staticmethod
     def _get_single_slope(input_vector: ndarray) -> float:
