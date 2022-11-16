@@ -1,7 +1,4 @@
 import unittest
-
-import numpy as np
-
 from shapedtw.shapeDescriptors import *
 
 
