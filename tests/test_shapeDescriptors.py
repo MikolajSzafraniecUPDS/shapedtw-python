@@ -233,5 +233,60 @@ class TestDerivativeDescriptor(unittest.TestCase):
             )
         )
 
+class TestCompoundDescriptor(unittest.TestCase):
+
+    input_subsequence = np.array([3.6, 9.1, 5.7, 8.9, 4.5, 10.1])
+    raw_subsequence_desc = RawSubsequenceDescriptor()
+    slope_desc = SlopeDescriptor(slope_window=2)
+    derivative_desc = DerivativeShapeDescriptor()
+
+    raw_desc_results = raw_subsequence_desc.get_shape_descriptor(input_subsequence)
+    slope_desc_results = slope_desc.get_shape_descriptor(input_subsequence)
+    derivative_desc_results = derivative_desc.get_shape_descriptor(input_subsequence)
+
+    def test_compound_desc_no_weigths(self):
+        compound_desc = CompoundDescriptor(
+            shape_descriptors=[
+                self.raw_subsequence_desc, self.slope_desc, self.derivative_desc
+            ]
+        )
+
+        compound_desc_results = compound_desc.get_shape_descriptor(self.input_subsequence)
+        expected_res = np.concatenate(
+            [self.raw_desc_results, self.slope_desc_results, self.derivative_desc_results]
+        )
+
+        self.assertTrue(
+            np.allclose(
+                compound_desc_results, expected_res
+            )
+        )
+
+    def test_compound_desc_weights(self):
+
+        weight_1, weight_2, weight_3 = 1.5, 2.0, 0.5
+
+        compound_desc = CompoundDescriptor(
+            shape_descriptors=[
+                self.raw_subsequence_desc, self.slope_desc, self.derivative_desc
+            ],
+            descriptors_weights=[weight_1, weight_2, weight_3]
+        )
+
+        compound_desc_results = compound_desc.get_shape_descriptor(self.input_subsequence)
+        expected_res = np.concatenate(
+            [
+                self.raw_desc_results*weight_1,
+                self.slope_desc_results*weight_2,
+                self.derivative_desc_results*weight_3
+            ]
+        )
+
+        self.assertTrue(
+            np.allclose(
+                compound_desc_results, expected_res
+            )
+        )
+
 if __name__ == '__main__':
     unittest.main()

@@ -200,7 +200,7 @@ class CompoundDescriptor(ShapeDescriptor):
     differs significantly.
     """
 
-    def __init__(self, *shape_descriptors: List[ShapeDescriptor], descriptors_weights: List[float] = None):
+    def __init__(self, shape_descriptors: List[ShapeDescriptor], descriptors_weights: List[float] = None):
 
         descriptors_number = len(shape_descriptors)
 
