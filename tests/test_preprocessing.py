@@ -1,5 +1,7 @@
 import unittest
 
+import numpy as np
+
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
 
@@ -224,6 +226,68 @@ class TestMultivariateSubsequenceBuilder(unittest.TestCase):
             )
         )
 
+class TestMultivariateSeriesSubsequences(unittest.TestCase):
+    origin_ts = np.array([
+        [1, 10],
+        [2, 20],
+        [3, 30],
+        [4, 40],
+        [5, 50]
+    ])
+
+    multivariate_series_subsequences = MultivariateSubsequenceBuilder(
+        origin_ts, subsequence_width=2
+    ).transform_time_series_to_subsequences()
+
+    def test_raw_descriptor(self):
+        raw_shape_descriptor = RawSubsequenceDescriptor()
+        shape_descriptors = self.multivariate_series_subsequences.get_shape_descriptors(
+            raw_shape_descriptor
+        )
+
+        arrays_equal = [
+            np.array_equal(
+                uni_subsequence.subsequences,
+                uni_shape_desc.shape_descriptors_array)
+            for (uni_subsequence, uni_shape_desc) in
+            zip(
+                self.multivariate_series_subsequences.subsequences_list,
+                shape_descriptors.descriptors_list
+            )
+        ]
+
+        self.assertTrue(
+            all(arrays_equal)
+        )
+
+    def test_slope_descriptor(self):
+        slope_descriptor = SlopeDescriptor(slope_window=2)
+        expected_res_1 = np.array([
+            [0., 1., 0.],
+            [0., 1., 0.],
+            [1., 1., 0.],
+            [1., 1., 0.],
+            [1., 0., 0.]
+        ])
+        expected_res_2 = expected_res_1*10
+        expected_res_list = [expected_res_1, expected_res_2]
+
+        shape_descriptors = self.multivariate_series_subsequences.get_shape_descriptors(
+            slope_descriptor
+        )
+
+        arrays_equal = [
+            np.array_equal(
+                exp_res,
+                uni_shape_desc.shape_descriptors_array
+            )
+            for (exp_res, uni_shape_desc) in
+            zip(expected_res_list, shape_descriptors.descriptors_list)
+        ]
+
+        self.assertTrue(
+            all(arrays_equal)
+        )
 
 if __name__ == '__main__':
     unittest.main()
