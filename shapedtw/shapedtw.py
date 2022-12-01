@@ -373,13 +373,18 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         return self
 
 
-def shape_dtw(x: ndarray, y: ndarray,
-              subsequence_width: int,
+def shape_dtw(x, y, subsequence_width: int,
               shape_descriptor: ShapeDescriptor,
               step_pattern: str = "symmetric2",
               dist_method="euclidean",
               multivariate_version: str = "dependent",
               **kwargs):
+
+    if not isinstance(x, ndarray):
+        x = x.values
+
+    if not isinstance(y, ndarray):
+        y = y.values
 
     if not Utils.number_of_dimensions_equal(x, y):
         raise IncompatibleDimensionality(x, y)
