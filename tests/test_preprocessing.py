@@ -1,5 +1,7 @@
 import unittest
 
+import numpy as np
+
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
 
@@ -285,6 +287,44 @@ class TestMultivariateSeriesSubsequences(unittest.TestCase):
 
         self.assertTrue(
             all(arrays_equal)
+        )
+
+class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
+
+    dim_check_array_1 = np.array([1, 2, 3])
+    dim_check_array_2 = np.array(
+        [[1, 2,3],
+        [4, 5, 6]]
+    )
+    dim_check_array_3 = np.array(
+        [[[1, 2, 3],
+         [4, 5, 6]],
+        [[7, 8, 9],
+         [10, 11, 12]]]
+    )
+
+    def test_number_of_dimensions_check(self):
+        one_true = UnivariateSeriesShapeDescriptors._check_dimensions_number(
+            self.dim_check_array_1, 1
+        )
+        two_true = UnivariateSeriesShapeDescriptors._check_dimensions_number(
+            self.dim_check_array_2, 2
+        )
+        three_true = UnivariateSeriesShapeDescriptors._check_dimensions_number(
+            self.dim_check_array_3, 3
+        )
+        one_false = not UnivariateSeriesShapeDescriptors._check_dimensions_number(
+            self.dim_check_array_1, 2
+        )
+        two_false = not UnivariateSeriesShapeDescriptors._check_dimensions_number(
+            self.dim_check_array_2, 3
+        )
+        three_false = not UnivariateSeriesShapeDescriptors._check_dimensions_number(
+            self.dim_check_array_3, 1
+        )
+
+        self.assertTrue(
+            all([one_false, two_true, three_true, one_false, two_false, three_false])
         )
 
 if __name__ == '__main__':
