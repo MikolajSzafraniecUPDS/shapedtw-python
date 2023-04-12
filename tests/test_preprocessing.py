@@ -291,41 +291,104 @@ class TestMultivariateSeriesSubsequences(unittest.TestCase):
 
 class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
 
-    dim_check_array_1 = np.array([1, 2, 3])
-    dim_check_array_2 = np.array(
-        [[1, 2,3],
-        [4, 5, 6]]
-    )
-    dim_check_array_3 = np.array(
-        [[[1, 2, 3],
-         [4, 5, 6]],
-        [[7, 8, 9],
-         [10, 11, 12]]]
+    empty_array_1 = np.array([])
+    empty_array_2 = np.array([[], []])
+    empty_origin_ts = np.array([])
+    origin_ts_len_2 = np.array([1, 2])
+
+    array_1_dim = np.array([1.0, 2.3, 4.5])
+    array_1_dim_transponed = np.array([[1.0], [2.3], [4.5]])
+    origin_ts_len_3 = np.array([1.0, 2.3, 4.5])
+
+    array_2_rows = np.array(
+        [[1, 2, 3], [4, 5, 6]]
     )
 
-    def test_number_of_dimensions_check(self):
-        one_true = UnivariateSeriesShapeDescriptors._check_dimensions_number(
-            self.dim_check_array_1, 1
-        )
-        two_true = UnivariateSeriesShapeDescriptors._check_dimensions_number(
-            self.dim_check_array_2, 2
-        )
-        three_true = UnivariateSeriesShapeDescriptors._check_dimensions_number(
-            self.dim_check_array_3, 3
-        )
-        one_false = not UnivariateSeriesShapeDescriptors._check_dimensions_number(
-            self.dim_check_array_1, 2
-        )
-        two_false = not UnivariateSeriesShapeDescriptors._check_dimensions_number(
-            self.dim_check_array_2, 3
-        )
-        three_false = not UnivariateSeriesShapeDescriptors._check_dimensions_number(
-            self.dim_check_array_3, 1
+    array_3_dim = np.array([
+        [[1, 2, 3], [4, 5, 6]],
+        [[1, 2, 3], [4, 5, 6]]
+    ])
+
+    test_dist_array_1 = np.array([[1, 2, 3], [4, 5, 6]])
+    test_dist_array_2 = np.array([[1.1, 2, 3.5], [4.4, 5, 6.7]])
+
+    dist_results = np.array([
+        [0.50990195, 5.85234996],
+        [4.8641546, 0.80622577]
+    ])
+
+    def test_empty_array_1_dim_error(self):
+        with self.assertRaises(EmptyShapeDescriptorsArray):
+            UnivariateSeriesShapeDescriptors(
+                self.empty_array_1,
+                self.empty_origin_ts
+            )
+
+    def test_empty_array_2_dim_error(self):
+        with self.assertRaises(EmptyShapeDescriptorsArray):
+            UnivariateSeriesShapeDescriptors(
+                self.empty_array_2,
+                self.origin_ts_len_2
+            )
+
+    def test_3_dim_array_error(self):
+        with self.assertRaises(TooManyDimensionsArray):
+            UnivariateSeriesShapeDescriptors(
+                self.array_3_dim,
+                self.origin_ts_len_2
+            )
+
+    def test_1_dim_array_transposition(self):
+        univariate_series_shape_desc = UnivariateSeriesShapeDescriptors(
+            self.array_1_dim,
+            self.origin_ts_len_3
         )
 
         self.assertTrue(
-            all([one_false, two_true, three_true, one_false, two_false, three_false])
+            np.array_equal(
+                univariate_series_shape_desc.shape_descriptors_array,
+                self.array_1_dim_transponed
+            )
         )
+
+    def test_array_ts_incompatibility(self):
+        with self.assertRaises(OriginTSShapeDescriptorsArrayIncompatibility):
+            UnivariateSeriesShapeDescriptors(
+                self.array_2_rows,
+                self.origin_ts_len_3
+            )
+
+    def test_classes_incompatibility(self):
+        ussd = UnivariateSeriesShapeDescriptors(
+            self.array_2_rows,
+            self.origin_ts_len_2
+        )
+        multivariate_shape_desc = MultivariateSeriesShapeDescriptors(
+            [ussd, ussd],
+            self.origin_ts_len_2
+        )
+
+        with self.assertRaises(ObjectOfWrongClass):
+            ussd.calc_distance_matrix(multivariate_shape_desc)
+
+    def test_distance_results(self):
+        ussd_1 = UnivariateSeriesShapeDescriptors(
+            self.test_dist_array_1,
+            self.origin_ts_len_2
+        )
+        ussd_2 = UnivariateSeriesShapeDescriptors(
+            self.test_dist_array_2,
+            self.origin_ts_len_2
+        )
+        res = ussd_1.calc_distance_matrix(ussd_2)
+
+        self.assertTrue(
+            np.allclose(
+                res.dist_matrix,
+                self.dist_results
+            )
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

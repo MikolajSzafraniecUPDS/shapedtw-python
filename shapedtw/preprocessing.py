@@ -199,7 +199,15 @@ class UnivariateSeriesShapeDescriptors:
 
     def __init__(self, descriptors_array: ndarray, origin_ts: ndarray):
 
-        if self._check_dimensions_number(descriptors_array, 1):
+        if self._array_is_empty(descriptors_array):
+            raise EmptyShapeDescriptorsArray()
+        elif not self._input_ts_descriptor_array_compatible(descriptors_array, origin_ts):
+            input_ts_len = origin_ts.shape[0]
+            shape_descriptor_array_nrow = descriptors_array.shape[0]
+            raise OriginTSShapeDescriptorsArrayIncompatibility(
+                input_ts_len, shape_descriptor_array_nrow
+            )
+        elif self._check_dimensions_number(descriptors_array, 1):
             descriptors_array = np.atleast_2d(descriptors_array).T
         elif not self._check_dimensions_number(descriptors_array, 2):
             n_dims = len(descriptors_array.shape)
@@ -211,6 +219,14 @@ class UnivariateSeriesShapeDescriptors:
     @staticmethod
     def _check_dimensions_number(descriptor_array: ndarray, n_dim: int) -> bool:
         return len(descriptor_array.shape) == n_dim
+
+    @staticmethod
+    def _array_is_empty(descriptor_array: ndarray):
+        return np.size(descriptor_array) == 0
+
+    @staticmethod
+    def _input_ts_descriptor_array_compatible(descriptor_array: ndarray, origin_ts: ndarray):
+        return origin_ts.shape[0] == descriptor_array.shape[0]
 
     def calc_distance_matrix(self, series_y_descriptor: UnivariateSeriesShapeDescriptors,
                              dist_method: str = "euclidean") -> UnivariateSeriesDistanceMatrix:

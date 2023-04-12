@@ -119,6 +119,16 @@ class DistanceSettingNotPossible(Exception):
 class ShapeDescriptorError(Exception):
     pass
 
+class EmptyShapeDescriptorsArray(Exception):
+    pass
+
+class OriginTSShapeDescriptorsArrayIncompatibility(Exception):
+    def __init__(self, origin_ts_len: int, shape_descriptor_array_row_num: int):
+        error_msg = """Origin time series and shape descriptor array incompatible. 
+        Time series length = {0}, shape descriptor array row number = {1}
+        """.format(origin_ts_len, shape_descriptor_array_row_num)
+
+        super().__init__(error_msg)
 
 class WrongSlopeWindow(ShapeDescriptorError):
 
