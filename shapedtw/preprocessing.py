@@ -204,7 +204,7 @@ class UnivariateSeriesShapeDescriptors:
         elif not self._input_ts_descriptor_array_compatible(descriptors_array, origin_ts):
             input_ts_len = origin_ts.shape[0]
             shape_descriptor_array_nrow = descriptors_array.shape[0]
-            raise OriginTSShapeDescriptorsArrayIncompatibility(
+            raise UnivariateOriginTSShapeDescriptorsIncompatibility(
                 input_ts_len, shape_descriptor_array_nrow
             )
         elif self._check_dimensions_number(descriptors_array, 1):
@@ -252,8 +252,39 @@ class MultivariateSeriesShapeDescriptors:
         self.descriptors_list = descriptors_list
         self.origin_ts = origin_ts
 
+        if not self._input_ts_descriptor_dimensions_compatible():
+            origin_ts_dim = self.origin_ts.shape[1]
+            descriptors_list_length = len(self)
+            raise MultivariateOriginTSShapeDescriptorsDimIncompatibility(
+                origin_ts_dim=origin_ts_dim,
+                shape_descriptor_list_length=descriptors_list_length
+            )
+
+        if not self._input_ts_descriptors_length_compatible():
+            ts_len = self.origin_ts[0]
+            shape_descriptors_lengths = [
+                uni_sd.shape_descriptors_array.shape[0]
+                for uni_sd in self.descriptors_list
+            ]
+
+            raise MultivariateOriginTSShapeDescriptorsLengthIncompatibility(
+                origin_ts_length=ts_len,
+                shape_descriptor_lengths=shape_descriptors_lengths
+            )
+
+
     def __len__(self):
         return len(self.descriptors_list)
+
+    def _input_ts_descriptor_dimensions_compatible(self):
+        return len(self) == self.origin_ts.shape[1]
+
+    def _input_ts_descriptors_length_compatible(self):
+        ts_len = self.origin_ts[0]
+        return all(
+            [uni_sd.shape_descriptors_array.shape[0] == ts_len
+             for uni_sd in self.descriptors_list]
+        )
 
     def _verify_dimension_compatibility(self, other: MultivariateSeriesShapeDescriptors) -> None:
         ts_x_dim = len(self)

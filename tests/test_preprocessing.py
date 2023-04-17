@@ -352,7 +352,7 @@ class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
         )
 
     def test_array_ts_incompatibility(self):
-        with self.assertRaises(OriginTSShapeDescriptorsArrayIncompatibility):
+        with self.assertRaises(UnivariateOriginTSShapeDescriptorsIncompatibility):
             UnivariateSeriesShapeDescriptors(
                 self.array_2_rows,
                 self.origin_ts_len_3
@@ -388,6 +388,9 @@ class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
                 self.dist_results
             )
         )
+
+class MultivariateSeriesShapeDescriptor(unittest.TestCase):
+    pass
 
 
 if __name__ == '__main__':

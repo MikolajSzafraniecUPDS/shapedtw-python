@@ -1,4 +1,5 @@
 import numpy as np
+from typing import List
 
 def get_number_of_dimensions(x: np.ndarray) -> int:
     return len(x.shape)
@@ -122,11 +123,32 @@ class ShapeDescriptorError(Exception):
 class EmptyShapeDescriptorsArray(Exception):
     pass
 
-class OriginTSShapeDescriptorsArrayIncompatibility(Exception):
+class OriginTSShapeDescriptorIncompatibility(Exception):
+    pass
+
+class UnivariateOriginTSShapeDescriptorsIncompatibility(OriginTSShapeDescriptorIncompatibility):
     def __init__(self, origin_ts_len: int, shape_descriptor_array_row_num: int):
         error_msg = """Origin time series and shape descriptor array incompatible. 
         Time series length = {0}, shape descriptor array row number = {1}
         """.format(origin_ts_len, shape_descriptor_array_row_num)
+
+        super().__init__(error_msg)
+
+class MultivariateOriginTSShapeDescriptorsDimIncompatibility(OriginTSShapeDescriptorIncompatibility):
+
+    def __init__(self, origin_ts_dim: int, shape_descriptor_list_length: int):
+        error_msg = """Origin time series and shape descriptor list incompatible.
+        Number of time series dimensions = {0}, number of provided shape descriptors = {1}
+        """.format(origin_ts_dim, shape_descriptor_list_length)
+
+        super().__init__(error_msg)
+
+class MultivariateOriginTSShapeDescriptorsLengthIncompatibility(OriginTSShapeDescriptorIncompatibility):
+
+    def __init__(self, origin_ts_length: int, shape_descriptor_lengths: List[int]):
+        error_msg = """Origin time series and shape descriptor list incompatible.
+        Length of time series = {0}, lengths of shape descriptors = {1}
+        """.format(origin_ts_length, shape_descriptor_lengths)
 
         super().__init__(error_msg)
 
