@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import operator
 
+import numpy as np
 from numpy import ndarray
 from shapedtw.exceptions import *
 from scipy.spatial.distance import cdist
@@ -249,6 +250,10 @@ class UnivariateSeriesShapeDescriptors:
 class MultivariateSeriesShapeDescriptors:
 
     def __init__(self, descriptors_list: List[UnivariateSeriesShapeDescriptors], origin_ts: ndarray):
+
+        if self._one_dim_ts(origin_ts):
+            origin_ts = np.atleast_2d(origin_ts)
+
         self.descriptors_list = descriptors_list
         self.origin_ts = origin_ts
 
@@ -261,7 +266,7 @@ class MultivariateSeriesShapeDescriptors:
             )
 
         if not self._input_ts_descriptors_length_compatible():
-            ts_len = self.origin_ts[0]
+            ts_len = self.origin_ts.shape[0]
             shape_descriptors_lengths = [
                 uni_sd.shape_descriptors_array.shape[0]
                 for uni_sd in self.descriptors_list
@@ -276,11 +281,15 @@ class MultivariateSeriesShapeDescriptors:
     def __len__(self):
         return len(self.descriptors_list)
 
+    @staticmethod
+    def _one_dim_ts(origin_ts):
+        return len(origin_ts.shape) == 1
+
     def _input_ts_descriptor_dimensions_compatible(self):
         return len(self) == self.origin_ts.shape[1]
 
     def _input_ts_descriptors_length_compatible(self):
-        ts_len = self.origin_ts[0]
+        ts_len = self.origin_ts.shape[0]
         return all(
             [uni_sd.shape_descriptors_array.shape[0] == ts_len
              for uni_sd in self.descriptors_list]

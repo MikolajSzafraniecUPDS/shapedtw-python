@@ -355,9 +355,13 @@ class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
 
     def test_classes_incompatibility(self):
         array_2_rows = np.array(
-            [[1, 2, 3], [4, 5, 6]]
+            [[1, 2, 3],
+             [4, 5, 6]]
         )
-        origin_ts_len_2 = np.array([1, 2])
+        origin_ts_len_2 = np.array(
+            [[1, 2],
+             [3, 4]]
+        )
 
         ussd = UnivariateSeriesShapeDescriptors(
             array_2_rows,
@@ -400,7 +404,39 @@ class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
         )
 
 class MultivariateSeriesShapeDescriptor(unittest.TestCase):
-    pass
+
+    def test_dimension_incompatibility_exception(self):
+        origin_ts_multidim = np.array(
+            [[1, 2, 3],
+             [4, 5, 6],
+             [7, 8, 9]]
+        )
+        desc_array_1 = np.array(
+            [[1, 1, 4],
+             [1, 4, 7],
+             [4, 7, 7]]
+        )
+        desc_array_2 = np.array(
+            [[2, 2, 5],
+             [2, 5, 8],
+             [5, 8, 8]]
+        )
+        origin_ts_univariate_1 = np.array([1, 4, 7])
+        origin_ts_univariate_2 = np.array([2, 5, 8])
+        usd_1 = UnivariateSeriesShapeDescriptors(
+            descriptors_array = desc_array_1,
+            origin_ts= origin_ts_univariate_1
+        )
+        usd_2 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_1,
+            origin_ts=origin_ts_univariate_1
+        )
+
+        with self.assertRaises(MultivariateOriginTSShapeDescriptorsDimIncompatibility):
+            msd = MultivariateSeriesShapeDescriptors(
+                descriptors_list=[usd_1, usd_2],
+                origin_ts=origin_ts_multidim
+            )
 
 
 if __name__ == '__main__':
