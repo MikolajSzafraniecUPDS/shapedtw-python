@@ -95,6 +95,15 @@ class IncompatibleDimensionality(DimensionError):
 
         super().__init__(error_msg)
 
+class MultivariateSeriesShapeDescriptorsIncompatibility(DimensionError):
+
+    def __init__(self, ts_x_dim, ts_y_dim):
+        error_msg = "Incompatible dimensionality, series x dim = {0}d, series y dim = {1}d".format(
+            ts_x_dim, ts_y_dim
+        )
+
+        super().__init__(error_msg)
+
 
 class IncompatibleSeriesNumber(DimensionError):
     def __init__(self, ts_x: np.ndarray, ts_y: np.ndarray):

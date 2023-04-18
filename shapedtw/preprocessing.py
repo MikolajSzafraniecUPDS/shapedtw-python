@@ -251,7 +251,7 @@ class MultivariateSeriesShapeDescriptors:
 
     def __init__(self, descriptors_list: List[UnivariateSeriesShapeDescriptors], origin_ts: ndarray):
 
-        if self._one_dim_ts(origin_ts):
+        if self._is_one_dim_ts(origin_ts):
             origin_ts = np.atleast_2d(origin_ts)
 
         self.descriptors_list = descriptors_list
@@ -282,7 +282,7 @@ class MultivariateSeriesShapeDescriptors:
         return len(self.descriptors_list)
 
     @staticmethod
-    def _one_dim_ts(origin_ts):
+    def _is_one_dim_ts(origin_ts):
         return len(origin_ts.shape) == 1
 
     def _input_ts_descriptor_dimensions_compatible(self):
@@ -299,7 +299,7 @@ class MultivariateSeriesShapeDescriptors:
         ts_x_dim = len(self)
         ts_y_dim = len(other)
         if ts_x_dim != ts_y_dim:
-            raise IncompatibleDimensionality(ts_x_dim, ts_y_dim)
+            raise MultivariateSeriesShapeDescriptorsIncompatibility(ts_x_dim, ts_y_dim)
 
     def calc_distance_matrices(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                dist_method: str = "euclidean") -> MultivariateDistanceMatrixIndependent:

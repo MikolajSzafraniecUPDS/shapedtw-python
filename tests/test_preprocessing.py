@@ -403,7 +403,7 @@ class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
             )
         )
 
-class MultivariateSeriesShapeDescriptor(unittest.TestCase):
+class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
 
     def test_dimension_incompatibility_exception(self):
         origin_ts_multidim = np.array(
@@ -428,8 +428,8 @@ class MultivariateSeriesShapeDescriptor(unittest.TestCase):
             origin_ts= origin_ts_univariate_1
         )
         usd_2 = UnivariateSeriesShapeDescriptors(
-            descriptors_array=desc_array_1,
-            origin_ts=origin_ts_univariate_1
+            descriptors_array=desc_array_2,
+            origin_ts=origin_ts_univariate_2
         )
 
         with self.assertRaises(MultivariateOriginTSShapeDescriptorsDimIncompatibility):
@@ -437,6 +437,123 @@ class MultivariateSeriesShapeDescriptor(unittest.TestCase):
                 descriptors_list=[usd_1, usd_2],
                 origin_ts=origin_ts_multidim
             )
+
+    def test_length_incompatibility_exception(self):
+        origin_ts_multidim = np.array(
+            [[1, 2],
+             [4, 5],
+             [7, 8]]
+        )
+        desc_array_1 = np.array(
+            [[1, 1, 4],
+             [1, 4, 7],
+             [4, 7, 7],
+             [7, 7, 7]]
+        )
+        desc_array_2 = np.array(
+            [[2, 2, 5],
+             [2, 5, 8],
+             [5, 8, 8]]
+        )
+        origin_ts_univariate_1 = np.array([1, 4, 7, 7])
+        origin_ts_univariate_2 = np.array([2, 5, 8])
+        usd_1 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_1,
+            origin_ts=origin_ts_univariate_1
+        )
+        usd_2 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_2,
+            origin_ts=origin_ts_univariate_2
+        )
+
+        with self.assertRaises(MultivariateOriginTSShapeDescriptorsLengthIncompatibility):
+            msd = MultivariateSeriesShapeDescriptors(
+                descriptors_list=[usd_1, usd_2],
+                origin_ts=origin_ts_multidim
+            )
+
+    def test_base_exceptions(self):
+        origin_ts_multidim_1 = np.array(
+            [[1, 2],
+             [4, 5],
+             [7, 8]]
+        )
+        desc_array_1_1 = np.array(
+            [[1, 1, 4],
+             [1, 4, 7],
+             [4, 7, 7]]
+        )
+        desc_array_1_2 = np.array(
+            [[2, 2, 5],
+             [2, 5, 8],
+             [5, 8, 8]]
+        )
+
+        origin_ts_multidim_2 = np.array(
+            [[1, 2, 3],
+             [4, 5, 6],
+             [7, 8, 9]]
+        )
+        desc_array_2_1 = np.array(
+            [[1, 1, 4],
+             [1, 4, 7],
+             [4, 7, 7]]
+        )
+        desc_array_2_2 = np.array(
+            [[2, 2, 5],
+             [2, 5, 8],
+             [5, 8, 8]]
+        )
+        desc_array_2_3 = np.array(
+            [[3, 3, 6],
+             [3, 6, 9],
+             [6, 9, 9]]
+        )
+
+        origin_ts_univariate_1 = np.array([1, 4, 7])
+        origin_ts_univariate_2 = np.array([2, 5, 8])
+        origin_ts_univariate_3 = np.array([3, 6, 9])
+
+        usd_1_1 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_1_1,
+            origin_ts=origin_ts_univariate_1
+        )
+        usd_1_2 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_1_2,
+            origin_ts=origin_ts_univariate_2
+        )
+
+        usd_2_1 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_2_1,
+            origin_ts=origin_ts_univariate_1
+        )
+        usd_2_2 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_2_2,
+            origin_ts=origin_ts_univariate_2
+        )
+        usd_2_3 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_2_3,
+            origin_ts=origin_ts_univariate_3
+        )
+
+        msd_1 = MultivariateSeriesShapeDescriptors(
+            descriptors_list=[usd_1_1, usd_1_2],
+            origin_ts=origin_ts_multidim_1
+        )
+        msd_2 = MultivariateSeriesShapeDescriptors(
+            descriptors_list=[usd_2_1, usd_2_2, usd_2_3],
+            origin_ts=origin_ts_multidim_2
+        )
+
+        with self.assertRaises(ObjectOfWrongClass):
+            msd_1.calc_distance_matrices(
+                usd_1_1
+            )
+
+        with self.assertRaises(MultivariateSeriesShapeDescriptorsIncompatibility):
+            msd_1.calc_distance_matrices(msd_2)
+
+
 
 
 if __name__ == '__main__':
