@@ -669,6 +669,136 @@ class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
             )
         )
 
+    def test_distance_results_dependent_type(self):
+
+        origin_ts_multidim_1 = np.array(
+            [[1., 2.],
+             [4., 5.],
+             [7., 8.]]
+        )
+        origin_ts_multidim_2 = np.array(
+            [[2.5, 4.5],
+             [4.0, 7.0],
+             [5.0, 4.5]]
+        )
+
+        origin_ts_univariate_1_1 = np.array([1., 4., 7.])
+        origin_ts_univariate_1_2 = np.array([2., 5., 8.])
+
+        origin_ts_univariate_2_1 = np.array([2.5, 4.0, 5.0])
+        origin_ts_univariate_2_2 = np.array([4.5, 7.0, 4.5])
+
+        desc_array_1_1 = np.array(
+            [[1., 1., 4.],
+             [1., 4., 7.],
+             [4., 7., 7.]]
+        )
+        desc_array_1_2 = np.array(
+            [[2., 2., 5.],
+             [2., 5., 8.],
+             [5., 8., 8.]]
+        )
+        desc_array_2_1 = np.array(
+            [[2.5, 2.5, 4.0],
+             [2.5, 4.0, 5.0],
+             [4.0, 5.0, 5.0]]
+        )
+        desc_array_2_2 = np.array(
+            [[4.5, 4.5, 7.0],
+             [4.5, 7.0, 4.5],
+             [4.5, 7.0, 7.0]]
+        )
+
+        usd_1_1 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_1_1,
+            origin_ts=origin_ts_univariate_1_1
+        )
+        usd_1_2 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_1_2,
+            origin_ts=origin_ts_univariate_1_2
+        )
+        usd_2_1 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_2_1,
+            origin_ts=origin_ts_univariate_2_1
+        )
+        usd_2_2 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=desc_array_2_2,
+            origin_ts=origin_ts_univariate_2_2
+        )
+
+        msd_1 = MultivariateSeriesShapeDescriptors(
+            descriptors_list=[usd_1_1, usd_1_2],
+            origin_ts=origin_ts_multidim_1
+        )
+        msd_2 = MultivariateSeriesShapeDescriptors(
+            descriptors_list=[usd_2_1, usd_2_2],
+            origin_ts=origin_ts_multidim_2
+        )
+
+        expected_euclid_dist = np.array(
+            [[4.58257569, 6.61437828, 7.82623792],
+             [4.58257569, 5.36190265, 5.02493781],
+             [6.70820393, 5.36190265, 3.20156212]]
+        )
+        expected_cityblock_dist = np.array(
+            [[10., 13.5, 17.5],
+             [10., 11.5, 11.5],
+             [14., 11.5, 6.5]]
+        )
+
+        results_euclid = msd_1.calc_summed_distance_matrix(msd_2, dist_method="euclidean")
+        results_cityblock = msd_1.calc_summed_distance_matrix(msd_2, dist_method="cityblock")
+
+        self.assertTrue(
+            isinstance(results_euclid, MultivariateDistanceMatrixDependent)
+        )
+
+        self.assertTrue(
+            isinstance(results_cityblock, MultivariateDistanceMatrixDependent)
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                results_euclid.ts_x,
+                origin_ts_multidim_1
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                results_euclid.ts_y,
+                origin_ts_multidim_2
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                results_cityblock.ts_x,
+                origin_ts_multidim_1
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                results_cityblock.ts_y,
+                origin_ts_multidim_2
+            )
+        )
+
+        self.assertTrue(
+            np.allclose(
+                results_euclid.distance_matrix,
+                expected_euclid_dist
+            )
+        )
+
+        self.assertTrue(
+            np.allclose(
+                results_cityblock.distance_matrix,
+                expected_cityblock_dist
+            )
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

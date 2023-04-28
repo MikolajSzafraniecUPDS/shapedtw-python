@@ -322,18 +322,33 @@ class MultivariateSeriesShapeDescriptors:
             series_y_descriptor.origin_ts
         )
 
+    @staticmethod
+    def _calc_sum_of_distance_matrices_euclidean(
+            univariate_dist_matrices: List[UnivariateSeriesDistanceMatrix]
+    ) -> np.ndarray:
+        distance_matrices_list = [uni_mat.dist_matrix ** 2 for uni_mat in univariate_dist_matrices]
+        distance_matrix = np.sqrt(reduce(operator.add, distance_matrices_list))
+        return distance_matrix
+
+    @staticmethod
+    def _calc_sum_of_distance_matrices_non_euclidean(
+            univariate_dist_matrices: List[UnivariateSeriesDistanceMatrix]
+    ) -> np.ndarray:
+        distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrices]
+        distance_matrix = reduce(operator.add, distance_matrices_list)
+        return distance_matrix
+
     def calc_summed_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                     dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
 
         univariate_dist_matrices = self.calc_distance_matrices(
             series_y_descriptor,
             dist_method).distance_matrices_list
+
         if dist_method == "euclidean":
-            distance_matrices_list = [uni_mat.dist_matrix**2 for uni_mat in univariate_dist_matrices]
-            distance_matrix = np.sqrt(reduce(operator.add, distance_matrices_list))
+            distance_matrix = self._calc_sum_of_distance_matrices_euclidean(univariate_dist_matrices)
         else:
-            distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrices]
-            distance_matrix = reduce(operator.add, distance_matrices_list)
+            distance_matrix = self._calc_sum_of_distance_matrices_non_euclidean(univariate_dist_matrices)
 
         return MultivariateDistanceMatrixDependent(distance_matrix, self.origin_ts, series_y_descriptor.origin_ts)
 
@@ -392,7 +407,7 @@ class UnivariateSeriesDistanceMatrix:
 
 
 class MultivariateDistanceMatrixIndependent:
-    def __init__(self, distance_matrices_list: List[ndarray], ts_x, ts_y):
+    def __init__(self, distance_matrices_list: List[UnivariateSeriesDistanceMatrix], ts_x, ts_y):
         self.distance_matrices_list = distance_matrices_list
         self.ts_x = ts_x
         self.ts_y = ts_y
