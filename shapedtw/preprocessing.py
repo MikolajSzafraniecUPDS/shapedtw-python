@@ -360,6 +360,9 @@ class DistanceMatrixCalculator:
         self.ts_y = ts_y
         self.method = method
 
+    def _input_ts_empty(self):
+        return (np.size(self.ts_x) == 0) | (np.size(self.ts_x) == 0)
+
     def _two_dim_at_most(self):
         return (len(self.ts_x.shape) < 3) & (len(self.ts_y.shape) < 3)
 
@@ -373,6 +376,9 @@ class DistanceMatrixCalculator:
         return self.ts_x.shape[1] == self.ts_y.shape[1]
 
     def _verify_dimensions(self):
+
+        if self._input_ts_empty():
+            raise DimensionError("Empty arrays are not allowed.")
 
         if not self._two_dim_at_most():
             raise DimensionError("Only arrays of 1 and 2 dimensions are supported")

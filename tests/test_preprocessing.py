@@ -7,7 +7,6 @@ from shapedtw.shapeDescriptors import *
 
 
 class TestPadder(unittest.TestCase):
-
     time_series_test = np.array([1, 2, 3, 4, 5])
 
     def test_left_padding(self):
@@ -69,7 +68,6 @@ class TestPadder(unittest.TestCase):
 
 
 class TestUnivariateSubsequenceBuilder(unittest.TestCase):
-
     time_series_test = np.array([1, 2, 3, 4, 5])
 
     def test_zero_subsequence_width(self):
@@ -77,7 +75,7 @@ class TestUnivariateSubsequenceBuilder(unittest.TestCase):
         expected_res = np.array([
             [1], [2], [3], [4], [5]
         ])
-        subsequences_returned = subsequence_builder.\
+        subsequences_returned = subsequence_builder. \
             transform_time_series_to_subsequences().subsequences
 
         self.assertTrue(
@@ -132,14 +130,13 @@ class TestUnivariateSubsequenceBuilder(unittest.TestCase):
 
 
 class TestUnivariateSeriesSubsequences(unittest.TestCase):
-
     origin_ts = np.array([1, 2, 3, 4, 5])
     subsequences_array = np.array([
-            [1, 1, 1, 2, 3],
-            [1, 1, 2, 3, 4],
-            [1, 2, 3, 4, 5],
-            [2, 3, 4, 5, 5],
-            [3, 4, 5, 5, 5]
+        [1, 1, 1, 2, 3],
+        [1, 1, 2, 3, 4],
+        [1, 2, 3, 4, 5],
+        [2, 3, 4, 5, 5],
+        [3, 4, 5, 5, 5]
     ])
 
     univariate_series_subsequences = UnivariateSeriesSubsequences(
@@ -149,7 +146,7 @@ class TestUnivariateSeriesSubsequences(unittest.TestCase):
     def test_raw_subsequence_descriptor(self):
         raw_subsequences_desc = RawSubsequenceDescriptor()
         expected_res = self.subsequences_array.copy()
-        shape_descriptors_returned = self.univariate_series_subsequences.\
+        shape_descriptors_returned = self.univariate_series_subsequences. \
             get_shape_descriptors(shape_descriptor=raw_subsequences_desc). \
             shape_descriptors_array
 
@@ -181,7 +178,6 @@ class TestUnivariateSeriesSubsequences(unittest.TestCase):
 
 
 class TestMultivariateSubsequenceBuilder(unittest.TestCase):
-
     time_series_test = np.array([
         [1, 10],
         [2, 20],
@@ -212,7 +208,7 @@ class TestMultivariateSubsequenceBuilder(unittest.TestCase):
     ])
 
     def test_multivariate_subsequence_builder(self):
-        time_series_transformed = self.subsequences_builder.\
+        time_series_transformed = self.subsequences_builder. \
             transform_time_series_to_subsequences()
 
         self.assertTrue(
@@ -225,6 +221,7 @@ class TestMultivariateSubsequenceBuilder(unittest.TestCase):
                 time_series_transformed.subsequences_list[1].subsequences
             )
         )
+
 
 class TestMultivariateSeriesSubsequences(unittest.TestCase):
     origin_ts = np.array([
@@ -269,7 +266,7 @@ class TestMultivariateSeriesSubsequences(unittest.TestCase):
             [1., 1., 0.],
             [1., 0., 0.]
         ])
-        expected_res_2 = expected_res_1*10
+        expected_res_2 = expected_res_1 * 10
         expected_res_list = [expected_res_1, expected_res_2]
 
         shape_descriptors = self.multivariate_series_subsequences.get_shape_descriptors(
@@ -288,6 +285,7 @@ class TestMultivariateSeriesSubsequences(unittest.TestCase):
         self.assertTrue(
             all(arrays_equal)
         )
+
 
 class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
 
@@ -403,6 +401,7 @@ class TestUnivariateSeriesShapeDescriptors(unittest.TestCase):
             )
         )
 
+
 class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
 
     def test_dimension_incompatibility_exception(self):
@@ -424,8 +423,8 @@ class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
         origin_ts_univariate_1 = np.array([1, 4, 7])
         origin_ts_univariate_2 = np.array([2, 5, 8])
         usd_1 = UnivariateSeriesShapeDescriptors(
-            descriptors_array = desc_array_1,
-            origin_ts= origin_ts_univariate_1
+            descriptors_array=desc_array_1,
+            origin_ts=origin_ts_univariate_1
         )
         usd_2 = UnivariateSeriesShapeDescriptors(
             descriptors_array=desc_array_2,
@@ -553,9 +552,7 @@ class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
         with self.assertRaises(MultivariateSeriesShapeDescriptorsIncompatibility):
             msd_1.calc_distance_matrices(msd_2)
 
-
     def test_distance_results_independent_type(self):
-
         origin_ts_multidim_1 = np.array(
             [[1., 2.],
              [4., 5.],
@@ -670,7 +667,6 @@ class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
         )
 
     def test_distance_results_dependent_type(self):
-
         origin_ts_multidim_1 = np.array(
             [[1., 2.],
              [4., 5.],
@@ -799,6 +795,155 @@ class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
             )
         )
 
+
+class TestDistanceMatrixCalculator(unittest.TestCase):
+
+    def test_empty_arrays_exception(self):
+        ts_1 = np.array([])
+        ts_2 = np.array([])
+        ts_3 = np.array([1., 2.4])
+
+        with self.assertRaises(DimensionError):
+            DistanceMatrixCalculator(
+                ts_1, ts_2, "euclidean"
+            ).calc_distance_matrix()
+
+        with self.assertRaises(DimensionError):
+            DistanceMatrixCalculator(
+                ts_1, ts_3, "euclidean"
+            ).calc_distance_matrix()
+
+    def test_3d_arrays_exception(self):
+        ts_1 = np.array([
+            [[1., 2.],
+             [3., 4.]],
+            [[5., 6.],
+             [7., 8.]]]
+        )
+        ts_2 = np.array([
+            [[2., 3.],
+             [3.5, 4.1]],
+            [[5.3, 6.6],
+             [7.4, 8.1]]]
+        )
+
+        with self.assertRaises(DimensionError):
+            DistanceMatrixCalculator(
+                ts_1, ts_2, "euclidean"
+            ).calc_distance_matrix()
+
+        try:
+            DistanceMatrixCalculator(
+                ts_1, ts_2, "euclidean"
+            ).calc_distance_matrix()
+        except DimensionError as e:
+            self.assertTrue(
+                str(e) == "Only arrays of 1 and 2 dimensions are supported"
+            )
+
+    def test_different_dim_number_exception(self):
+        ts_1 = np.array([1., 2., 3.])
+        ts_2 = np.array([[1., 2., 3.], [4., 5., 6.]])
+
+        with self.assertRaises(DimensionError):
+            DistanceMatrixCalculator(
+                ts_1, ts_2, "euclidean"
+            ).calc_distance_matrix()
+
+        try:
+            DistanceMatrixCalculator(
+                ts_1, ts_2, "euclidean"
+            ).calc_distance_matrix()
+        except DimensionError as e:
+            self.assertTrue(
+                str(e) == "Number of time series dimensions doesn't match"
+            )
+
+    def test_number_of_cols_doesnt_match(self):
+        ts_1 = np.array(
+            [
+                [1., 2., 3.],
+                [4., 5., 6.]
+            ]
+        )
+        ts_2 = np.array(
+            [
+                [1.1, 2.6],
+                [4.3, 5.5]
+            ]
+        )
+
+        with self.assertRaises(DimensionError):
+            DistanceMatrixCalculator(
+                ts_1, ts_2, "euclidean"
+            ).calc_distance_matrix()
+
+        try:
+            DistanceMatrixCalculator(
+                ts_1, ts_2, "euclidean"
+            ).calc_distance_matrix()
+        except DimensionError as e:
+            self.assertTrue(
+                str(e) == "Number of time series columns doesn't match"
+            )
+
+    def test_univariate_series_transposition(self):
+        ts_1 = np.array([1., 2.])
+        ts_2 = np.array([2., 3.])
+
+        res = DistanceMatrixCalculator(
+            ts_1, ts_2, "euclidean"
+        ).calc_distance_matrix()
+
+        self.assertTrue(
+            res.shape == (2, 2)
+        )
+
+    def test_1d_series_dist_matrix_results(self):
+        ts_1 = np.array([1., 2.])
+        ts_2 = np.array([2., 3.])
+
+        expected_res = np.array(
+            [[1., 2.],
+             [0., 1.]]
+        )
+
+        res = DistanceMatrixCalculator(
+            ts_1, ts_2
+        ).calc_distance_matrix()
+
+        self.assertTrue(
+            np.array_equal(
+                expected_res,
+                res
+            )
+        )
+
+    def test_2d_series_dist_matrix_results(self):
+        ts_1 = np.array(
+            [[1., 2.5, 4.5, 7.6],
+             [2.5, 6., 3.4, 8.1]]
+        )
+        ts_2= np.array(
+            [[2., 4.5, 4.5, 2.1],
+             [6.5, 5., 6.7, 4.3]]
+        )
+
+        expected_res = np.array(
+            [[5.93717104, 7.22703259],
+             [6.3015871, 6.50615094]]
+        )
+
+        res = DistanceMatrixCalculator(
+            ts_1, ts_2
+        ).calc_distance_matrix()
+
+        self.assertTrue(
+            np.allclose(
+                expected_res,
+                res
+            )
+        )
 
 if __name__ == '__main__':
     unittest.main()
