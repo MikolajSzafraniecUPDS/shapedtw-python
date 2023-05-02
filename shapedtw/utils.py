@@ -1,8 +1,7 @@
 import sys
 
 import numpy as np
-
-from shapedtw.exceptions import IncompatibleDimensionality, TooManyDimensions
+from shapedtw.exceptions import IncompatibleDimensionality, TooManyDimensions, ProvidedStepPatternDoesNotExists
 
 
 class Utils:
@@ -16,9 +15,16 @@ class Utils:
         :return: StepPattern object
         """
         if hasattr(s, "mx"):
-            return s
+            res = s
         else:
-            return getattr(sys.modules["dtw.stepPattern"], s)
+            try:
+                res = getattr(sys.modules["dtw.stepPattern"], s)
+            except AttributeError as ae:
+                raise ProvidedStepPatternDoesNotExists(
+                    "There is no such step pattern. Please check if there is no type in the step pattern name."
+                )
+
+        return res
 
     @staticmethod
     def are_objects_of_same_classes(reference_obj: object, other_obj: object) -> bool:

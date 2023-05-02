@@ -169,3 +169,6 @@ class WrongSlopeWindow(ShapeDescriptorError):
         )
 
         super().__init__(error_msg)
+
+class ProvidedStepPatternDoesNotExists(Exception):
+    pass

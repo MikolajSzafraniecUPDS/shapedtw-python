@@ -17,8 +17,8 @@ class TestStepPatternCanonicalization(unittest.TestCase):
         self.assertIs(sp_canonicalized, sp_obj)
 
     def test_step_pattern_exceptions_for_wrong_name(self):
-        sp_txt = "non_existing_step_pattern"
-        with self.assertRaises(AttributeError):
+        sp_txt = "asymetric"
+        with self.assertRaises(ProvidedStepPatternDoesNotExists):
             Utils.canonicalizeStepPattern(sp_txt)
 
 
