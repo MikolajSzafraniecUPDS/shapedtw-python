@@ -628,8 +628,8 @@ class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
 
         results = msd_1.calc_distance_matrices(msd_2, dist_method="euclidean")
 
-        self.assertTrue(
-            isinstance(results, MultivariateDistanceMatrixIndependent)
+        self.assertIsInstance(
+            results, MultivariateDistanceMatrixIndependent
         )
 
         self.assertTrue(
@@ -743,12 +743,12 @@ class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
         results_euclid = msd_1.calc_summed_distance_matrix(msd_2, dist_method="euclidean")
         results_cityblock = msd_1.calc_summed_distance_matrix(msd_2, dist_method="cityblock")
 
-        self.assertTrue(
-            isinstance(results_euclid, MultivariateDistanceMatrixDependent)
+        self.assertIsInstance(
+            results_euclid, MultivariateDistanceMatrixDependent
         )
 
-        self.assertTrue(
-            isinstance(results_cityblock, MultivariateDistanceMatrixDependent)
+        self.assertIsInstance(
+            results_cityblock, MultivariateDistanceMatrixDependent
         )
 
         self.assertTrue(

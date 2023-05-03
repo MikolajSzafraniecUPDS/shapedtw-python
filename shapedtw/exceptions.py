@@ -172,3 +172,12 @@ class WrongSlopeWindow(ShapeDescriptorError):
 
 class ProvidedStepPatternDoesNotExists(Exception):
     pass
+
+
+class SegmentIndexOutOfRange(Exception):
+    def __init__(self, provided_segment_number, actual_number_of_segments):
+        error_msg = "Provided number of segment: {0}. Range of segments: (1, {1})".format(
+            provided_segment_number, actual_number_of_segments
+        )
+
+        super().__init__(error_msg)

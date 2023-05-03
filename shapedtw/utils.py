@@ -21,7 +21,7 @@ class Utils:
                 res = getattr(sys.modules["dtw.stepPattern"], s)
             except AttributeError as ae:
                 raise ProvidedStepPatternDoesNotExists(
-                    "There is no such step pattern. Please check if there is no type in the step pattern name."
+                    "There is no such step pattern. Please check if there is no typo in the step pattern name."
                 )
 
         return res

@@ -26,21 +26,35 @@ class StepPatternMatrixTransformator:
     def _get_segments_number(self) -> int:
         return int(self.step_pattern_matrix[:, 0].max())
 
+    def _segment_number_in_range(self, segment_number: int) -> bool:
+        return (segment_number > 0) & (segment_number <= self._get_segments_number())
+
+    def _check_segment_number(self, segment_number: int) -> None:
+        if not self._segment_number_in_range(segment_number):
+            raise SegmentIndexOutOfRange(
+                provided_segment_number = segment_number,
+                actual_number_of_segments = self._get_segments_number()
+            )
+
     def _get_matrix_segment(self, segment_number: int) -> ndarray:
+        self._check_segment_number(segment_number)
         ind_mask = self.step_pattern_matrix[:, 0] == segment_number
         return self.step_pattern_matrix[ind_mask, :].copy()
 
     def _get_segment_length(self, segment_number: int) -> int:
+        self._check_segment_number(segment_number)
         mask = self.step_pattern_matrix[:, 0] == segment_number
         return mask.sum()-1
 
     def _get_segment_pattern(self, segment_number: int) -> tuple:
+        self._check_segment_number(segment_number)
         segment = self._get_matrix_segment(segment_number)
         return int(segment[0, 1]), int(segment[0, 2])
 
-    def _segment_to_dict(self, segment_num):
-        segment = self._get_matrix_segment(segment_num)
-        segment_length = self._get_segment_length(segment_num)
+    def _segment_to_dict(self, segment_number: int) -> dict:
+        self._check_segment_number(segment_number)
+        segment = self._get_matrix_segment(segment_number)
+        segment_length = self._get_segment_length(segment_number)
         res = {
             i: {
                 "x_index": int(segment[i+1, 1]),
@@ -51,7 +65,7 @@ class StepPatternMatrixTransformator:
 
         return res
 
-    def step_pattern_matrix_to_dict(self):
+    def step_pattern_matrix_to_dict(self) -> dict:
         segments_number = self._get_segments_number()
         segments_iter = range(1, segments_number+1)
         res = {
