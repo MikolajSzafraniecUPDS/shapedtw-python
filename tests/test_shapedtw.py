@@ -172,5 +172,34 @@ class TestStepPatternMatrixTransformator(unittest.TestCase):
             StepPatternMatrixTransformator("asymmetricP05").step_pattern_matrix_to_dict()
         )
 
+
+class TestDistanceReconstructor(unittest.TestCase):
+
+    ts_x = np.array([1.2, 4.5, 1.3, 2.4, 2.6])
+    ts_y = np.array([2.4, 3.4, 5.6, 1.3, 5.7])
+    ts_x_warping_path = dtw(x=ts_x, y=ts_y, dist_method="euclidean", step_pattern="symmetric2").index1s
+    ts_y_warping_path = dtw(x=ts_x, y=ts_y, dist_method="euclidean", step_pattern="symmetric2").index2s
+
+    def test_calc_distance_matrix(self):
+        expected_res = np.array(
+            [[1.2, 2.2, 4.4, 0.1, 4.5],
+             [2.1, 1.1, 1.1, 3.2, 1.2],
+             [1.1, 2.1, 4.3, 0., 4.4],
+             [0., 1., 3.2, 1.1, 3.3],
+             [0.2, 0.8, 3., 1.3, 3.1]]
+        )
+
+        res = DistanceReconstructor(
+            "symmetric2", self.ts_x, self.ts_y,
+            self.ts_x_warping_path, self.ts_y_warping_path
+        )._calc_distance_matrix()
+
+        self.assertTrue(
+            np.allclose(
+                expected_res,
+                res
+            )
+        )
+
 if __name__ == '__main__':
     unittest.main()
