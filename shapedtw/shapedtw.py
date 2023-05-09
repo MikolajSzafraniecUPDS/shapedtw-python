@@ -188,6 +188,8 @@ class ShapeDTW:
         step_pattern = Utils.canonicalizeStepPattern(self._step_pattern)
         norm = step_pattern.hint
 
+        # In case of multidimensional time series 'len' function returns
+        # number of rows, not number of all observations
         n, m = len(self.ts_x), len(self.ts_y)
 
         if norm == "N+M":
