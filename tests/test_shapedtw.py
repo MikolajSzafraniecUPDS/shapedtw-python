@@ -352,64 +352,146 @@ class TestDistanceReconstructor(unittest.TestCase):
 
 class TestShapeDTW(unittest.TestCase):
 
-    def test_calc_raw_series_distance(self):
-        ts_x = np.array([1., 2.5, 1.2, 4.5, 3.4])
-        ts_y = np.array([4., 2.1, 2.6, 3.1, 4.5])
+    ts_x = np.array([1., 2.5, 1.2, 4.5, 3.4])
+    ts_y = np.array([4., 2.1, 2.6, 3.1, 4.5])
+    dist_matrix = cdist(
+        np.atleast_2d(ts_x).T, np.atleast_2d(ts_y).T
+    )
+    distance = 7.5
+    normalized_distance = 0.75
 
-        shape_dtw_res = ShapeDTW(ts_x, ts_y, dtw_res=dtw(ts_x, ts_y))
-        dist_matrix = cdist(
-            np.atleast_2d(ts_x).T, np.atleast_2d(ts_y).T
+    def test_calc_raw_series_distance(self):
+        shape_dtw_res = ShapeDTW(
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y)
         )
 
         # ts_x warping path = [0, 1, 1, 1, 2, 3, 4]
         # ts_y warping path = [0, 1, 2, 3, 3, 4, 4]
-        expected_res = dist_matrix[0, 0] + \
-            dist_matrix[1, 1] * 2.0 + \
-            dist_matrix[1, 2] + \
-            dist_matrix[1, 3] + \
-            dist_matrix[2, 3] + \
-            dist_matrix[3, 4] * 2.0 + \
-            dist_matrix[4, 4]
+        expected_res = self.dist_matrix[0, 0] + \
+            self.dist_matrix[1, 1] * 2.0 + \
+            self.dist_matrix[1, 2] + \
+            self.dist_matrix[1, 3] + \
+            self.dist_matrix[2, 3] + \
+            self.dist_matrix[3, 4] * 2.0 + \
+            self.dist_matrix[4, 4]
 
         res = shape_dtw_res._calc_raw_series_distance("euclidean")
 
         self.assertAlmostEqual(expected_res, res)
 
     def test_calc_raw_series_normalized_distance(self):
-        ts_x = np.array([1., 2.5, 1.2, 4.5, 3.4])
-        ts_y = np.array([4., 2.1, 2.6, 3.1, 4.5])
-        distance = 7.5
 
         shape_dtw_res_symmetric2 = ShapeDTW(
-            ts_x, ts_y, dtw_res=dtw(ts_x, ts_y), step_pattern="symmetric2"
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y), step_pattern="symmetric2"
         )
         shape_dtw_res_asymmetricP05 = ShapeDTW(
-            ts_x, ts_y, dtw_res=dtw(ts_x, ts_y), step_pattern="asymmetricP05"
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y), step_pattern="asymmetricP05"
         )
         shape_dtw_res_mori2006 = ShapeDTW(
-            ts_x, ts_y, dtw_res=dtw(ts_x, ts_y), step_pattern="mori2006"
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y), step_pattern="mori2006"
         )
         shape_dtw_res_symmetric1 = ShapeDTW(
-            ts_x, ts_y, dtw_res=dtw(ts_x, ts_y), step_pattern="symmetric1"
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y), step_pattern="symmetric1"
         )
 
         self.assertEqual(
-            shape_dtw_res_symmetric2._calc_raw_series_normalized_distance(distance),
-            distance / (5+5)
+            shape_dtw_res_symmetric2._calc_raw_series_normalized_distance(self.distance),
+            self.distance / (5+5)
         )
         self.assertEqual(
-            shape_dtw_res_asymmetricP05._calc_raw_series_normalized_distance(distance),
-            distance / (5)
+            shape_dtw_res_asymmetricP05._calc_raw_series_normalized_distance(self.distance),
+            self.distance / (5)
         )
         self.assertEqual(
-            shape_dtw_res_mori2006._calc_raw_series_normalized_distance(distance),
-            distance / (5)
+            shape_dtw_res_mori2006._calc_raw_series_normalized_distance(self.distance),
+            self.distance / (5)
         )
         self.assertTrue(
             math.isnan(
-                shape_dtw_res_symmetric1._calc_raw_series_normalized_distance(distance)
+                shape_dtw_res_symmetric1._calc_raw_series_normalized_distance(self.distance)
             )
         )
+
+    def test_calc_distances(self):
+
+        shape_dtw_res = ShapeDTW(
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y)
+        )
+        distances = shape_dtw_res._calc_distances()
+
+        self.assertIsInstance(
+            distances, ShapeDTWResults
+        )
+
+        self.assertEqual(
+            distances.distance,
+            self.distance
+        )
+
+        self.assertEqual(
+            distances.normalized_distance,
+            self.normalized_distance
+        )
+
+        self.assertEqual(
+            distances.distance,
+            distances.shape_distance
+        )
+
+        self.assertEqual(
+            distances.normalized_distance,
+            distances.shape_normalized_distance
+        )
+
+    def test_get_distance(self):
+        shape_dtw_res = ShapeDTW(
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y)
+        )
+
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
+            return shape_dtw_res.distance
+
+    def test_get_normalized_distance(self):
+        shape_dtw_res = ShapeDTW(
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y)
+        )
+
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
+            return shape_dtw_res.distance
+
+    def test_get_shape_descriptor_distance(self):
+        shape_dtw_res = ShapeDTW(
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y)
+        )
+
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
+            return shape_dtw_res.shape_distance
+
+    def test_get_shape_descriptor_normalized_distance(self):
+        shape_dtw_res = ShapeDTW(
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y)
+        )
+
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
+            return shape_dtw_res.shape_normalized_distance
+
+    def test_set_distance(self):
+        shape_dtw_res = ShapeDTW(
+            self.ts_x, self.ts_y, dtw_res=dtw(self.ts_x, self.ts_y)
+        )
+
+        with self.assertRaises(DistanceSettingNotPossible):
+            shape_dtw_res.distance = 10.1
+
+        with self.assertRaises(DistanceSettingNotPossible):
+            shape_dtw_res.normalized_distance = 10.1
+
+        with self.assertRaises(DistanceSettingNotPossible):
+            shape_dtw_res.shape_distance = 10.1
+
+        with self.assertRaises(DistanceSettingNotPossible):
+            shape_dtw_res.shape_normalized_distance = 10.1
+
 
 if __name__ == '__main__':
     unittest.main()
