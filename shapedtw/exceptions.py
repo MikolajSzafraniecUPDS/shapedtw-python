@@ -181,3 +181,11 @@ class SegmentIndexOutOfRange(Exception):
         )
 
         super().__init__(error_msg)
+
+class WrongMultivariateVersionSpecified(Exception):
+    def __init__(self, provided_version: str):
+        error_msg = "Multivariate shape dtw version must be one of following: ['dependent', 'independent']. Provided: '{0}'".format(
+            provided_version
+        )
+
+        super().__init__(error_msg)

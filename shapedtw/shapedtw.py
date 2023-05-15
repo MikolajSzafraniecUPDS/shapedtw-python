@@ -422,12 +422,14 @@ def shape_dtw(x, y, subsequence_width: int,
             step_pattern=step_pattern,
             dist_method=dist_method
         )
-    else:
+    elif multivariate_version == "independent":
         shape_dtw_obj = MultivariateShapeDTWIndependent(
             ts_x=x, ts_y=y,
             step_pattern=step_pattern,
             dist_method=dist_method
         )
+    else:
+        raise WrongMultivariateVersionSpecified(multivariate_version)
 
     shape_dtw_results = shape_dtw_obj.calc_shape_dtw(
         subsequence_width=subsequence_width,
