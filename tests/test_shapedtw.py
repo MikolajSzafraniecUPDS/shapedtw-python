@@ -492,6 +492,65 @@ class TestShapeDTW(unittest.TestCase):
         with self.assertRaises(DistanceSettingNotPossible):
             shape_dtw_res.shape_normalized_distance = 10.1
 
+class TestUnivariateShapeDTW(unittest.TestCase):
+
+    ts_x = np.array([5.4, 3.4, 9.0, 1.2, 4.5, 6.7, 12.4])
+    ts_y = np.array([10.6, 3.4, 2.1, 7.8, 2.3, 13.4, 11.3])
+
+    def test_raw_subseries_descriptor_zero_width(self):
+        """
+        For raw subseries descriptor with zero width results
+        of shape dtw are expected to be the same as for 'standard'
+        dynamic time warping
+        """
+        raw_shape_descriptor = RawSubsequenceDescriptor()
+        shape_dtw_res = UnivariateShapeDTW(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(0, raw_shape_descriptor)
+
+        self.assertAlmostEqual(
+            shape_dtw_res.distance,
+            shape_dtw_res.shape_distance
+        )
+
+        self.assertAlmostEqual(
+            shape_dtw_res.normalized_distance,
+            shape_dtw_res.shape_normalized_distance
+        )
+
+    def test_calc_shape_dtw(self):
+        expected_distance = 42.5
+        expected_normalized_distance = expected_distance / (len(self.ts_x) + len(self.ts_y))
+        expected_shape_distance = 90.82777378665594
+        expected_shape_normalized_distance = expected_shape_distance / (
+                len(self.ts_x) + len(self.ts_y)
+        )
+
+        slope_shape_desc = SlopeDescriptor(2)
+
+        shape_dtw_res = UnivariateShapeDTW(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(3, slope_shape_desc)
+
+        self.assertAlmostEqual(
+            expected_distance,
+            shape_dtw_res.distance
+        )
+
+        self.assertAlmostEqual(
+            expected_normalized_distance,
+            shape_dtw_res.normalized_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_distance,
+            shape_dtw_res.shape_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_normalized_distance,
+            shape_dtw_res.shape_normalized_distance
+        )
 
 if __name__ == '__main__':
     unittest.main()
