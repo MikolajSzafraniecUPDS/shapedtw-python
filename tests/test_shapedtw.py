@@ -624,5 +624,135 @@ class TestMultivariateShapeDTWDependent(unittest.TestCase):
             shape_dtw_res.shape_normalized_distance
         )
 
+class TestMultivariateShapeDTWIndependent(unittest.TestCase):
+
+    ts_x = np.array([
+        [3.4, 10.5],
+        [4.5, 6.1],
+        [1.4, 8.6],
+        [6.7, 13.5]
+    ])
+    ts_y = np.array([
+        [5.6, 13.4],
+        [1.3, 8.7],
+        [8.6, 11.1],
+        [1.4, 9.8]
+    ])
+
+    shape_descriptor = CompoundDescriptor(
+        [SlopeDescriptor(2), PAADescriptor(2)]
+    )
+
+    def test_calc_raw_series_distance(self):
+        raw_series_dist_matrix_1 = cdist(
+            np.atleast_2d(self.ts_x[:,0]).T,
+            np.atleast_2d(self.ts_y[:,0]).T
+        )
+        raw_series_dist_matrix_2 = cdist(
+            np.atleast_2d(self.ts_x[:, 1]).T,
+            np.atleast_2d(self.ts_y[:, 1]).T
+        )
+
+        shape_dtw_res_independent = MultivariateShapeDTWIndependent(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(2, self.shape_descriptor)
+
+        # Warping path 1: [(0, 0), (1, 0), (2, 1), (3, 2), (3, 3)]
+        # Warping path 2: [(0, 0), (1, 1), (1, 2), (2, 2), (3, 3)]
+        dist_1 = raw_series_dist_matrix_1[0, 0] + \
+            raw_series_dist_matrix_1[1, 0] + \
+            raw_series_dist_matrix_1[2, 1]*2.0 + \
+            raw_series_dist_matrix_1[3, 2]*2.0 + \
+            raw_series_dist_matrix_1[3, 3]
+
+        dist_2 = raw_series_dist_matrix_2[0, 0] + \
+            raw_series_dist_matrix_2[1, 1]*2.0 + \
+            raw_series_dist_matrix_2[1, 2] + \
+            raw_series_dist_matrix_2[2, 2] + \
+            raw_series_dist_matrix_2[3, 3]*2.0
+
+        expected_dist = dist_1+dist_2
+        self.assertAlmostEqual(
+            expected_dist,
+            shape_dtw_res_independent.distance
+        )
+
+    def test_calc_distances(self):
+        expected_distance = 35.599999999999994
+        expected_normalized_distance = expected_distance / (len(self.ts_x)+len(self.ts_y))
+        expected_shape_distance = 98.53608711667624
+        expected_shape_normalized_distance = expected_shape_distance / (len(self.ts_x) + len(self.ts_y))
+
+        ts_x_shape_descriptor = MultivariateSubsequenceBuilder(self.ts_x, 2). \
+            transform_time_series_to_subsequences(). \
+            get_shape_descriptors(self.shape_descriptor)
+
+        ts_y_shape_descriptor = MultivariateSubsequenceBuilder(self.ts_y, 2). \
+            transform_time_series_to_subsequences(). \
+            get_shape_descriptors(self.shape_descriptor)
+
+        dist_matrices = ts_x_shape_descriptor.calc_distance_matrices(
+            ts_y_shape_descriptor
+        )
+
+        dtw_results = [
+            dtw(dist_mat.dist_matrix)
+            for dist_mat in dist_matrices.distance_matrices_list
+        ]
+
+        shape_dtw_independent_res = MultivariateShapeDTWIndependent(
+            self.ts_x, self.ts_y, dtw_results=dtw_results
+        )._calc_distances()
+
+        self.assertAlmostEqual(
+            expected_distance,
+            shape_dtw_independent_res.distance
+        )
+
+        self.assertAlmostEqual(
+            expected_normalized_distance,
+            shape_dtw_independent_res.normalized_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_distance,
+            shape_dtw_independent_res.shape_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_normalized_distance,
+            shape_dtw_independent_res.shape_normalized_distance
+        )
+
+    def test_calc_shape_dtw(self):
+        expected_distance = 35.599999999999994
+        expected_normalized_distance = expected_distance / (len(self.ts_x) + len(self.ts_y))
+        expected_shape_distance = 98.53608711667624
+        expected_shape_normalized_distance = expected_shape_distance / (len(self.ts_x) + len(self.ts_y))
+
+        shape_dtw_independent_res = MultivariateShapeDTWIndependent(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(2, self.shape_descriptor)
+
+        self.assertAlmostEqual(
+            expected_distance,
+            shape_dtw_independent_res.distance
+        )
+
+        self.assertAlmostEqual(
+            expected_normalized_distance,
+            shape_dtw_independent_res.normalized_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_distance,
+            shape_dtw_independent_res.shape_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_normalized_distance,
+            shape_dtw_independent_res.shape_normalized_distance
+        )
+
 if __name__ == '__main__':
     unittest.main()
