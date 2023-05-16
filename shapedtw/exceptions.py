@@ -117,12 +117,18 @@ class IncompatibleSeriesNumber(DimensionError):
 
         super().__init__(error_msg)
 
+class DTWNotCalculatedYet(Exception):
+    pass
 
 class ShapeDTWNotCalculatedYet(Exception):
     pass
 
 
 class DistanceSettingNotPossible(Exception):
+    pass
+
+
+class WarpingPathSettingNotPossible(Exception):
     pass
 
 

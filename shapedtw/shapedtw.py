@@ -243,10 +243,44 @@ class ShapeDTW:
             "ShapeDTW distance can be set only using 'calc_shape_dtw' method"
         )
 
+    def _get_index1(self):
+        if self._dtw_results is not None:
+            return self._dtw_results.index1
+        else:
+            raise DTWNotCalculatedYet()
+
+    def _get_index2(self):
+        if self._dtw_results is not None:
+            return self._dtw_results.index2
+        else:
+            raise DTWNotCalculatedYet()
+
+    def _get_index1s(self):
+        if self._dtw_results is not None:
+            return self._dtw_results.index1s
+        else:
+            raise DTWNotCalculatedYet()
+
+    def _get_index2s(self):
+        if self._dtw_results is not None:
+            return self._dtw_results.index2s
+        else:
+            raise DTWNotCalculatedYet()
+
+    def _set_index(self, value):
+        raise WarpingPathSettingNotPossible(
+            "Warping paths can be set only using 'calc_shape_dtw' method"
+        )
+
     distance = property(_get_distance, _set_distance)
     normalized_distance = property(_get_normalized_distance, _set_distance)
     shape_distance = property(_get_shape_descriptor_distance, _set_distance)
     shape_normalized_distance = property(_get_shape_descriptor_normalized_distance, _set_distance)
+
+    index1 = property(_get_index1, _set_index)
+    index2 = property(_get_index2, _set_index)
+    index1s = property(_get_index1s, _set_index)
+    index2s = property(_get_index2s, _set_index)
 
 
 class UnivariateShapeDTW(ShapeDTW):
@@ -387,6 +421,31 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         self._shape_dtw_results = self._calc_distances()
 
         return self
+
+    def _get_index1(self):
+        if self._dtw_results is not None:
+            return [dtw_res.index1 for dtw_res in self._dtw_results]
+        else:
+            raise DTWNotCalculatedYet()
+
+    def _get_index2(self):
+        if self._dtw_results is not None:
+            return [dtw_res.index2 for dtw_res in self._dtw_results]
+        else:
+            raise DTWNotCalculatedYet()
+
+    def _get_index1s(self):
+        if self._dtw_results is not None:
+            return [dtw_res.index1s for dtw_res in self._dtw_results]
+        else:
+            raise DTWNotCalculatedYet()
+
+    def _get_index2s(self):
+        if self._dtw_results is not None:
+            return [dtw_res.index1s for dtw_res in self._dtw_results]
+        else:
+            raise DTWNotCalculatedYet()
+
 
 
 def shape_dtw(x, y, subsequence_width: int,
