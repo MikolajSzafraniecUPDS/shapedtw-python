@@ -1,6 +1,8 @@
 import unittest
 import math
 
+import numpy as np
+
 from shapedtw.shapedtw import *
 from shapedtw.exceptions import *
 
@@ -492,10 +494,46 @@ class TestShapeDTW(unittest.TestCase):
         with self.assertRaises(DistanceSettingNotPossible):
             shape_dtw_res.shape_normalized_distance = 10.1
 
+    def test_get_index1(self):
+        shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
+        with self.assertRaises(DTWNotCalculatedYet):
+            return shape_dtw_res.index1
+
+    def test_get_index2(self):
+        shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
+        with self.assertRaises(DTWNotCalculatedYet):
+            return shape_dtw_res.index2
+
+    def test_get_index1s(self):
+        shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
+        with self.assertRaises(DTWNotCalculatedYet):
+            return shape_dtw_res.index1s
+
+    def test_get_index2s(self):
+        shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
+        with self.assertRaises(DTWNotCalculatedYet):
+            return shape_dtw_res.index2s
+
+    def test_set_index(self):
+        shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index1 = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index2 = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index1s = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index2s = np.array([0, 1, 2])
+
 class TestUnivariateShapeDTW(unittest.TestCase):
 
     ts_x = np.array([5.4, 3.4, 9.0, 1.2, 4.5, 6.7, 12.4])
     ts_y = np.array([10.6, 3.4, 2.1, 7.8, 2.3, 13.4, 11.3])
+    slope_shape_desc = SlopeDescriptor(2)
 
     def test_raw_subseries_descriptor_zero_width(self):
         """
@@ -526,11 +564,9 @@ class TestUnivariateShapeDTW(unittest.TestCase):
                 len(self.ts_x) + len(self.ts_y)
         )
 
-        slope_shape_desc = SlopeDescriptor(2)
-
         shape_dtw_res = UnivariateShapeDTW(
             self.ts_x, self.ts_y
-        ).calc_shape_dtw(3, slope_shape_desc)
+        ).calc_shape_dtw(3, self.slope_shape_desc)
 
         self.assertAlmostEqual(
             expected_distance,
@@ -552,6 +588,60 @@ class TestUnivariateShapeDTW(unittest.TestCase):
             shape_dtw_res.shape_normalized_distance
         )
 
+    def test_index_getters(self):
+        expected_index1 = np.array([0, 0, 1, 2, 3, 4, 5, 6])
+        expected_index2 = np.array([0, 1, 2, 3, 4, 5, 6, 6])
+        expected_index1s = np.array([0, 0, 1, 2, 3, 4, 5, 6])
+        expected_index2s = np.array([0, 1, 2, 3, 4, 5, 6, 6])
+
+        shape_dtw_res = UnivariateShapeDTW(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(3, self.slope_shape_desc)
+
+        self.assertTrue(
+            np.array_equal(
+                expected_index1,
+                shape_dtw_res.index1
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                expected_index2,
+                shape_dtw_res.index2
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                expected_index1s,
+                shape_dtw_res.index1s
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                expected_index2s,
+                shape_dtw_res.index2s
+            )
+        )
+
+    def test_set_index(self):
+        shape_dtw_res = UnivariateShapeDTW(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(3, self.slope_shape_desc)
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index1 = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index2 = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index1s = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index2s = np.array([0, 1, 2])
 
 class TestMultivariateShapeDTWDependent(unittest.TestCase):
     ts_x = np.array([
@@ -568,6 +658,8 @@ class TestMultivariateShapeDTWDependent(unittest.TestCase):
         [9.5, 9. ],
         [1.1, 9.5]
     ])
+
+    slope_shape_desc = SlopeDescriptor(2)
 
     def test_raw_subseries_descriptor_zero_width(self):
         """
@@ -598,11 +690,9 @@ class TestMultivariateShapeDTWDependent(unittest.TestCase):
                 len(self.ts_x) + len(self.ts_y)
         )
 
-        slope_shape_desc = SlopeDescriptor(2)
-
         shape_dtw_res = MultivariateShapeDTWDependent(
             self.ts_x, self.ts_y
-        ).calc_shape_dtw(3, slope_shape_desc)
+        ).calc_shape_dtw(3, self.slope_shape_desc)
 
         self.assertAlmostEqual(
             expected_distance,
@@ -623,6 +713,61 @@ class TestMultivariateShapeDTWDependent(unittest.TestCase):
             expected_shape_normalized_distance,
             shape_dtw_res.shape_normalized_distance
         )
+
+    def test_index_getters(self):
+        expected_index1 = np.array([0, 1, 2, 3, 4, 4, 4, 4, 4])
+        expected_index2 = np.array([0, 0, 0, 0, 0, 1, 2, 3, 4])
+        expected_index1s = np.array([0, 1, 2, 3, 4, 4, 4, 4, 4])
+        expected_index2s = np.array([0, 0, 0, 0, 0, 1, 2, 3, 4])
+
+        shape_dtw_res = MultivariateShapeDTWDependent(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(3, self.slope_shape_desc)
+
+        self.assertTrue(
+            np.array_equal(
+                expected_index1,
+                shape_dtw_res.index1
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                expected_index2,
+                shape_dtw_res.index2
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                expected_index1s,
+                shape_dtw_res.index1s
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                expected_index2s,
+                shape_dtw_res.index2s
+            )
+        )
+
+    def test_set_index(self):
+        shape_dtw_res = MultivariateShapeDTWDependent(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(3, self.slope_shape_desc)
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index1 = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index2 = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index1s = np.array([0, 1, 2])
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_res.index2s = np.array([0, 1, 2])
 
 class TestMultivariateShapeDTWIndependent(unittest.TestCase):
 
@@ -753,6 +898,93 @@ class TestMultivariateShapeDTWIndependent(unittest.TestCase):
             expected_shape_normalized_distance,
             shape_dtw_independent_res.shape_normalized_distance
         )
+
+    def test_index_getters(self):
+        expected_index1 = [
+            np.array([0, 1, 2, 3, 3]),
+            np.array([0, 1, 1, 2, 3])
+        ]
+        expected_index2 = [
+            np.array([0, 0, 1, 2, 3]),
+            np.array([0, 1, 2, 2, 3])
+        ]
+        expected_index1s = [
+            np.array([0, 1, 2, 3, 3]),
+            np.array([0, 1, 1, 2, 3])
+        ]
+        expected_index2s = [
+            np.array([0, 0, 1, 2, 3]),
+            np.array([0, 1, 2, 2, 3])
+        ]
+
+        shape_dtw_independent_res = MultivariateShapeDTWIndependent(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(2, self.shape_descriptor)
+
+        self.assertTrue(
+            all(
+                [
+                    np.array_equal(expected, actual)
+                    for (expected, actual) in zip(expected_index1, shape_dtw_independent_res.index1)
+                ]
+            )
+        )
+
+        self.assertTrue(
+            all(
+                [
+                    np.array_equal(expected, actual)
+                    for (expected, actual) in zip(expected_index2, shape_dtw_independent_res.index2)
+                ]
+            )
+        )
+
+        self.assertTrue(
+            all(
+                [
+                    np.array_equal(expected, actual)
+                    for (expected, actual) in zip(expected_index1s, shape_dtw_independent_res.index1s)
+                ]
+            )
+        )
+
+        self.assertTrue(
+            all(
+                [
+                    np.array_equal(expected, actual)
+                    for (expected, actual) in zip(expected_index2s, shape_dtw_independent_res.index2s)
+                ]
+            )
+        )
+
+    def test_set_index(self):
+        shape_dtw_independent_res = MultivariateShapeDTWIndependent(
+            self.ts_x, self.ts_y
+        ).calc_shape_dtw(2, self.shape_descriptor)
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_independent_res.index1 = [
+                np.array([0, 1, 2]),
+                np.array([0, 1, 2])
+            ]
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_independent_res.index2 = [
+                np.array([0, 1, 2]),
+                np.array([0, 1, 2])
+            ]
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_independent_res.index1s = [
+                np.array([0, 1, 2]),
+                np.array([0, 1, 2])
+            ]
+
+        with self.assertRaises(WarpingPathSettingNotPossible):
+            shape_dtw_independent_res.index2s = [
+                np.array([0, 1, 2]),
+                np.array([0, 1, 2])
+            ]
 
 if __name__ == '__main__':
     unittest.main()

@@ -442,10 +442,14 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
     def _get_index2s(self):
         if self._dtw_results is not None:
-            return [dtw_res.index1s for dtw_res in self._dtw_results]
+            return [dtw_res.index2s for dtw_res in self._dtw_results]
         else:
             raise DTWNotCalculatedYet()
 
+    index1 = property(_get_index1, ShapeDTW._set_index)
+    index2 = property(_get_index2, ShapeDTW._set_index)
+    index1s = property(_get_index1s, ShapeDTW._set_index)
+    index2s = property(_get_index2s, ShapeDTW._set_index)
 
 
 def shape_dtw(x, y, subsequence_width: int,
