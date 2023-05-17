@@ -195,3 +195,11 @@ class WrongMultivariateVersionSpecified(Exception):
         )
 
         super().__init__(error_msg)
+
+class InputTimeSeriesUnsupportedType(Exception):
+    def __init__(self, type_of_provided_object: str):
+        error_msg = "Time series must be numpy array, pandas Series or pandas DataFrame. Provided type '{0}' is not currently supported".format(
+            type_of_provided_object
+        )
+
+        super().__init__(error_msg)

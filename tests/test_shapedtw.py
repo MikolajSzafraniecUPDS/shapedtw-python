@@ -2,6 +2,7 @@ import unittest
 import math
 
 import numpy as np
+import pandas as pd
 
 from shapedtw.shapedtw import *
 from shapedtw.exceptions import *
@@ -985,6 +986,385 @@ class TestMultivariateShapeDTWIndependent(unittest.TestCase):
                 np.array([0, 1, 2]),
                 np.array([0, 1, 2])
             ]
+
+class TestValuesGetter(unittest.TestCase):
+
+    np_array = np.array([1, 2, 3])
+    pd_series = pd.Series([1, 2, 3])
+    pd_df_one_col = pd.DataFrame({"X": [1, 2, 3]})
+    pd_df_two_col = pd.DataFrame(
+        {
+            "X": [1, 2, 3],
+            "Y": [4, 5, 6]
+        }
+    )
+
+    def test_is_numpy_array(self):
+        self.assertTrue(
+            ValuesGetter(
+                self.np_array
+            )._is_numpy_array()
+        )
+
+    def test_is_pandas_series(self):
+        self.assertTrue(
+            ValuesGetter(
+                self.pd_series
+            )._is_pandas_series()
+        )
+
+    def test_is_pandas_dataframe(self):
+        self.assertTrue(
+            ValuesGetter(
+                self.pd_df_two_col
+            )._is_pandas_dataframe()
+        )
+
+    def test_is_flatten_needed(self):
+        self.assertTrue(
+            ValuesGetter(
+                self.pd_df_one_col
+            )._is_flatten_needed()
+        )
+
+        self.assertFalse(
+            ValuesGetter(
+                self.pd_df_two_col
+            )._is_flatten_needed()
+        )
+
+        self.assertFalse(
+            ValuesGetter(
+                self.np_array
+            )._is_flatten_needed()
+        )
+
+        self.assertFalse(
+            ValuesGetter(
+                self.pd_series
+            )._is_flatten_needed()
+        )
+
+    def test_flatten_if_needed(self):
+        values_getter_flatten_needed = ValuesGetter(
+            self.pd_df_one_col
+        )
+        values_getter_flatten_no_needed = ValuesGetter(
+            self.pd_df_two_col
+        )
+
+        expected_res_flatten_needed = np.array([1, 2, 3])
+        expected_res_flatten_no_needed = np.array([
+            [1, 4],
+            [2, 5],
+            [3, 6]
+        ])
+
+        self.assertTrue(
+            np.array_equal(
+                values_getter_flatten_needed._flatten_if_needed(),
+                expected_res_flatten_needed
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                values_getter_flatten_no_needed._flatten_if_needed(),
+                expected_res_flatten_no_needed
+            )
+        )
+
+    def test_get_values(self):
+        expected_res_array = np.array([1, 2, 3])
+        expected_res_series = np.array([1, 2, 3])
+        expected_res_univariate_df = np.array([1, 2, 3])
+        expected_res_two_col_df = np.array([
+            [1, 4],
+            [2, 5],
+            [3, 6]
+        ])
+
+        self.assertTrue(
+            np.array_equal(
+                ValuesGetter(self.np_array).get_values(),
+                expected_res_array
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                ValuesGetter(self.pd_series).get_values(),
+                expected_res_series
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                ValuesGetter(self.pd_df_one_col).get_values(),
+                expected_res_univariate_df
+            )
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                ValuesGetter(self.pd_df_two_col).get_values(),
+                expected_res_two_col_df
+            )
+        )
+
+        with self.assertRaises(InputTimeSeriesUnsupportedType):
+            return ValuesGetter([1, 2, 3]).get_values()
+
+class TestShapeDTWMethod(unittest.TestCase):
+
+    ts_x_univariate_array = np.array(
+        [4.5, 2.3, 9.0, 3.4, 1.1, 2.0]
+    )
+    ts_y_univariate_array = np.array(
+        [10.5, 7.3, 1.1, 8.6, 8.5, 3.4]
+    )
+
+    ts_x_univariate_series = pd.Series(ts_x_univariate_array)
+    ts_y_univariate_series = pd.Series(ts_y_univariate_array)
+
+    ts_x_univariate_dataframe = pd.DataFrame(ts_x_univariate_array, columns=["dim_1"])
+    ts_y_univariate_dataframe = pd.DataFrame(ts_y_univariate_array, columns=["dim_1"])
+
+
+    ts_x_multivariate_dataframe = pd.DataFrame(
+        {
+            "dim_1": [9.0, 4.5, 1.3, 7.6, 4.5],
+            "dim_2": [5.1, 7.4, 6.5, 1.1, 1.5]
+        }
+    )
+    ts_y_multivariate_dataframe = pd.DataFrame(
+        {
+            "dim_1": [6.7, 2.2, 5.3, 6.4, 10.1],
+            "dim_2": [9.5, 1.4, 1.5, 3.4, 8.5]
+        }
+    )
+    ts_x_multivariate_array = ts_x_multivariate_dataframe.values
+    ts_y_multivariate_array = ts_y_multivariate_dataframe.values
+
+    shape_desc_slope = SlopeDescriptor(2)
+
+    def test_univariate_series_output_class(self):
+        shape_dtw_res_array = shape_dtw(
+            self.ts_x_univariate_array, self.ts_y_univariate_array,
+            2, self.shape_desc_slope
+        )
+
+        shape_dtw_res_series = shape_dtw(
+            self.ts_x_univariate_series, self.ts_y_univariate_series,
+            2, self.shape_desc_slope
+        )
+
+        shape_dtw_res_dataframe = shape_dtw(
+            self.ts_x_univariate_dataframe, self.ts_y_univariate_dataframe,
+            2, self.shape_desc_slope
+        )
+
+        self.assertIsInstance(
+            shape_dtw_res_array,
+            UnivariateShapeDTW
+        )
+
+        self.assertIsInstance(
+            shape_dtw_res_series,
+            UnivariateShapeDTW
+        )
+
+        self.assertIsInstance(
+            shape_dtw_res_dataframe,
+            UnivariateShapeDTW
+        )
+
+    def test_multivariate_dependent_output_class(self):
+        shape_dtw_res_array = shape_dtw(
+            self.ts_x_multivariate_array,
+            self.ts_y_multivariate_array,
+            2,
+            self.shape_desc_slope
+        )
+
+        shape_dtw_res_dataframe = shape_dtw(
+            self.ts_x_multivariate_dataframe,
+            self.ts_y_multivariate_dataframe,
+            2,
+            self.shape_desc_slope
+        )
+
+        self.assertIsInstance(
+            shape_dtw_res_array,
+            MultivariateShapeDTWDependent
+        )
+
+        self.assertIsInstance(
+            shape_dtw_res_dataframe,
+            MultivariateShapeDTWDependent
+        )
+
+    def test_multivariate_independent_output_class(self):
+        shape_dtw_res_array = shape_dtw(
+            self.ts_x_multivariate_array,
+            self.ts_y_multivariate_array,
+            2,
+            self.shape_desc_slope,
+            multivariate_version="independent"
+        )
+
+        shape_dtw_res_dataframe = shape_dtw(
+            self.ts_x_multivariate_dataframe,
+            self.ts_y_multivariate_dataframe,
+            2,
+            self.shape_desc_slope,
+            multivariate_version="independent"
+        )
+
+        self.assertIsInstance(
+            shape_dtw_res_array,
+            MultivariateShapeDTWIndependent
+        )
+
+        self.assertIsInstance(
+            shape_dtw_res_dataframe,
+            MultivariateShapeDTWIndependent
+        )
+
+    def test_wrong_multivariate_specification_exception(self):
+        with self.assertRaises(WrongMultivariateVersionSpecified):
+            return shape_dtw(
+            self.ts_x_multivariate_array,
+            self.ts_y_multivariate_array,
+            2,
+            self.shape_desc_slope,
+            multivariate_version="independend"
+        )
+
+    def test_univariate_pandas_array_results_equality(self):
+        shape_dtw_res_array = shape_dtw(
+            self.ts_x_univariate_array,
+            self.ts_y_univariate_array,
+            2, self.shape_desc_slope
+        )
+        shape_dtw_res_series = shape_dtw(
+            self.ts_x_univariate_series,
+            self.ts_y_univariate_series,
+            2, self.shape_desc_slope
+        )
+        shape_dtw_res_dataframe = shape_dtw(
+            self.ts_x_univariate_dataframe,
+            self.ts_y_univariate_dataframe,
+            2, self.shape_desc_slope
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.distance,
+            shape_dtw_res_series.distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_series.distance,
+            shape_dtw_res_dataframe.distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.normalized_distance,
+            shape_dtw_res_series.normalized_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_series.normalized_distance,
+            shape_dtw_res_dataframe.normalized_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.shape_distance,
+            shape_dtw_res_series.shape_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_series.shape_distance,
+            shape_dtw_res_dataframe.shape_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.shape_normalized_distance,
+            shape_dtw_res_series.shape_normalized_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_series.shape_normalized_distance,
+            shape_dtw_res_dataframe.shape_normalized_distance
+        )
+
+    def test_multivariate_dependent_pandas_array_results_equality(self):
+        shape_dtw_res_array = shape_dtw(
+            self.ts_x_multivariate_array,
+            self.ts_y_multivariate_array,
+            2, self.shape_desc_slope
+        )
+        shape_dtw_res_dataframe = shape_dtw(
+            self.ts_x_multivariate_dataframe,
+            self.ts_y_multivariate_dataframe,
+            2, self.shape_desc_slope
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.distance,
+            shape_dtw_res_dataframe.distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.normalized_distance,
+            shape_dtw_res_dataframe.normalized_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.shape_distance,
+            shape_dtw_res_dataframe.shape_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.shape_normalized_distance,
+            shape_dtw_res_dataframe.shape_normalized_distance
+        )
+
+    def test_multivariate_independent_pandas_array_results_equality(self):
+        shape_dtw_res_array = shape_dtw(
+            self.ts_x_multivariate_array,
+            self.ts_y_multivariate_array,
+            2, self.shape_desc_slope,
+            multivariate_version="independent"
+        )
+        shape_dtw_res_dataframe = shape_dtw(
+            self.ts_x_multivariate_dataframe,
+            self.ts_y_multivariate_dataframe,
+            2, self.shape_desc_slope,
+            multivariate_version="independent"
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.distance,
+            shape_dtw_res_dataframe.distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.normalized_distance,
+            shape_dtw_res_dataframe.normalized_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.shape_distance,
+            shape_dtw_res_dataframe.shape_distance
+        )
+
+        self.assertEqual(
+            shape_dtw_res_array.shape_normalized_distance,
+            shape_dtw_res_dataframe.shape_normalized_distance
+        )
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pandas as pd
 from dtw import *
 
 from shapedtw.preprocessing import *
@@ -451,6 +452,46 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
     index1s = property(_get_index1s, ShapeDTW._set_index)
     index2s = property(_get_index2s, ShapeDTW._set_index)
 
+class ValuesGetter:
+
+    def __init__(self, input_ts: object):
+        self.input_ts = input_ts
+
+    def _is_numpy_array(self) -> bool:
+        return isinstance(self.input_ts, ndarray)
+
+    def _is_pandas_series(self) -> bool:
+        return isinstance(self.input_ts, pd.Series)
+
+    def _is_pandas_dataframe(self) -> bool:
+        return isinstance(self.input_ts, pd.DataFrame)
+
+    def _is_flatten_needed(self) -> bool:
+        if self._is_pandas_dataframe():
+            return True if len(self.input_ts.columns) == 1 else False
+        return False
+
+    def _flatten_if_needed(self) -> ndarray:
+        if self._is_flatten_needed():
+            res = self.input_ts.values.flatten()
+        else:
+            res = self.input_ts.values
+        return res
+
+    def get_values(self) -> ndarray:
+        if self._is_numpy_array():
+            res = self.input_ts
+        elif self._is_pandas_series():
+            res = self.input_ts.values
+        elif self._is_pandas_dataframe():
+            res = self._flatten_if_needed()
+        else:
+            raise InputTimeSeriesUnsupportedType(
+                self.input_ts.__class__.__name__
+            )
+
+        return res
+
 
 def shape_dtw(x, y, subsequence_width: int,
               shape_descriptor: ShapeDescriptor,
@@ -459,11 +500,8 @@ def shape_dtw(x, y, subsequence_width: int,
               multivariate_version: str = "dependent",
               **kwargs):
 
-    if not isinstance(x, ndarray):
-        x = x.values
-
-    if not isinstance(y, ndarray):
-        y = y.values
+    x = ValuesGetter(x).get_values()
+    y = ValuesGetter(y).get_values()
 
     if not Utils.number_of_dimensions_equal(x, y):
         raise IncompatibleDimensionality(x, y)
@@ -471,7 +509,7 @@ def shape_dtw(x, y, subsequence_width: int,
     if not Utils.number_of_series_equal(x, y):
         raise IncompatibleSeriesNumber(x, y)
 
-    ts_x_shape = len(x.shape)
+    ts_x_shape = Utils.get_number_of_dimensions(x)
 
     if ts_x_shape == 1:
         shape_dtw_obj = UnivariateShapeDTW(
