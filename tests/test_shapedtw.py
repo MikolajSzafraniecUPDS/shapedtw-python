@@ -1361,6 +1361,177 @@ class TestShapeDTWMethod(unittest.TestCase):
             shape_dtw_res_dataframe.shape_normalized_distance
         )
 
+    def test_incompatible_dimensionality_exceptions(self):
+        ts_x = np.random.randn(10)
+        ts_y = np.random.randn(10, 2)
+
+        ts_x_pandas = pd.DataFrame(
+            {
+                "X": [1, 2, 3]
+            }
+        )
+        ts_y_pandas = pd.DataFrame(
+            {
+                "X": [1, 2, 3],
+                "Y": [4, 5, 6]
+            }
+        )
+        ts_z_pandas = pd.DataFrame(
+            {
+                "X": [1, 2, 3],
+                "Y": [4, 5, 6],
+                "Z": [7, 8, 9]
+            }
+        )
+
+        with self.assertRaises(IncompatibleDimensionality):
+            return shape_dtw(ts_x, ts_y, 2, self.shape_desc_slope)
+
+        with self.assertRaises(IncompatibleDimensionality):
+            return shape_dtw(ts_x_pandas, ts_y_pandas, 2, self.shape_desc_slope)
+
+        with self.assertRaises(IncompatibleSeriesNumber):
+            return shape_dtw(ts_y_pandas, ts_z_pandas, 2, self.shape_desc_slope)
+
+    def test_different_patterns_different_results(self):
+        np.random.seed(10)
+        ts_x_univariate = np.random.randn(100)
+        ts_y_univariate = np.random.randn(100)
+
+        ts_x_multivariate = np.random.randn(100, 3)
+        ts_y_multivariate = np.random.randn(100, 3)
+
+        self.assertNotEqual(
+            shape_dtw(ts_x_univariate, ts_y_univariate, 3, self.shape_desc_slope).distance,
+            shape_dtw(ts_x_univariate, ts_y_univariate, 3, self.shape_desc_slope, step_pattern="asymmetricP05").distance
+        )
+
+        self.assertNotEqual(
+            shape_dtw(ts_x_multivariate, ts_y_multivariate, 3, self.shape_desc_slope).distance,
+            shape_dtw(ts_x_multivariate, ts_y_multivariate, 3, self.shape_desc_slope,
+                      step_pattern="asymmetricP05").distance
+        )
+
+        self.assertNotEqual(
+            shape_dtw(
+                ts_x_multivariate, ts_y_multivariate,
+                3, self.shape_desc_slope, multivariate_version="independent"
+            ).distance,
+            shape_dtw(
+                ts_x_multivariate, ts_y_multivariate,
+                3, self.shape_desc_slope,step_pattern="asymmetricP05",
+                multivariate_version="independent"
+            ).distance
+        )
+
+    def test_univariate_results(self):
+        expected_distance = 28.199999999999996
+        expected_normalized_distance = expected_distance / (
+                len(self.ts_x_univariate_array) + len(self.ts_y_univariate_array)
+        )
+        expected_shape_distance = 44.368827255622335
+        expected_shape_normalized_distance = expected_shape_distance / (
+                len(self.ts_x_univariate_array) + len(self.ts_y_univariate_array)
+        )
+
+        shape_dtw_univariate_res = shape_dtw(
+            self.ts_x_univariate_array,
+            self.ts_y_univariate_array,
+            2, self.shape_desc_slope
+        )
+
+        self.assertAlmostEqual(
+            expected_distance,
+            shape_dtw_univariate_res.distance
+        )
+
+        self.assertAlmostEqual(
+            expected_normalized_distance,
+            shape_dtw_univariate_res.normalized_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_distance,
+            shape_dtw_univariate_res.shape_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_normalized_distance,
+            shape_dtw_univariate_res.shape_normalized_distance
+        )
+
+    def test_multivariate_dependent_results(self):
+        expected_distance = 58.188833804489654
+        expected_normalized_distance = expected_distance / (
+                len(self.ts_x_multivariate_array) + len(self.ts_y_multivariate_array)
+        )
+        expected_shape_distance = 71.30642623707017
+        expected_shape_normalized_distance = expected_shape_distance / (
+                len(self.ts_x_multivariate_array) + len(self.ts_y_multivariate_array)
+        )
+
+        shape_dtw_multivariate_dependent_res = shape_dtw(
+            self.ts_x_multivariate_array,
+            self.ts_y_multivariate_array,
+            2, self.shape_desc_slope
+        )
+
+        self.assertAlmostEqual(
+            expected_distance,
+            shape_dtw_multivariate_dependent_res.distance
+        )
+
+        self.assertAlmostEqual(
+            expected_normalized_distance,
+            shape_dtw_multivariate_dependent_res.normalized_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_distance,
+            shape_dtw_multivariate_dependent_res.shape_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_normalized_distance,
+            shape_dtw_multivariate_dependent_res.shape_normalized_distance
+        )
+
+    def test_multivariate_independent_results(self):
+        expected_distance = 51.0
+        expected_normalized_distance = expected_distance / (
+                len(self.ts_x_multivariate_array) + len(self.ts_y_multivariate_array)
+        )
+        expected_shape_distance = 76.83431214261648
+        expected_shape_normalized_distance = expected_shape_distance / (
+                len(self.ts_x_multivariate_array) + len(self.ts_y_multivariate_array)
+        )
+
+        shape_dtw_multivariate_independent_res = shape_dtw(
+            self.ts_x_multivariate_array,
+            self.ts_y_multivariate_array,
+            2, self.shape_desc_slope,
+            multivariate_version="independent"
+        )
+
+        self.assertAlmostEqual(
+            expected_distance,
+            shape_dtw_multivariate_independent_res.distance
+        )
+
+        self.assertAlmostEqual(
+            expected_normalized_distance,
+            shape_dtw_multivariate_independent_res.normalized_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_distance,
+            shape_dtw_multivariate_independent_res.shape_distance
+        )
+
+        self.assertAlmostEqual(
+            expected_shape_normalized_distance,
+            shape_dtw_multivariate_independent_res.shape_normalized_distance
+        )
 
 
 if __name__ == '__main__':
