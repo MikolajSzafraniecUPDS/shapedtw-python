@@ -375,7 +375,7 @@ class TestShapeDTW(unittest.TestCase):
             self.dist_matrix[3, 4] * 2.0 + \
             self.dist_matrix[4, 4]
 
-        res = shape_dtw_res._calc_raw_series_distance("euclidean")
+        res = shape_dtw_res._calc_raw_series_distance()
 
         self.assertAlmostEqual(expected_res, res)
 
