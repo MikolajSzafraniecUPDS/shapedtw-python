@@ -1,9 +1,6 @@
 import unittest
 import math
 
-import numpy as np
-import pandas as pd
-
 from shapedtw.shapedtw import *
 from shapedtw.exceptions import *
 

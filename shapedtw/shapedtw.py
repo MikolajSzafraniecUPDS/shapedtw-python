@@ -350,7 +350,7 @@ class MultivariateShapeDTWDependent(ShapeDTW):
             ts_y_shape_descriptor, dist_method=self._dist_method
         )
 
-        dtw_results = dtw(dist_matrix.distance_matrix, **kwargs)
+        dtw_results = dtw(dist_matrix.distance_matrix, step_pattern=self._step_pattern, **kwargs)
         self._dtw_results = dtw_results
         self._shape_dtw_results = self._calc_distances()
 
@@ -414,7 +414,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         )
 
         dtw_results_list = [
-            dtw(dist_mat.dist_matrix, **kwargs)
+            dtw(dist_mat.dist_matrix, step_pattern=self._step_pattern, **kwargs)
             for dist_mat in dist_matrices.distance_matrices_list
         ]
 
