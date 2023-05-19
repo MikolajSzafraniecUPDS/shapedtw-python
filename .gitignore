@@ -134,5 +134,5 @@ dmypy.json
 # Jupyter notebooks
 *.ipynb
 
-# Txt notes
-*.txt
+# Notes
+/notes

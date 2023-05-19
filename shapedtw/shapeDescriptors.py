@@ -5,7 +5,7 @@ from abc import abstractmethod, ABC
 from numpy import ndarray
 from typing import List
 from scipy.stats import linregress
-from .exceptions import *
+from shapedtw.exceptions import *
 from itertools import repeat
 
 
@@ -95,7 +95,7 @@ class DWTDescriptor(ShapeDescriptor):
     F(·) = DWT, di = DWT (si).'
     """
 
-    def __init__(self, wave_type: str = "haar", mode: str = "sym", level: int = 3):
+    def __init__(self, wave_type: str = "haar", mode: str = "symmetric", level: int = 3):
         self.wave_type = wave_type
         self.mode = mode
         self.level = level
@@ -125,7 +125,14 @@ class SlopeDescriptor(ShapeDescriptor):
     """
 
     def __init__(self, slope_window: int = 2):
+        if not self._is_slope_correct(slope_window):
+            raise WrongSlopeWindow(slope_window)
         self.slope_window = slope_window
+
+    @staticmethod
+    def _is_slope_correct(slope_window):
+        slope_correct = isinstance(slope_window, int) and slope_window > 1
+        return slope_correct
 
     @staticmethod
     def _get_single_slope(input_vector: ndarray) -> float:
@@ -193,7 +200,7 @@ class CompoundDescriptor(ShapeDescriptor):
     differs significantly.
     """
 
-    def __init__(self, *shape_descriptors: List[ShapeDescriptor], descriptors_weights: List[float] = None):
+    def __init__(self, shape_descriptors: List[ShapeDescriptor], descriptors_weights: List[float] = None):
 
         descriptors_number = len(shape_descriptors)
 

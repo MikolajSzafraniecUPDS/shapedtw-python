@@ -3,15 +3,14 @@ from __future__ import annotations
 import operator
 
 import numpy as np
-
 from numpy import ndarray
-from .exceptions import *
+from shapedtw.exceptions import *
 from scipy.spatial.distance import cdist
 from typing import List
 from abc import ABC, abstractmethod
-from .shapeDescriptors import ShapeDescriptor
+from shapedtw.shapeDescriptors import ShapeDescriptor
 from functools import reduce
-from .utils import Utils
+from shapedtw.utils import Utils
 
 
 class Padder:
@@ -201,7 +200,15 @@ class UnivariateSeriesShapeDescriptors:
 
     def __init__(self, descriptors_array: ndarray, origin_ts: ndarray):
 
-        if self._check_dimensions_number(descriptors_array, 1):
+        if self._array_is_empty(descriptors_array):
+            raise EmptyShapeDescriptorsArray()
+        elif not self._input_ts_descriptor_array_compatible(descriptors_array, origin_ts):
+            input_ts_len = origin_ts.shape[0]
+            shape_descriptor_array_nrow = descriptors_array.shape[0]
+            raise UnivariateOriginTSShapeDescriptorsIncompatibility(
+                input_ts_len, shape_descriptor_array_nrow
+            )
+        elif self._check_dimensions_number(descriptors_array, 1):
             descriptors_array = np.atleast_2d(descriptors_array).T
         elif not self._check_dimensions_number(descriptors_array, 2):
             n_dims = len(descriptors_array.shape)
@@ -214,10 +221,22 @@ class UnivariateSeriesShapeDescriptors:
     def _check_dimensions_number(descriptor_array: ndarray, n_dim: int) -> bool:
         return len(descriptor_array.shape) == n_dim
 
+    @staticmethod
+    def _array_is_empty(descriptor_array: ndarray):
+        return np.size(descriptor_array) == 0
+
+    @staticmethod
+    def _input_ts_descriptor_array_compatible(descriptor_array: ndarray, origin_ts: ndarray):
+        return origin_ts.shape[0] == descriptor_array.shape[0]
+
     def calc_distance_matrix(self, series_y_descriptor: UnivariateSeriesShapeDescriptors,
                              dist_method: str = "euclidean") -> UnivariateSeriesDistanceMatrix:
 
-        Utils.verify_classes_compatibility(self, series_y_descriptor)
+        if not Utils.are_objects_of_same_classes(self, series_y_descriptor):
+            raise ObjectOfWrongClass(
+                actual_cls=series_y_descriptor.__class__,
+                expected_cls=self.__class__
+            )
 
         distance_matrix = DistanceMatrixCalculator(
             self.shape_descriptors_array,
@@ -231,22 +250,66 @@ class UnivariateSeriesShapeDescriptors:
 class MultivariateSeriesShapeDescriptors:
 
     def __init__(self, descriptors_list: List[UnivariateSeriesShapeDescriptors], origin_ts: ndarray):
+
+        if self._is_one_dim_ts(origin_ts):
+            origin_ts = np.atleast_2d(origin_ts)
+
         self.descriptors_list = descriptors_list
         self.origin_ts = origin_ts
 
+        if not self._input_ts_descriptor_dimensions_compatible():
+            origin_ts_dim = self.origin_ts.shape[1]
+            descriptors_list_length = len(self)
+            raise MultivariateOriginTSShapeDescriptorsDimIncompatibility(
+                origin_ts_dim=origin_ts_dim,
+                shape_descriptor_list_length=descriptors_list_length
+            )
+
+        if not self._input_ts_descriptors_length_compatible():
+            ts_len = self.origin_ts.shape[0]
+            shape_descriptors_lengths = [
+                uni_sd.shape_descriptors_array.shape[0]
+                for uni_sd in self.descriptors_list
+            ]
+
+            raise MultivariateOriginTSShapeDescriptorsLengthIncompatibility(
+                origin_ts_length=ts_len,
+                shape_descriptor_lengths=shape_descriptors_lengths
+            )
+
+
     def __len__(self):
         return len(self.descriptors_list)
+
+    @staticmethod
+    def _is_one_dim_ts(origin_ts):
+        return len(origin_ts.shape) == 1
+
+    def _input_ts_descriptor_dimensions_compatible(self):
+        return len(self) == self.origin_ts.shape[1]
+
+    def _input_ts_descriptors_length_compatible(self):
+        ts_len = self.origin_ts.shape[0]
+        return all(
+            [uni_sd.shape_descriptors_array.shape[0] == ts_len
+             for uni_sd in self.descriptors_list]
+        )
 
     def _verify_dimension_compatibility(self, other: MultivariateSeriesShapeDescriptors) -> None:
         ts_x_dim = len(self)
         ts_y_dim = len(other)
         if ts_x_dim != ts_y_dim:
-            raise IncompatibleDimensionality(ts_x_dim, ts_y_dim)
+            raise MultivariateSeriesShapeDescriptorsIncompatibility(ts_x_dim, ts_y_dim)
 
     def calc_distance_matrices(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                dist_method: str = "euclidean") -> MultivariateDistanceMatrixIndependent:
 
-        Utils.verify_classes_compatibility(self, series_y_descriptor)
+        if not Utils.are_objects_of_same_classes(self, series_y_descriptor):
+            raise ObjectOfWrongClass(
+                actual_cls=series_y_descriptor.__class__,
+                expected_cls=self.__class__
+            )
+
         self._verify_dimension_compatibility(series_y_descriptor)
 
         distance_matrices_list = [ts_x_descriptor.calc_distance_matrix(ts_y_descriptor, dist_method)
@@ -259,18 +322,33 @@ class MultivariateSeriesShapeDescriptors:
             series_y_descriptor.origin_ts
         )
 
+    @staticmethod
+    def _calc_sum_of_distance_matrices_euclidean(
+            univariate_dist_matrices: List[UnivariateSeriesDistanceMatrix]
+    ) -> np.ndarray:
+        distance_matrices_list = [uni_mat.dist_matrix ** 2 for uni_mat in univariate_dist_matrices]
+        distance_matrix = np.sqrt(reduce(operator.add, distance_matrices_list))
+        return distance_matrix
+
+    @staticmethod
+    def _calc_sum_of_distance_matrices_non_euclidean(
+            univariate_dist_matrices: List[UnivariateSeriesDistanceMatrix]
+    ) -> np.ndarray:
+        distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrices]
+        distance_matrix = reduce(operator.add, distance_matrices_list)
+        return distance_matrix
+
     def calc_summed_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                     dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
 
         univariate_dist_matrices = self.calc_distance_matrices(
             series_y_descriptor,
             dist_method).distance_matrices_list
+
         if dist_method == "euclidean":
-            distance_matrices_list = [uni_mat.dist_matrix**2 for uni_mat in univariate_dist_matrices]
-            distance_matrix = np.sqrt(reduce(operator.add, distance_matrices_list))
+            distance_matrix = self._calc_sum_of_distance_matrices_euclidean(univariate_dist_matrices)
         else:
-            distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrices]
-            distance_matrix = reduce(operator.add, distance_matrices_list)
+            distance_matrix = self._calc_sum_of_distance_matrices_non_euclidean(univariate_dist_matrices)
 
         return MultivariateDistanceMatrixDependent(distance_matrix, self.origin_ts, series_y_descriptor.origin_ts)
 
@@ -281,6 +359,9 @@ class DistanceMatrixCalculator:
         self.ts_x = ts_x
         self.ts_y = ts_y
         self.method = method
+
+    def _input_ts_empty(self):
+        return (np.size(self.ts_x) == 0) | (np.size(self.ts_x) == 0)
 
     def _two_dim_at_most(self):
         return (len(self.ts_x.shape) < 3) & (len(self.ts_y.shape) < 3)
@@ -295,6 +376,9 @@ class DistanceMatrixCalculator:
         return self.ts_x.shape[1] == self.ts_y.shape[1]
 
     def _verify_dimensions(self):
+
+        if self._input_ts_empty():
+            raise DimensionError("Empty arrays are not allowed.")
 
         if not self._two_dim_at_most():
             raise DimensionError("Only arrays of 1 and 2 dimensions are supported")
@@ -329,7 +413,7 @@ class UnivariateSeriesDistanceMatrix:
 
 
 class MultivariateDistanceMatrixIndependent:
-    def __init__(self, distance_matrices_list: List[ndarray], ts_x, ts_y):
+    def __init__(self, distance_matrices_list: List[UnivariateSeriesDistanceMatrix], ts_x, ts_y):
         self.distance_matrices_list = distance_matrices_list
         self.ts_x = ts_x
         self.ts_y = ts_y
