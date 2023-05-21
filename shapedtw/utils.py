@@ -47,9 +47,9 @@ class Utils:
         ---------------
         :raise ProvidedStepPatternDoesNotExists: There is no step pattern of such a name
 
-        Return
+        Returns
         ---------------
-        :return: StepPattern object
+        :returns: StepPattern object
         """
         if hasattr(s, "mx"):
             res = s
@@ -68,9 +68,14 @@ class Utils:
         """
         Check whether two objects are instances of the same class
 
+        Parameters
+        ---------------
         :param reference_obj: Reference object
         :param other_obj: Object to compare
-        :return: Bool - results of comparison
+
+        Returns
+        ---------------
+        :returns: Bool - results of comparison
         """
         are_same_class = isinstance(reference_obj, other_obj.__class__)
         return are_same_class
@@ -85,9 +90,9 @@ class Utils:
         ---------------
         :param x: Numpy arrat
 
-        Return
+        Returns
         ---------------
-        :return: Int - number of dimension
+        :returns: Int - number of dimension
         """
         return len(x.shape)
 
@@ -102,9 +107,9 @@ class Utils:
         :param ts_x: First array
         :param ts_y: Second array
 
-        Return
+        Returns
         ---------------
-        :return: Bool - results of check
+        :returns: Bool - results of check
         """
         ts_x_dim_number = Utils.get_number_of_dimensions(ts_x)
         ts_y_dim_number = Utils.get_number_of_dimensions(ts_y)
@@ -134,9 +139,9 @@ class Utils:
         :raise IncompatibleDimensionality: Series of different number of dimensions
             were provided (for example 1d and 2d array).
 
-        Return
+        Returns
         ---------------
-        :return: Bool as a result of check
+        :returns: Bool as a result of check
         """
         ts_x_dim_number = Utils.get_number_of_dimensions(ts_x)
         ts_y_dim_number = Utils.get_number_of_dimensions(ts_y)
@@ -163,8 +168,8 @@ class Utils:
         ---------------
         :param num: Int number to check
 
-        Return
+        Returns
         ---------------
-        :return: Bool - a result of check
+        :returns: Bool - a result of check
         """
         return bool(num & 0x1)

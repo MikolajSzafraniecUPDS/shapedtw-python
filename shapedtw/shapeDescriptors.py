@@ -1,36 +1,101 @@
-import numpy as np
+##
+## Copyright (c) of Mikołaj Szafraniec
+##
+## This file is part of the ShapeDTW package.
+##
+## ShapeDTW is free software: you can redistribute it and/or modify it
+## under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## ShapeDTW is distributed in the hope that it will be useful, but WITHOUT
+## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+## or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+## License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with DTW.  If not, see <http://www.gnu.org/licenses/>.
+##
+
+"""Classes representing hape descriptors, which are the key koncept of shape dtw algorithm"""
 
 from pywt import Wavelet, wavedec
 from abc import abstractmethod, ABC
 from numpy import ndarray
-from typing import List
 from scipy.stats import linregress
 from shapedtw.exceptions import *
 from itertools import repeat
+from shapedtw.exceptions import SubsequenceShorterThanWindow
 
 
 class ShapeDescriptor(ABC):
     """
-    According to Zhao and Itti concept so-called shape descriptors are the basis of the shape DTW algorithm. They allow
+    Abstract class representing shape descriptor. It contains two static methods common for all shape descriptors
+    and the abstract method 'get_shape_descriptor' which must be implemented n case of every single shape descriptor.
+
+    According to Zhao and Itti concept so-called shape descriptors are the core of the shape DTW algorithm. They allow
     us to transform subsequence of given time series to a vector of values representing it's local shape.
     Shape DTW algorithm uses shape descriptors instead of raw time series values to calculate optimal warping path.
 
-    There are a few shape descriptors described in the Zhao and Itti paper and one can define his own descriptor.
-    ShapeDescriptor is an abstract class, intended to be a parent class for all of the shape descriptors. It forces
-    to implement a 'get_shape_descriptor' method, transforming a given time series chunk to its shape descriptor.
+    This package contains a few shape descriptors described in the Zhao and Itti paper. In addition, every single user
+    is able to define his own descriptor - all we need to do is define a class inheriting from ShapeDescriptor
+    which implements abstract method 'get_shape_descriptor'.
     """
 
     @abstractmethod
     def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
+        """
+        Abstract method - it takes raw subsequence of time series as an input and should
+        return its shape descriptor as an output.
+
+        Parameters
+        ---------------
+        :param ts_subsequence: Time series subsequence as numpy array
+
+        Returns
+        ---------------
+        :returns: Shape descriptor of given subsequence as numpy array
+        """
         pass
 
     @staticmethod
     def _subsequence_is_shorter_than_window_size(subsequence_len: int, window_size: int) -> bool:
+        """
+        Is provided subsequence shorter than window size specified in the class
+        constructor.
+
+        Parameters
+        ---------------
+        :param subsequence_len: Length of provided time series subsequence
+        :param window_size: Window size specified (usually) in the class constructor
+
+        Returns
+        ---------------
+        :returns: Bool - results of check
+        """
         return subsequence_len < window_size
 
     @staticmethod
     def _split_into_windows(ts_subsequence: ndarray, window_size: int) -> List[ndarray]:
+        """
+        Split subsequence of time series into a set of windows. Some shape descriptors (for example
+        slope descriptor or PAA descriptor requires to split provided subsequence into a set of
+        disjunctive windows for which the final measure is calculated (steepness / mean value, etc.)
 
+        Parameters
+        ---------------
+        :param ts_subsequence: Subsequence of time series as a numpy array
+        :param window_size: Size of the window
+
+        Raises
+        ---------------
+        :raises SubsequenceShorterThanWindow: Provided subsequence is shorter than window specified
+            in class constructor or elsewhere
+
+        Returns
+        ---------------
+        :return: List of arrays (windows)
+        """
         subsequence_len = len(ts_subsequence)
 
         if ShapeDescriptor._subsequence_is_shorter_than_window_size(subsequence_len, window_size):
@@ -51,6 +116,17 @@ class RawSubsequenceDescriptor(ShapeDescriptor):
     """
 
     def get_shape_descriptor(self, time_series_subsequence: ndarray) -> ndarray:
+        """
+        Get raw subsequence shape descriptor
+
+        Parameters
+        ---------------
+        :param time_series_subsequence: Subsequence of time series as numpy array
+
+        Returns
+        ---------------
+        :return: Raw subsequence itself
+        """
         return time_series_subsequence
 
 
@@ -64,17 +140,51 @@ class PAADescriptor(ShapeDescriptor):
     Length of intervals is specified by "piecewise_aggregation_window" argument provided in the class
     constructor. If it is impossible to split array into chunks of equal length, then the last chunk
     is adequately shorter.
+
+    Attributes
+    ---------------
+    piecewise_aggregation_window: int:
+        Window length for piecewise aggregation
     """
 
     def __init__(self, piecewise_aggregation_window: int = 2):
+        """
+        Constructs a PAADescriptor object
+
+        Parameters
+        ---------------
+        :param piecewise_aggregation_window: Length of piecewise aggregation window
+        """
         self.piecewise_aggregation_window = piecewise_aggregation_window
 
     @staticmethod
     def _get_windows_means(windows: List[ndarray]) -> ndarray:
+        """
+        Get mean value of each subsequence's window
+
+        Parameters
+        ---------------
+        :param windows: List of subsequence's windows
+
+        Returns
+        ---------------
+        :return: Array of subsequence's windows means
+        """
         windows_means = np.array([np.mean(window) for window in windows])
         return windows_means
 
     def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
+        """
+        Get PAA shape descriptor for given subsequence
+
+        Parameters
+        ---------------
+        :param ts_subsequence: Input time serie subsequence as numpy array
+
+        Returns
+        ---------------
+        :return: PAA shape descriptor as a numpy array
+        """
         windows = self._split_into_windows(ts_subsequence, self.piecewise_aggregation_window)
         paa_descriptor = self._get_windows_means(windows)
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import operator
 
-import numpy as np
 from numpy import ndarray
 from shapedtw.exceptions import *
 from scipy.spatial.distance import cdist
