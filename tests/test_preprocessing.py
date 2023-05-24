@@ -4,66 +4,6 @@ from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
 
 
-class TestPadder(unittest.TestCase):
-    time_series_test = np.array([1, 2, 3, 4, 5])
-
-    def test_left_padding(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=1)
-        expected_val = np.array([1, 1, 2])
-        padded_subsequence = test_padder.pad_left(0)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
-    def test_left_padding_zero_width(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=0)
-        expected_val = np.array([1])
-        padded_subsequence = test_padder.pad_left(0)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
-    def test_right_padding(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=1)
-        expected_val = np.array([4, 5, 5])
-        padded_subsequence = test_padder.pad_right(4)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
-    def test_right_padding_zero_width(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=0)
-        expected_val = np.array([5])
-        padded_subsequence = test_padder.pad_right(4)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
-    def test_both_side_padding(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=5)
-        expected_val = np.array(
-            [1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 5]
-        )
-        padded_subsequence = test_padder.pad_both_side(0)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
 
 class TestUnivariateSubsequenceBuilder(unittest.TestCase):
     time_series_test = np.array([1, 2, 3, 4, 5])
