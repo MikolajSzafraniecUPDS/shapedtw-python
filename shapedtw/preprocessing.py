@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import operator
 
-import numpy as np
+
+
 from numpy import ndarray
 from shapedtw.exceptions import *
 from scipy.spatial.distance import cdist
@@ -15,8 +16,20 @@ from shapedtw.utils import Utils
 
 class SubsequenceBuilder(ABC):
 
+    """
+    Abstract class representing subsequence builder. It enforces all child classes
+    to implement abstract method 'transform_time_series_to_subsequences', which
+    transforms univariate or multivariate time series to its subsequences
+    representation. Subsequences represent neighbourhood of given temporal point of
+    a time series and afterward are used to calculate its shape descriptor.
+    """
+
+
     @abstractmethod
     def transform_time_series_to_subsequences(self):
+        """
+        Transform input time series to its subsequences representation
+        """
         pass
 
 
@@ -24,13 +37,45 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
 
     """
     This class is used for the purpose of transforming univariate time
-    series into a set of subsequences. It is represented by two-dimensional
-    array, where number of rows is equal to the time series length and number
-    of column is equal to the specified subsequence length.
+    series into a set of subsequences. Subsequences are represented by
+    two-dimensional array, where number of rows is equal to the time series
+    length and number of column is equal to the specified subsequence length,
+    calculated as subsequence_width*2 + 1.
+
+    Attributes
+    ---------------
+    time_series: ndarray:
+        input time series as numpy array
+    subsequence_width: int:
+        width of the output subsequences
+
+    Examples
+    --------
+    >> from shapedtw.preprocessing import UnivariateSubsequenceBuilder
+    >> import numpy as np
+    >> ts_x = np.array([1, 2, 3])
+    >> usb = UnivariateSubsequenceBuilder(time_series=ts_x, subsequence_width=3)
+    >> res = usb.transform_time_series_to_subsequences()
+    >> print(res.subsequences)
+    >> [[1 1 1 1 2 3 3]
+    >> [1 1 1 2 3 3 3]
+    >> [1 1 2 3 3 3 3]]
     """
 
     def __init__(self, time_series: ndarray, subsequence_width: int):
+        """
+        Constructs a UnivariateSubsequenceBuilder object
 
+        Parameters
+        ---------------
+        :param time_series: input time series (1d numpy array)
+        :param subsequence_width: width of a single subsequence
+
+        Raises
+        ---------------
+        :raise NegativeSubsequenceWidth: subsequence width must be integer equal
+            to or greater than 0
+        """
         if subsequence_width < 0:
             raise NegativeSubsequenceWidth()
 
@@ -39,6 +84,20 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
         self.ts_length = len(time_series)
 
     def _get_padded_time_series(self, input_time_series: ndarray) -> ndarray:
+        """
+        Get time series padded with its edge values (first and last point).
+        In order to make subsequences and shape descriptors well-defined for every
+        temporal point we need to extend time series at the beginning and at the
+        end.
+
+        Parameters
+        ---------------
+        :param input_time_series: input time series as a numpy array
+
+        Returns
+        ---------------
+        :returns: padded time series as a numpy array
+        """
         padded_time_series = np.pad(
             input_time_series,
             self.subsequence_width,
@@ -48,6 +107,16 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
         return padded_time_series
 
     def _get_central_indices(self) -> ndarray:
+        """
+        Get indices of temporal points for which the subsequences will be
+        retrieved. It is equivalent of indices of origin time series,
+        before padding was applied.
+
+        Returns
+        ---------------
+        :returns: numpy array - indices of padded time series for which
+            subsequences will be retrieved
+        """
         central_indices = np.arange(
             start=self.subsequence_width,
             stop=self.ts_length+self.subsequence_width
@@ -56,6 +125,28 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
         return central_indices
 
     def _get_single_subsequence(self, central_index: int) -> ndarray:
+        """
+        Get subsequence for given index of padded time series
+
+        Parameters
+        ---------------
+        :param central_index: int - index of padded time series for which
+            subsequence will be retrieved
+
+        Returns
+        ---------------
+        :return: subsequence for given index as a numpy array
+
+        Examples
+        --------
+        >> from shapedtw.preprocessing import UnivariateSubsequenceBuilder
+        >> import numpy as np
+        >> ts_x = np.array([1, 2, 3])
+        >> usb = UnivariateSubsequenceBuilder(time_series=ts_x, subsequence_width=3)
+        >> res = usb._get_single_subsequence(3)
+        >> print(res)
+        >> array([1, 1, 1, 1, 2, 3, 3])
+        """
         current_indices = np.arange(
             start=central_index-self.subsequence_width,
             stop=central_index+self.subsequence_width+1
@@ -64,6 +155,30 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
         return self.padded_time_series[current_indices]
 
     def transform_time_series_to_subsequences(self) -> UnivariateSeriesSubsequences:
+        """
+        Transforms univariate time series to the array of its subsequences
+
+        Returns
+        ---------------
+        :return: UnivariateSeriesSubsequences object. It contains array of time series
+            subsequences and origin time series (before padding was applied).
+
+        Examples
+        --------
+        >> from shapedtw.preprocessing import UnivariateSubsequenceBuilder
+        >> import numpy as np
+        >> ts_x = np.array([1, 2, 3])
+        >> usb = UnivariateSubsequenceBuilder(time_series=ts_x, subsequence_width=3)
+        >> res = usb.transform_time_series_to_subsequences()
+        >>
+        >> print(res.subsequences)
+        >> [[1 1 1 1 2 3 3]
+        >> [1 1 1 2 3 3 3]
+        >> [1 1 2 3 3 3 3]]
+        >>
+        >> print(res.origin_ts)
+        >> array([1, 2, 3])
+        """
         central_indices = self._get_central_indices()
         subsequences_list = [self._get_single_subsequence(central_index) for central_index in central_indices]
         subsequences_array = np.vstack(subsequences_list)
@@ -76,7 +191,7 @@ class MultivariateSubsequenceBuilder(SubsequenceBuilder):
     Subsequence builder for multivariate time series
     """
 
-    def __init__(self, time_series: ndarray, subsequence_width):
+    def __init__(self, time_series: ndarray, subsequence_width: int):
         self.time_series = time_series
         self.subsequence_width = subsequence_width
         self.dimensions_number = time_series.shape[1]
