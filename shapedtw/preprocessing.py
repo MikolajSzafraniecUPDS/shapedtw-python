@@ -57,9 +57,9 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
     >> usb = UnivariateSubsequenceBuilder(time_series=ts_x, subsequence_width=3)
     >> res = usb.transform_time_series_to_subsequences()
     >> print(res.subsequences)
-    >> [[1 1 1 1 2 3 3]
-    >> [1 1 1 2 3 3 3]
-    >> [1 1 2 3 3 3 3]]
+    [[1 1 1 1 2 3 3]
+    [1 1 1 2 3 3 3]
+    [1 1 2 3 3 3 3]]
     """
 
     def __init__(self, time_series: ndarray, subsequence_width: int):
@@ -145,7 +145,7 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
         >> usb = UnivariateSubsequenceBuilder(time_series=ts_x, subsequence_width=3)
         >> res = usb._get_single_subsequence(3)
         >> print(res)
-        >> array([1, 1, 1, 1, 2, 3, 3])
+        array([1, 1, 1, 1, 2, 3, 3])
         """
         current_indices = np.arange(
             start=central_index-self.subsequence_width,
@@ -172,12 +172,12 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
         >> res = usb.transform_time_series_to_subsequences()
         >>
         >> print(res.subsequences)
-        >> [[1 1 1 1 2 3 3]
-        >> [1 1 1 2 3 3 3]
-        >> [1 1 2 3 3 3 3]]
+        [[1 1 1 1 2 3 3]
+        [1 1 1 2 3 3 3]
+        [1 1 2 3 3 3 3]]
         >>
         >> print(res.origin_ts)
-        >> array([1, 2, 3])
+        array([1, 2, 3])
         """
         central_indices = self._get_central_indices()
         subsequences_list = [self._get_single_subsequence(central_index) for central_index in central_indices]
