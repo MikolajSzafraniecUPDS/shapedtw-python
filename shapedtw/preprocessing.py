@@ -36,6 +36,8 @@ class SubsequenceBuilder(ABC):
 class UnivariateSubsequenceBuilder(SubsequenceBuilder):
 
     """
+    Univariate time series builder.
+
     This class is used for the purpose of transforming univariate time
     series into a set of subsequences. Subsequences are represented by
     two-dimensional array, where number of rows is equal to the time series
@@ -188,15 +190,96 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
 class MultivariateSubsequenceBuilder(SubsequenceBuilder):
 
     """
-    Subsequence builder for multivariate time series
+    Multivariate time series builder.
+
+    This class is used for the purpose of transforming multivariate time
+    series into a set of subsequences. Subsequences are represented by
+    MultivariateSeriesSubsequences, which contains a list of
+    UnivariateSeriesSubsequences - one for each of time series
+    dimensions.
+
+    Attributes
+    ---------------
+    time_series: ndarray:
+        input time series as a 2d numpy array
+    subsequence_width: int:
+        width of the output subsequences
+
+    Examples
+    --------
+    >> from shapedtw.preprocessing import MultivariateSubsequenceBuilder
+    >> import numpy as np
+    >> ts_x = np.array(
+    >>  [[1, 2],
+    >>   [3, 4],
+    >>   [5, 6]]
+    >>  )
+    >> msb = MultivariateSubsequenceBuilder(time_series=ts_x, subsequence_width=3)
+    >> res = msb.transform_time_series_to_subsequences()
+    >> for uss in res.subsequences_list:
+    >>      print(uss.subsequences, '\n')
+    [[1 1 1 1 3 5 5]
+    [1 1 1 3 5 5 5]
+    [1 1 3 5 5 5 5]]
+
+    [[2 2 2 2 4 6 6]
+    [2 2 2 4 6 6 6]
+    [2 2 4 6 6 6 6]]
     """
 
     def __init__(self, time_series: ndarray, subsequence_width: int):
+        """
+        Constructs a MultivariateSubsequenceBuilder object
+
+        Parameters
+        ---------------
+        :param time_series: input time series (2d numpy array)
+        :param subsequence_width: width of a single subsequence
+
+        Raises
+        ---------------
+        :raise NegativeSubsequenceWidth: subsequence width must be integer equal
+            to or greater than 0
+        """
+        if subsequence_width < 0:
+            raise NegativeSubsequenceWidth()
+
         self.time_series = time_series
         self.subsequence_width = subsequence_width
         self.dimensions_number = time_series.shape[1]
 
     def transform_time_series_to_subsequences(self) -> MultivariateSeriesSubsequences:
+        """
+        Transforms multivariate time series to the MultivariateSeriesSubsequences object
+
+        Returns
+        ---------------
+        :return: MultivariateSeriesSubsequences object. It contains a list of
+            UnivariateSeriesSubsequences (one per each of a time series dimension)
+            and origin time series.
+
+        Examples
+        --------
+        >> from shapedtw.preprocessing import MultivariateSubsequenceBuilder
+        >> import numpy as np
+        >> ts_x = np.array(
+        >>  [[1, 2],
+        >>   [3, 4],
+        >>   [5, 6]]
+        >>  )
+        >> msb = MultivariateSubsequenceBuilder(time_series=ts_x, subsequence_width=3)
+        >> res = msb.transform_time_series_to_subsequences()
+        >>
+        >> for uss in res.subsequences_list:
+        >>      print(uss.subsequences, '\n')
+        [[1 1 1 1 3 5 5]
+        [1 1 1 3 5 5 5]
+        [1 1 3 5 5 5 5]]
+
+        [[2 2 2 2 4 6 6]
+        [2 2 2 4 6 6 6]
+        [2 2 4 6 6 6 6]]
+        """
         sub_builders = [UnivariateSubsequenceBuilder(self.time_series[:, i], self.subsequence_width)
                         for i in range(self.dimensions_number)]
         subsequences = [sub_builder.transform_time_series_to_subsequences()
@@ -206,8 +289,28 @@ class MultivariateSubsequenceBuilder(SubsequenceBuilder):
 
 class Subsequences(ABC):
 
+    """
+    Abstract class representing a subsequences objects, which is a set of
+    time series temporal points with its neighbours. It enforces child
+    classes to implement 'get_shape_descriptors' method, which takes
+    ShapeDescriptor object as an argument and returns shape descriptors
+    of given subsequences.
+    """
+
     @abstractmethod
-    def get_shape_descriptors(self, shape_descriptor: ShapeDescriptor):
+    def get_shape_descriptors(self, shape_descriptor: ShapeDescriptor) -> object:
+        """
+        Get shape descriptors for subsequences stored as Subsequences class
+        attribute.
+
+        Parameters
+        ---------------
+        :param shape_descriptor: instance of ShapeDescriptor child class
+
+        Returns
+        ---------------
+        :returns: object containing shape descriptors of given subsequences
+        """
         pass
 
 
