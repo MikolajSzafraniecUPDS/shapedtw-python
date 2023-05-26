@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import operator
 
-
-
+import numpy as np
 from numpy import ndarray
 from shapedtw.exceptions import *
 from scipy.spatial.distance import cdist
@@ -316,11 +315,78 @@ class Subsequences(ABC):
 
 class UnivariateSeriesSubsequences(Subsequences):
 
+    """
+    Class representing univariate time series split into a set of
+    subsequences, required for calculating shape descriptors. It contains
+    an array of subsequences and origin time series. Moreover, it provides
+    a method which allows to calculate shape descriptors based on given
+    ShapeDescriptor's object.
+
+    Attributes
+    ---------------
+    subsequences_array: ndarray:
+        2d numpy array containing subsequences
+    origin_ts: ndarray:
+        origin time series as 1d array
+    """
+
     def __init__(self, subsequences_array: ndarray, origin_ts: ndarray):
+        """
+        Constructs a MultivariateSubsequenceBuilder object
+
+        Parameters
+        ---------------
+        :param subsequences_array: 2d numpy array - every row of
+            it represents single subsequence of time series
+        :param origin_ts: origin time series as 1d array
+        """
         self.subsequences = subsequences_array
         self.origin_ts = origin_ts
 
     def get_shape_descriptors(self, shape_descriptor: ShapeDescriptor) -> UnivariateSeriesShapeDescriptors:
+        """
+        Calculates shape descriptors for all subsequences
+
+        Parameters
+        ---------------
+        :param shape_descriptor: shape descriptor object - it must be an instance of
+            ShapeDescriptor child class
+
+        Raises
+        ---------------
+        :raises NotShapeDescriptor: provided shape_descriptor object is not an
+            instance of ShapeDescriptor's child class
+
+        Returns
+        ---------------
+        :returns: UnivariateSeriesShapeDescriptors object, representing shape
+            descriptors of origin time series
+
+        Examples
+        --------
+        >> from shapedtw.preprocessing import UnivariateSeriesSubsequences
+        >> from shapedtw.shapeDescriptors import PAADescriptor
+        >> import numpy as np
+        >> origin_ts = np.array([1, 2, 3, 4])
+        >> subsequences_array = np.array([
+        >>      [1, 1, 1, 2, 3],
+        >>      [1, 1, 2, 3, 4],
+        >>      [1, 2, 3, 4, 4],
+        >>      [2, 3, 4, 4, 4]
+        >> ])
+        >> uss = UnivariateSeriesSubsequences(subsequences_array, origin_ts)
+        >> paa_descriptor = PAADescriptor(2)
+        >> res = uss.get_shape_descriptors(paa_descriptor)
+        >> print(res.shape_descriptors_array)
+        [[1.  1.5 3. ]
+         [1.  2.5 4. ]
+         [1.5 3.5 4. ]
+         [2.5 4.  4. ]]
+        """
+
+        if not isinstance(shape_descriptor, ShapeDescriptor):
+            raise NotShapeDescriptor(shape_descriptor)
+
         shape_descriptors = np.array([
             shape_descriptor.get_shape_descriptor(subsequence) for
             subsequence in self.subsequences
