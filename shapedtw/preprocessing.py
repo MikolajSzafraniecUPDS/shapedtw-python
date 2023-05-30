@@ -110,7 +110,7 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
     def _get_central_indices(self) -> ndarray:
         """
         Get indices of temporal points for which the subsequences will be
-        retrieved. It is equivalent of indices of origin time series,
+        retrieved. It is equivalent of indices of the original time series,
         before padding was applied.
 
         Returns
@@ -162,7 +162,7 @@ class UnivariateSubsequenceBuilder(SubsequenceBuilder):
         Returns
         ---------------
         :return: UnivariateSeriesSubsequences object. It contains array of time series
-            subsequences and origin time series (before padding was applied).
+            subsequences and the original time series (before padding was applied).
 
         Examples
         --------
@@ -226,7 +226,7 @@ class MultivariateSubsequenceBuilder(SubsequenceBuilder):
     [2 2 4 6 6 6 6]]
     """
 
-    def __init__(self, time_series: ndarray, subsequence_width: int):
+    def __init__(self, time_series: ndarray, get_shape_descriptors: int):
         """
         Constructs a MultivariateSubsequenceBuilder object
 
@@ -255,7 +255,7 @@ class MultivariateSubsequenceBuilder(SubsequenceBuilder):
         ---------------
         :return: MultivariateSeriesSubsequences object. It contains a list of
             UnivariateSeriesSubsequences (one per each of a time series dimension)
-            and origin time series.
+            and the original time series.
 
         Examples
         --------
@@ -318,7 +318,7 @@ class UnivariateSeriesSubsequences(Subsequences):
     """
     Class representing univariate time series split into a set of
     subsequences, required for calculating shape descriptors. It contains
-    an array of subsequences and origin time series. Moreover, it provides
+    an array of subsequences and the original time series. Moreover, it provides
     a method which allows to calculate shape descriptors based on given
     ShapeDescriptor's object.
 
@@ -338,7 +338,7 @@ class UnivariateSeriesSubsequences(Subsequences):
         ---------------
         :param subsequences_array: 2d numpy array - every row of
             it represents single subsequence of time series
-        :param origin_ts: origin time series as 1d array
+        :param origin_ts: original time series as 1d array
         """
         self.subsequences = subsequences_array
         self.origin_ts = origin_ts
@@ -360,7 +360,7 @@ class UnivariateSeriesSubsequences(Subsequences):
         Returns
         ---------------
         :returns: UnivariateSeriesShapeDescriptors object, representing shape
-            descriptors of origin time series
+            descriptors of the original time series
 
         Examples
         --------
@@ -400,7 +400,7 @@ class MultivariateSeriesSubsequences(Subsequences):
     Class representing multivariate time series split into a set of
     subsequences, required for calculating shape descriptors. It contains
     a list of UnivariateSeriesSubsequences objects (one per each dimension of
-    time series) and origin time series. Moreover, it provides
+    time series) and the original time series. Moreover, it provides
     a method which allows to calculate shape descriptors based on given
     ShapeDescriptor's object.
 
@@ -410,7 +410,7 @@ class MultivariateSeriesSubsequences(Subsequences):
         List containing a set of UnivariateSeriesSubsequences objects, one per
         each time series dimension
     origin_ts: ndarray:
-        origin time series as 2d array
+        original time series as 2d array
     """
 
     def __init__(self, subsequences_list: List[UnivariateSeriesSubsequences], origin_ts: ndarray):
@@ -421,7 +421,7 @@ class MultivariateSeriesSubsequences(Subsequences):
         ---------------
         :param subsequences_list: List containing a set of UnivariateSeriesSubsequences objects,
             one per ach time series dimension
-        :param origin_ts: origin time series as 2d array
+        :param origin_ts: original time series as 2d array
         """
         self.subsequences_list = subsequences_list
         self.origin_ts = origin_ts
@@ -442,7 +442,7 @@ class MultivariateSeriesSubsequences(Subsequences):
             instance of ShapeDescriptor's child class
 
         :returns: MultivariateSeriesShapeDescriptors object, representing shape
-            descriptors of origin multivariate time series
+            descriptors of the original multivariate time series
 
         Examples
         --------
@@ -492,7 +492,7 @@ class UnivariateSeriesShapeDescriptors:
         Shape descriptors in the form of 2d numpy array. Each row
         represents shape descriptor of a single temporal point
     origin ts: ndarray:
-        origin time series
+        original time series
     """
 
     def __init__(self, descriptors_array: ndarray, origin_ts: ndarray):
@@ -503,7 +503,7 @@ class UnivariateSeriesShapeDescriptors:
         ---------------
         :param descriptors_array: Shape descriptors in the form of 2d numpy array. Each row
             represents shape descriptor of a single temporal point
-        :param origin_ts: origin time series
+        :param origin_ts: original time series
 
         Raises
         ---------------
@@ -547,7 +547,7 @@ class UnivariateSeriesShapeDescriptors:
         return len(descriptor_array.shape) == n_dim
 
     @staticmethod
-    def _array_is_empty(descriptor_array: ndarray):
+    def _array_is_empty(descriptor_array: ndarray) -> bool:
         """
         Verify that the array is empty
 
@@ -562,7 +562,7 @@ class UnivariateSeriesShapeDescriptors:
         return np.size(descriptor_array) == 0
 
     @staticmethod
-    def _input_ts_descriptor_array_compatible(descriptor_array: ndarray, origin_ts: ndarray):
+    def _input_ts_descriptor_array_compatible(descriptor_array: ndarray, origin_ts: ndarray) -> bool:
         """
         Check that the supplied time series and the shape descriptor
         array are compatible, i.e., the length of the series is equal
@@ -571,7 +571,7 @@ class UnivariateSeriesShapeDescriptors:
         Parameters
         ---------------
         :param descriptor_array: array of shape descriptors
-        :param origin_ts: origin time series
+        :param origin_ts: original time series
 
         Returns
         ---------------
@@ -623,7 +623,11 @@ class MultivariateSeriesShapeDescriptors:
     Class representing a shape descriptors of multivariate time series.
     It provides a set of methods allowing to verify consistency of provided
     descriptors and calculate distance matrix between descriptors for two
-    instances of MultivariateSeriesShapeDescriptors class.
+    instances of MultivariateSeriesShapeDescriptors class. It has a capability
+    to calculate a list of distance matrices separately for each dimension
+    of time series (useful in case of multidimensional, independent dtw)
+    as well as common distance matrix for all dimensions, used in case of
+    multidimensional, dependent dtw.
 
     Attributes
     ---------------
@@ -631,7 +635,7 @@ class MultivariateSeriesShapeDescriptors:
         list of UnivariateSeriesShapeDescriptors instances, each representing
         shape descriptors for a single dimension of given time series
     origin_ts: ndarray:
-        origin time series as a 2d numpy array
+        original time series as a 2d numpy array
     """
 
     def __init__(self, descriptors_list: List[UnivariateSeriesShapeDescriptors], origin_ts: ndarray):
@@ -642,7 +646,7 @@ class MultivariateSeriesShapeDescriptors:
         ---------------
         :param descriptors_list: list of UnivariateSeriesShapeDescriptors instances, each representing
             shape descriptors for a single dimension of given time series
-        :param origin_ts: origin time series as a 2d numpy array
+        :param origin_ts: original time series as a 2d numpy array
 
         Raises
         ---------------
@@ -686,30 +690,30 @@ class MultivariateSeriesShapeDescriptors:
 
         Returns
         ---------------
-        :returns: length of MultivariateSeriesShapeDescriptors object
+        :returns: int - length of MultivariateSeriesShapeDescriptors object
         """
         return len(self.descriptors_list)
 
     @staticmethod
-    def _is_one_dim_ts(origin_ts):
+    def _is_one_dim_ts(origin_ts: ndarray) -> bool:
         """
         Verify that the provided time series is one-dimensional
 
         Parameters
         ---------------
-        :param origin_ts: origin time series
+        :param origin_ts: original time series in the form of
+            numpy array
 
         Returns
         ---------------
-        :return: results of the test
+        :return: bool - a results of the test
         """
         return len(origin_ts.shape) == 1
 
-    def _input_ts_descriptor_dimensions_compatible(self):
+    def _input_ts_descriptor_dimensions_compatible(self) -> bool:
         """
         Verify that number of columns and number of
-        UnivariateSeriesShapeDescriptors in an input list
-        match
+        UnivariateSeriesShapeDescriptors in an input list match
 
         Returns
         ---------------
@@ -717,14 +721,14 @@ class MultivariateSeriesShapeDescriptors:
         """
         return len(self) == self.origin_ts.shape[1]
 
-    def _input_ts_descriptors_length_compatible(self):
+    def _input_ts_descriptors_length_compatible(self) -> bool:
         """
         Verify that the length of time series and number of rows in all
         of UnivariateSeriesShapeDescriptors match
 
         Returns
         ---------------
-        :return: results of a test
+        :return: bool - a results of a test
         """
         ts_len = self.origin_ts.shape[0]
         return all(
@@ -733,6 +737,21 @@ class MultivariateSeriesShapeDescriptors:
         )
 
     def _verify_dimension_compatibility(self, other: MultivariateSeriesShapeDescriptors) -> None:
+        """
+        Verify that numbers of dimensions (columns / univariate shape descriptors) for
+        both MultivariateSeriesShapeDescriptors are equal. If not
+        MultivariateSeriesShapeDescriptorsIncompatibility exception is raised.
+
+        Parameters
+        ---------------
+        :param other: another MultivariateSeriesShapeDescriptors instance
+            to compare with
+
+        Raises
+        ---------------
+        :raises MultivariateSeriesShapeDescriptorsIncompatibility: numbers of dimensions
+            (columns) of giver time series are different
+        """
         ts_x_dim = len(self)
         ts_y_dim = len(other)
         if ts_x_dim != ts_y_dim:
@@ -740,7 +759,68 @@ class MultivariateSeriesShapeDescriptors:
 
     def calc_distance_matrices(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                dist_method: str = "euclidean") -> MultivariateDistanceMatrixIndependent:
+        """
+        Calculates distance matrices between shape descriptors for each
+        dimension of the time series. Used in case of multidimensional,
+        independent shape dtw.
 
+        Parameters
+        ---------------
+        :param series_y_descriptor: another instance of the MultivariateSeriesShapeDescriptors
+            for which the distance matrix is to be calculated
+        :param dist_method: str - distance method. Full list of available types of distance is to find
+            here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html
+
+        Raises
+        ---------------
+        :raises ObjectOfWrongClass: series_y_descriptor is not an instance of
+            MultivariateSeriesShapeDescriptors
+        :raises MultivariateSeriesShapeDescriptorsIncompatibility: numbers of dimensions
+            (columns) of giver time series are different
+
+        Returns
+        ---------------
+        :return: MultivariateDistanceMatrixIndependent object, containing a list of
+            distance matrices and the original time series
+
+        Examples
+        --------
+        >> from shapedtw.preprocessing import MultivariateSubsequenceBuilder
+        >> from shapedtw.shapeDescriptors import PAADescriptor
+        >> import numpy as np
+        >> ts_x = np.array([
+        >>  [4.5, 1.3],
+        >>  [6.7, 1.0],
+        >>  [3.0, 1.1]
+        >> ])
+        >> ts_y = np.array([
+        >>  [5.5, 2.5],
+        >>  [3.3, 2.2],
+        >>  [1.5, 2.6]
+        >> ])
+        >> paa_descriptor = PAADescriptor(2)
+        >> ts_x_shape_descriptors = MultivariateSubsequenceBuilder(
+        >>  ts_x, subsequence_width=2
+        >>  ).transform_time_series_to_subsequences().get_shape_descriptors(
+        >>  paa_descriptor
+        >> )
+        >> ts_y_shape_descriptors = MultivariateSubsequenceBuilder(
+        >>  ts_y, subsequence_width=2
+        >>  ).transform_time_series_to_subsequences().get_shape_descriptors(
+        >>  paa_descriptor
+        >> )
+        >> dist_matrices = ts_x_shape_descriptors.calc_distance_matrices(
+        >>  ts_y_shape_descriptors
+        >> )
+        >> for dist_matrix in dist_matrices.distance_matrices_list:
+        >>      print(dist_matrix.dist_matrix)
+        [[2.16564078 3.67287353 4.36692111]
+         [1.85809042 3.04179223 3.67185239]
+         [2.05426386 1.61864141 2.43721152]]
+        [[2.26495033 2.29183333 2.33559414]
+         [2.3194827  2.34787138 2.39895811]
+         [2.37381549 2.40052078 2.43721152]]
+        """
         if not Utils.are_objects_of_same_classes(self, series_y_descriptor):
             raise ObjectOfWrongClass(
                 actual_cls=series_y_descriptor.__class__,
@@ -762,7 +842,19 @@ class MultivariateSeriesShapeDescriptors:
     @staticmethod
     def _calc_sum_of_distance_matrices_euclidean(
             univariate_dist_matrices: List[UnivariateSeriesDistanceMatrix]
-    ) -> np.ndarray:
+    ) -> ndarray:
+        """
+        Calculates a sum of distance matrices for Euclidean distance
+
+        Parameters
+        ---------------
+        :param univariate_dist_matrices: list of distance matrices calculated for
+            all dimensions of given time series
+
+        Returns
+        ---------------
+        :return: sum of distance matrices as a numpy array
+        """
         distance_matrices_list = [uni_mat.dist_matrix ** 2 for uni_mat in univariate_dist_matrices]
         distance_matrix = np.sqrt(reduce(operator.add, distance_matrices_list))
         return distance_matrix
@@ -771,16 +863,80 @@ class MultivariateSeriesShapeDescriptors:
     def _calc_sum_of_distance_matrices_non_euclidean(
             univariate_dist_matrices: List[UnivariateSeriesDistanceMatrix]
     ) -> np.ndarray:
+        """
+        Calculates a sum of distance matrices for non-euclidean distance
+
+        Parameters
+        ---------------
+        :param univariate_dist_matrices: list of distance matrices calculated for
+            all dimensions of given time series
+
+        Returns
+        ---------------
+        :return: sum of distance matrices as a numpy array
+        """
         distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrices]
         distance_matrix = reduce(operator.add, distance_matrices_list)
         return distance_matrix
 
     def calc_summed_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                     dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
+        """
+        Calculates distance matrices between shape descriptors for each
+        dimension of the time series and adds them up. Used in case of
+        multidimensional, dependent shape dtw.
+
+        Parameters
+        ---------------
+        :param series_y_descriptor: another instance of the MultivariateSeriesShapeDescriptors
+            for which the distance matrix is to be calculated
+        :param dist_method: str - distance method. Full list of available types of distance is to find
+            here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html
+
+        Returns
+        ---------------
+        :return: MultivariateDistanceMatrixDependent object, containing a single, common
+            distance matrix and original time series.
+
+        Examples
+        --------
+        >> from shapedtw.preprocessing import MultivariateSubsequenceBuilder
+        >> from shapedtw.shapeDescriptors import PAADescriptor
+        >> import numpy as np
+        >> ts_x = np.array([
+        >>  [4.5, 1.3],
+        >>  [6.7, 1.0],
+        >>  [3.0, 1.1]
+        >> ])
+        >> ts_y = np.array([
+        >>  [5.5, 2.5],
+        >>  [3.3, 2.2],
+        >>  [1.5, 2.6]
+        >> ])
+        >> paa_descriptor = PAADescriptor(2)
+        >> ts_x_shape_descriptors = MultivariateSubsequenceBuilder(
+        >>  ts_x, subsequence_width=2
+        >>  ).transform_time_series_to_subsequences().get_shape_descriptors(
+        >>  paa_descriptor
+        >> )
+        >> ts_y_shape_descriptors = MultivariateSubsequenceBuilder(
+        >>  ts_y, subsequence_width=2
+        >>  ).transform_time_series_to_subsequences().get_shape_descriptors(
+        >>  paa_descriptor
+        >> )
+        >> dist_matrix = ts_x_shape_descriptors.calc_summed_distance_matrix(
+        >>  ts_y_shape_descriptors
+        >> )
+        >> print(dist_matrix.distance_matrix)
+        [[3.13368792 4.32926091 4.95227221]
+         [2.97195222 3.84252521 4.38605746]
+         [3.13926743 2.89525474 3.44673759]]
+        """
 
         univariate_dist_matrices = self.calc_distance_matrices(
             series_y_descriptor,
-            dist_method).distance_matrices_list
+            dist_method
+        ).distance_matrices_list
 
         if dist_method == "euclidean":
             distance_matrix = self._calc_sum_of_distance_matrices_euclidean(univariate_dist_matrices)
