@@ -13,7 +13,14 @@ class StepPatternMatrixTransformator:
 
     """
     Class for transforming step pattern matrix to more convenient
-    form of dictionary
+    form of dictionary. It is required to reproduce the distance
+    for raw time series after the warping path is determined using
+    distance matrix calculated based on shape descriptors.
+
+    Attributes
+    ---------------
+    step_pattern: str:
+        name of step pattern which was used to calculate warping path
     """
 
     def __init__(self, step_pattern: str):
@@ -21,16 +28,69 @@ class StepPatternMatrixTransformator:
         self.step_pattern_matrix = self._get_step_pattern_matrix()
 
     def _get_step_pattern_matrix(self) -> ndarray:
+        """
+        Get StepPattern object based on step pattern name and
+        retrieve step pattern matrix
+
+        Returns
+        ---------------
+        :return: step pattern matrix as numpy array
+
+        Examples
+        --------
+        >> from shapedtw.shapedtw import StepPatternMatrixTransformator
+        >> spmt = StepPatternMatrixTransformator("symmetric2")
+        >> res = spmt._get_step_pattern_matrix()
+        >> print(res)
+        [[ 1.  1.  1. -1.]
+         [ 1.  0.  0.  2.]
+         [ 2.  0.  1. -1.]
+         [ 2.  0.  0.  1.]
+         [ 3.  1.  0. -1.]
+         [ 3.  0.  0.  1.]]
+        """
         step_pattern_obj = Utils.canonicalizeStepPattern(self.step_pattern)
         return step_pattern_obj.mx
 
     def _get_segments_number(self) -> int:
+        """
+        Get number of step pattern's possible transitions
+        schemas
+
+        Returns
+        ---------------
+        :return: int - number of step pattern segments (transition schemas)
+        """
         return int(self.step_pattern_matrix[:, 0].max())
 
     def _segment_number_in_range(self, segment_number: int) -> bool:
+        """
+        Checks that the number of segment is in the valid range
+
+        Parameters
+        ---------------
+        :param segment_number: int - index of segment to check
+
+        Returns
+        ---------------
+        :return: bool - result of test
+        """
         return (segment_number > 0) & (segment_number <= self._get_segments_number())
 
     def _check_segment_number(self, segment_number: int) -> None:
+        """
+        Verify that segment number is in a valid range. If not
+        SegmentIndexOutOfRange exception is raised.
+
+        Parameters
+        ---------------
+        :param segment_number: int - index of segment to check
+
+        Raises
+        ---------------
+        :raises SegmentIndexOutOfRange: index of segment is lower than
+            zero or greater than the number of given step pattern's segments
+        """
         if not self._segment_number_in_range(segment_number):
             raise SegmentIndexOutOfRange(
                 provided_segment_number = segment_number,
@@ -38,21 +98,83 @@ class StepPatternMatrixTransformator:
             )
 
     def _get_matrix_segment(self, segment_number: int) -> ndarray:
+        """
+        Get rows of step pattern's matrix representing particular
+        segment (transition schema).
+
+        Parameters
+        ---------------
+        :param segment_number: index of segment
+
+        Returns
+        ---------------
+        :return: numpy array - rows of step pattern's matrix
+            representing particular segment
+        """
         self._check_segment_number(segment_number)
         ind_mask = self.step_pattern_matrix[:, 0] == segment_number
         return self.step_pattern_matrix[ind_mask, :].copy()
 
     def _get_segment_length(self, segment_number: int) -> int:
+        """
+        Get a length of given segment (transition schema). It
+        tells us how many values we need to consider in distance
+        reconstruction for particular step.
+
+        Parameters
+        ---------------
+        :param segment_number: index of segment
+
+        Returns
+        ---------------
+        :return: int - number of values the segment consists of
+        """
         self._check_segment_number(segment_number)
         mask = self.step_pattern_matrix[:, 0] == segment_number
         return mask.sum()-1
 
     def _get_segment_pattern(self, segment_number: int) -> tuple:
+        """
+        Get the transition schema for given segment. For example
+        output (1, 1) means that warping path moves to the next
+        observation of both x (reference) and y (query) time series.
+        (1, 0) would mean that we go to the next observation of
+        reference time series, but stick to the current observation of
+        y (query) series.
+
+        Parameters
+        ---------------
+        :param segment_number: int - index of segment
+
+        Returns
+        ---------------
+        :return: a tuple - transition schema for given segment
+        """
         self._check_segment_number(segment_number)
         segment = self._get_matrix_segment(segment_number)
         return int(segment[0, 1]), int(segment[0, 2])
 
     def _segment_to_dict(self, segment_number: int) -> dict:
+        """
+        Transform given segment (transition schema) to python
+        dictionary.
+
+        Parameters
+        ---------------
+        :param segment_number: int - index of segment
+
+        Returns
+        ---------------
+        :return: dictionary representing given segment (transition
+            schema) of a step pattern
+
+        Examples
+        --------
+        >> from shapedtw.shapedtw import StepPatternMatrixTransformator
+        >> spmt = StepPatternMatrixTransformator("symmetric2")
+        >> spmt._segment_to_dict(1)
+        {0: {'x_index': 0, 'y_index': 0, 'weight': 2.0}}
+        """
         self._check_segment_number(segment_number)
         segment = self._get_matrix_segment(segment_number)
         segment_length = self._get_segment_length(segment_number)
@@ -67,6 +189,22 @@ class StepPatternMatrixTransformator:
         return res
 
     def step_pattern_matrix_to_dict(self) -> dict:
+        """
+        Convert step pattern matrix to dictionary
+
+        Returns
+        ---------------
+        :return: dictionary representing given step pattern
+
+        Examples
+        --------
+        >> from shapedtw.shapedtw import StepPatternMatrixTransformator
+        >> spmt = StepPatternMatrixTransformator("symmetric2")
+        >> spmt.step_pattern_matrix_to_dict()
+        {(1, 1): {0: {'x_index': 0, 'y_index': 0, 'weight': 2.0}},
+         (0, 1): {0: {'x_index': 0, 'y_index': 0, 'weight': 1.0}},
+         (1, 0): {0: {'x_index': 0, 'y_index': 0, 'weight': 1.0}}}
+        """
         segments_number = self._get_segments_number()
         segments_iter = range(1, segments_number+1)
         res = {
