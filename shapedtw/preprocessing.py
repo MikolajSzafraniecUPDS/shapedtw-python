@@ -948,28 +948,96 @@ class MultivariateSeriesShapeDescriptors:
 
 class DistanceMatrixCalculator:
 
+    """
+    Class allowing to calculate distance matrix between two time series using
+    scipy 'cdist' method. It contains a set of functions which verify that
+    both time series are fully compatible
+
+    Attributes
+    ---------------
+    ts_x: ndarray:
+        first time series as numpy array
+    ts_y: ndarray:
+        second time series as numpy array
+    method: str:
+        type of distance, 'euclidean' as a default. Full list of distances is to find
+        here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html
+    """
+
     def __init__(self, ts_x: ndarray, ts_y: ndarray, method: str = "euclidean"):
+        """
+        Constructs a DistanceMatrixCalculator object
+
+        Parameters
+        ---------------
+        :param ts_x: reference time series as numpy array
+        :param ts_y: query time series as numpy array
+        :param method: type of distance, full list of possible values is to find
+            here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html
+        """
         self.ts_x = ts_x
         self.ts_y = ts_y
         self.method = method
 
     def _input_ts_empty(self):
+        """
+        Checks that one or both time series are empty
+
+        Returns
+        ---------------
+        :return: bool - result of test
+        """
         return (np.size(self.ts_x) == 0) | (np.size(self.ts_x) == 0)
 
     def _two_dim_at_most(self):
+        """
+        Checks that time series are not > 2d arrays
+
+        Returns
+        ---------------
+        :return: bool - result of test
+        """
         return (len(self.ts_x.shape) < 3) & (len(self.ts_y.shape) < 3)
 
     def _series_shape_match(self):
+        """
+        Checks that shapes (number of dimensions) of time series match
+
+        Returns
+        ---------------
+        :return: bool - result of test
+        """
         return len(self.ts_x.shape) == len(self.ts_y.shape)
 
     def _series_are_univariate(self):
+        """
+        Checks that both time series are univariate
+
+        Returns
+        ---------------
+        :return: bool - result of test
+        """
         return (len(self.ts_x.shape) == 1) & (len(self.ts_y.shape) == 1)
 
     def _series_dimensions_match(self):
+        """
+        Checks that number of time series dimensions (columns) match
+
+        Returns
+        ---------------
+        :return: bool - result of test
+        """
         return self.ts_x.shape[1] == self.ts_y.shape[1]
 
     def _verify_dimensions(self):
+        """
+        Verify time series correctness and compatibility
 
+        Raises
+        ---------------
+        :raises DimensionError: there is an issue with dimensions - details
+            explained in the error message
+        """
         if self._input_ts_empty():
             raise DimensionError("Empty arrays are not allowed.")
 
@@ -977,17 +1045,46 @@ class DistanceMatrixCalculator:
             raise DimensionError("Only arrays of 1 and 2 dimensions are supported")
 
         if not self._series_shape_match():
-            raise DimensionError("Number of time series dimensions doesn't match")
+            raise DimensionError("Shapes of time series are different")
 
         if not self._series_are_univariate():
             if not self._series_dimensions_match():
                 raise DimensionError("Number of time series columns doesn't match")
 
     def _convert_one_dimension_series(self):
+        """
+        Transpone univariate time series to the form of
+        2d matrix, required by calculation process
+        """
         self.ts_x = np.atleast_2d(self.ts_x).T
         self.ts_y = np.atleast_2d(self.ts_y).T
 
-    def calc_distance_matrix(self):
+    def calc_distance_matrix(self) -> ndarray:
+        """
+        Calculates distance matrix for given time series
+
+        Raises
+        ---------------
+        :raises DimensionError: there is an issue with dimensions - details
+            explained in the error message
+
+        Returns
+        ---------------
+        :return: distance matrix in the form of numpy array
+
+        Examples
+        --------
+        >> from shapedtw.preprocessing import DistanceMatrixCalculator
+        >> import numpy as np
+        >> ts_x = np.array([[1., 2.], [5., 2.], [4., 4.]])
+        >> ts_y = np.array([[4., 1.], [3., 3.], [1., 6.]])
+        >> dmc = DistanceMatrixCalculator(ts_x, ts_y, "euclidean")
+        >> res = dmc.calc_distance_matrix()
+        >> print(res)
+        [[3.16227766 2.23606798 4.        ]
+         [1.41421356 2.23606798 5.65685425]
+         [3.         1.41421356 3.60555128]]
+        """
         self._verify_dimensions()
         if self._series_are_univariate():
             self._convert_one_dimension_series()
@@ -998,7 +1095,11 @@ class DistanceMatrixCalculator:
 
 
 class UnivariateSeriesDistanceMatrix:
-
+    """
+    Class representing univariate series distance matrix. It stores
+    output distance matrix and time series based on which it was
+    calculated.
+    """
     def __init__(self, dist_matrix: np.ndarray, ts_x: ndarray, ts_y: ndarray):
         self.dist_matrix = dist_matrix
         self.ts_x = ts_x
@@ -1006,6 +1107,13 @@ class UnivariateSeriesDistanceMatrix:
 
 
 class MultivariateDistanceMatrixIndependent:
+    """
+    Class representing distance matrices calculated for the purpose
+    of multivariate, independent shape dtw. It stores list of
+    UnivariateSeriesDistanceMatrix (for each of time series
+    dimension / column respectively) and time series based on
+    which it was calculated.
+    """
     def __init__(self, distance_matrices_list: List[UnivariateSeriesDistanceMatrix], ts_x, ts_y):
         self.distance_matrices_list = distance_matrices_list
         self.ts_x = ts_x
@@ -1013,6 +1121,12 @@ class MultivariateDistanceMatrixIndependent:
 
 
 class MultivariateDistanceMatrixDependent:
+    """
+    Class representing multivariate series distance matrix, calculated
+    for the purpose of multivariate, dependent shape dtw. It stores
+    output distance matrix and time series based on which it was
+    calculated.
+    """
     def __init__(self, distance_matrix: ndarray, ts_x, ts_y):
         self.distance_matrix = distance_matrix
         self.ts_x = ts_x
