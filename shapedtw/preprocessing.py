@@ -970,8 +970,8 @@ class DistanceMatrixCalculator:
 
         Parameters
         ---------------
-        :param ts_x: reference time series as numpy array
-        :param ts_y: query time series as numpy array
+        :param ts_x: query time series as numpy array
+        :param ts_y: reference time series as numpy array
         :param method: type of distance, full list of possible values is to find
             here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html
         """

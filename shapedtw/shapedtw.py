@@ -137,10 +137,10 @@ class StepPatternMatrixTransformator:
         """
         Get the transition schema for given segment. For example
         output (1, 1) means that warping path moves to the next
-        observation of both x (reference) and y (query) time series.
+        observation of both x (query) and y (reference) time series.
         (1, 0) would mean that we go to the next observation of
-        reference time series, but stick to the current observation of
-        y (query) series.
+        query time series, but stick to the current observation of
+        y (reference) series.
 
         Parameters
         ---------------
@@ -218,8 +218,29 @@ class StepPatternMatrixTransformator:
 class DistanceReconstructor:
 
     """
-    Class for reconstructing raw time series distance based on its
-    distance matrix and warping path
+    This class allows to calculate distance between raw time series
+    based on provided warping paths. ShapeDTW algorithm calculates optimal
+    warping paths using distance matrix determined based on shape descriptors.
+    We can use such total distance in several applications, however one might
+    prefer to use raw time series distance. Class representing shape DTW results
+    contains both versions.
+
+    Attributes
+    ---------------
+    step_pattern: str:
+        name of step pattern used to calculate warping paths
+    ts_x: ndarray:
+        query time series
+    ts_y: ndarray:
+        reference time series
+    ts_x_wp:
+        warping path for query time series as a
+        list of indices
+    ts_y_wp:
+        warping path for reference time series as a
+        list of indices
+    dist_method: str:
+        type of distance used for determine warping paths
     """
 
     def __init__(self,
@@ -229,7 +250,16 @@ class DistanceReconstructor:
                  ts_x_wp: list,
                  ts_y_wp: list,
                  dist_method: str = "euclidean"):
+        """
+        Constructs a DistanceReconstructor object
 
+        :param step_pattern: name of step pattern used to calculate warping paths
+        :param ts_x: query time series
+        :param ts_y: reference time series
+        :param ts_x_wp: warping path for query time series as a list of indices
+        :param ts_y_wp: warping path for reference time series as a list of indices
+        :param dist_method: type of distance used for determine warping paths
+        """
         self.ts_x = ts_x
         self.ts_y = ts_y
         self.ts_x_warping_path = ts_x_wp
@@ -238,18 +268,53 @@ class DistanceReconstructor:
         self.distance_matrix = self._calc_distance_matrix()
         self.step_pattern_dictionary = StepPatternMatrixTransformator(step_pattern).step_pattern_matrix_to_dict()
 
-    def _calc_distance_matrix(self):
+    def _calc_distance_matrix(self) -> ndarray:
+        """
+        Calculates distance matrix for raw time series
+
+        Returns
+        ---------------
+        :return: distance matrix as ndarray
+        """
         dist_matrix = DistanceMatrixCalculator(self.ts_x, self.ts_y, self.dist_method).\
             calc_distance_matrix()
         return dist_matrix
 
-    def _calc_single_distance(self, x_index: int, y_index: int, single_pattern_dict: dict) -> float:
-        target_x_index = x_index - single_pattern_dict["x_index"]
-        target_y_index = y_index - single_pattern_dict["y_index"]
-        distance = self.distance_matrix[target_x_index, target_y_index] * single_pattern_dict["weight"]
+    def _calc_single_distance(self, x_index: int, y_index: int, step_pattern_segment_dict: dict) -> float:
+        """
+        Calculates weighted distance between a pair of time series observations for given
+        element of step pattern segment.
+
+        Parameters
+        ---------------
+        :param x_index: index of query time series
+        :param y_index: index of reference time series
+        :param step_pattern_segment_dict: dictionary for given element of step pattern segment
+
+        Returns
+        ---------------
+        :return: weighted distance between time series elements
+        """
+        target_x_index = x_index - step_pattern_segment_dict["x_index"]
+        target_y_index = y_index - step_pattern_segment_dict["y_index"]
+        distance = self.distance_matrix[target_x_index, target_y_index] * step_pattern_segment_dict["weight"]
         return distance
 
     def _calc_distance_for_given_pattern(self, x_index: int, y_index: int, pattern: tuple) -> float:
+        """
+        Calculates distance between a pair of time series observations for given
+        step pattern segment.
+
+        Parameters
+        ---------------
+        :param x_index: index of query time series
+        :param y_index: index of reference time series
+        :param pattern: transition pattern as a tuple of indices diff
+
+        Returns
+        ---------------
+        :return: distance for given time series elements and step pattern segment
+        """
         pattern_segment = self.step_pattern_dictionary[pattern]
         pattern_distance = sum([
             self._calc_single_distance(x_index, y_index, pattern_segment[key])
@@ -257,7 +322,29 @@ class DistanceReconstructor:
         ])
         return pattern_distance
 
-    def _get_indices_pairs(self):
+    def _get_indices_pairs(self) -> List[tuple]:
+        """
+        Converts warping paths into a list of tuples, representing pairs of
+        time series indices linked by the shape dtw algorithm
+
+        Returns
+        ---------------
+        :return: warping path in the form of a list of tuples,
+            representing pairs of time series indices
+
+        Examples
+        --------
+        >> import numpy as np
+        >> from shapedtw.shapedtw import DistanceReconstructor
+        >> ts_x = np.array([1.1, 1.5, 6.7, 4.5, 1.3])
+        >> ts_y = np.array([2.1, 2.5, 1.7, 3.3, 6.6])
+        >> ts_x_wp = np.array([0, 0, 1, 1, 2, 3, 4])
+        >> ts_y_wp = np.array([0, 1, 2, 3, 4, 4, 4])
+        >> ds = DistanceReconstructor("symmetric2", ts_x, ts_y, ts_x_wp, ts_y_wp)
+        >> res = ds._get_indices_pairs()
+        >> print(res)
+        [(0, 0), (0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 4)]
+        """
         return list(
             zip(
                 self.ts_x_warping_path,
@@ -265,13 +352,57 @@ class DistanceReconstructor:
             )
         )
 
-    def _get_indices_patterns(self):
+    def _get_indices_patterns(self) -> List[tuple]:
+        """
+        Calculates differences between a pairs of time series linked by the
+        shape dtw algorithm. It allows to reconstruct step pattern segments
+        required for calculate dtw distance between raw time series.
+
+        Returns
+        ---------------
+        :return: step pattern transitions in the form of a
+            list of tuples
+
+        Examples
+        --------
+        >> import numpy as np
+        >> from shapedtw.shapedtw import DistanceReconstructor
+        >> ts_x = np.array([1.1, 1.5, 6.7, 4.5, 1.3])
+        >> ts_y = np.array([2.1, 2.5, 1.7, 3.3, 6.6])
+        >> ts_x_wp = np.array([0, 0, 1, 1, 2, 3, 4])
+        >> ts_y_wp = np.array([0, 1, 2, 3, 4, 4, 4])
+        >> ds = DistanceReconstructor("symmetric2", ts_x, ts_y, ts_x_wp, ts_y_wp)
+        >> res = ds._get_indices_patterns()
+        >> print(res)
+        [(0, 1), (1, 1), (0, 1), (1, 1), (1, 0), (1, 0)]
+        """
         x_indices_diff = self.ts_x_warping_path[1:] - self.ts_x_warping_path[:-1]
         y_indices_diff = self.ts_y_warping_path[1:] - self.ts_y_warping_path[:-1]
 
         return list(zip(x_indices_diff, y_indices_diff))
 
-    def calc_raw_ts_distance(self):
+    def calc_raw_ts_distance(self) -> float:
+        """
+        Calculates distance between raw time series based on
+        provided warping paths.
+
+        Returns
+        ---------------
+        :return: distance as a float number
+
+        Examples
+        --------
+        >> import numpy as np
+        >> from shapedtw.shapedtw import DistanceReconstructor
+        >> ts_x = np.array([1.1, 1.5, 6.7, 4.5, 1.3])
+        >> ts_y = np.array([2.1, 2.5, 1.7, 3.3, 6.6])
+        >> ts_x_wp = np.array([0, 0, 1, 1, 2, 3, 4])
+        >> ts_y_wp = np.array([0, 1, 2, 3, 4, 4, 4])
+        >> ds = DistanceReconstructor("symmetric2", ts_x, ts_y, ts_x_wp, ts_y_wp)
+        >> res = ds.calc_raw_ts_distance()
+        >> print(res)
+        12.2
+        """
         indices_pairs = self._get_indices_pairs()
         indices_patterns = self._get_indices_patterns()
         raw_series_distance = self.distance_matrix[0, 0]
