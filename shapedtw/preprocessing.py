@@ -690,7 +690,7 @@ class MultivariateSeriesShapeDescriptors:
 
         Returns
         ---------------
-        :returns: int - length of MultivariateSeriesShapeDescriptors object
+        :return: int - length of MultivariateSeriesShapeDescriptors object
         """
         return len(self.descriptors_list)
 

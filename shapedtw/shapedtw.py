@@ -783,20 +783,76 @@ class ShapeDTW:
 
 class UnivariateShapeDTW(ShapeDTW):
 
+    """
+    Class representing results of univariate shape dtw and containing
+    a method used to calculate them
+
+    Attributes
+    ---------------
+    ts_x: ndarray:
+        query time series
+    ts_y: ndarray:
+        reference time series
+    step_pattern: str:
+        name of step pattern used to calculate warping paths
+    dist_method: str:
+        type of distance
+    dtw_res: DTW:
+        results of dtw algorithm applied to shape dtw distance
+        matrix; it contains all needed metadata, such as warping
+        paths, distance, normalized distance, etc.
+    shape_dtw_results: ShapeDTWResults:
+        shape dtw distances in the form of ShapeDTWResults class
+    """
+
     def __init__(self,
                  ts_x: ndarray,
                  ts_y: ndarray,
                  step_pattern: str = "symmetric2",
                  dist_method: str = "euclidean",
-                 dtw_results: DTW = None):
+                 dtw_results: DTW = None,
+                 shape_dtw_results: ShapeDTWResults = None):
+        """
+        Constructs a UnivariateShapeDTW object
 
-        super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results)
+        :param ts_x: query time series
+        :param ts_y: reference time series
+        :param step_pattern: name of step pattern used to calculate warping paths
+        :param dist_method: type of distance
+        :param dtw_results: results of dtw algorithm applied to shape dtw distance
+            matrix; it contains all needed metadata, such as warping
+            paths, distance, normalized distance, etc.
+        :param shape_dtw_results: shape dtw distances in the form of
+            ShapeDTWResults class
+        """
+        super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results, shape_dtw_results)
 
     def calc_shape_dtw(self,
                        subsequence_width: int,
                        shape_descriptor: ShapeDescriptor,
-                       **kwargs):
+                       **kwargs) -> UnivariateShapeDTW:
+        """
+        Calculates univariate shape dtw and set proper attributes inside
+        a given instance of the class (_dtw_results and _shape_dtw_results).
+        In order to calculate shape dtw we need to get shape descriptors of
+        query and reference time series, construct a distance matrix for them
+        and pass such matrix to the 'dtw' function from dtw-python package. It
+        calculates warping path using shape descriptor distances instead of raw
+        time series values, as in case of 'standard' dtw.
 
+        Parameters
+        ---------------
+        :param subsequence_width: width of subsequence
+        :param shape_descriptor: shape descriptor
+        :param kwargs: keyword arguments which will be passed to the 'dtw'
+            function executing dtw algorithm on the top of the distance matrix
+            determined using shape descriptors
+
+        Returns
+        ---------------
+        :return: self - an instance of the UnivariateShapeDTW with proper attributes
+            assigned ('_dtw_results' and '_shape_dtw_results')
+        """
         ts_x_shape_descriptor = UnivariateSubsequenceBuilder(self.ts_x, subsequence_width). \
             transform_time_series_to_subsequences(). \
             get_shape_descriptors(shape_descriptor)
@@ -820,21 +876,76 @@ class UnivariateShapeDTW(ShapeDTW):
 
 
 class MultivariateShapeDTWDependent(ShapeDTW):
+    """
+    Class representing results of multivariate, dependent shape dtw
+    and containing a method used to calculate them
+
+    Attributes
+    ---------------
+    ts_x: ndarray:
+        query time series
+    ts_y: ndarray:
+        reference time series
+    step_pattern: str:
+        name of step pattern used to calculate warping paths
+    dist_method: str:
+        type of distance
+    dtw_res: DTW:
+        results of dtw algorithm applied to shape dtw distance
+        matrix; it contains all needed metadata, such as warping
+        paths, distance, normalized distance, etc.
+    shape_dtw_results: ShapeDTWResults:
+        shape dtw distances in the form of ShapeDTWResults class
+    """
 
     def __init__(self,
                  ts_x: ndarray,
                  ts_y: ndarray,
                  step_pattern: str = "symmetric2",
                  dist_method: str = "euclidean",
-                 dtw_results: DTW = None):
+                 dtw_results: DTW = None,
+                 shape_dtw_results: ShapeDTWResults = None):
+        """
+        Constructs a MultivariateShapeDTWDependent object
 
-        super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results)
+        :param ts_x: query time series
+        :param ts_y: reference time series
+        :param step_pattern: name of step pattern used to calculate warping paths
+        :param dist_method: type of distance
+        :param dtw_results: results of dtw algorithm applied to shape dtw distance
+            matrix; it contains all needed metadata, such as warping
+            paths, distance, normalized distance, etc.
+        :param shape_dtw_results: shape dtw distances in the form of
+            ShapeDTWResults class
+        """
+        super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results, shape_dtw_results)
 
     def calc_shape_dtw(self,
                        subsequence_width: int,
                        shape_descriptor: ShapeDescriptor,
                        **kwargs):
+        """
+        Calculates multivariate, dependent shape dtw and set proper attributes
+        inside a given instance of the class (_dtw_results and _shape_dtw_results).
+        In order to calculate shape dtw we need to get shape descriptors of
+        each dimension of query and reference time series separately, construct
+        distance matrices for them, sum them up and pass such summed distance matrix
+        to the 'dtw' function from dtw-python package. It calculates warping path,
+        common for all the time series dimensions.
 
+        Parameters
+        ---------------
+        :param subsequence_width: width of subsequence
+        :param shape_descriptor: shape descriptor
+        :param kwargs: keyword arguments which will be passed to the 'dtw'
+            function executing dtw algorithm on the top of the distance matrix
+            determined using shape descriptors
+
+        Returns
+        ---------------
+        :return: self - an instance of the MultivariateShapeDTWDependent with proper attributes
+            assigned ('_dtw_results' and '_shape_dtw_results')
+        """
         ts_x_shape_descriptor = MultivariateSubsequenceBuilder(self.ts_x, subsequence_width). \
             transform_time_series_to_subsequences(). \
             get_shape_descriptors(shape_descriptor)
@@ -861,9 +972,10 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                  ts_y: ndarray,
                  step_pattern: str = "symmetric2",
                  dist_method: str = "euclidean",
-                 dtw_results: List[DTW] = None):
+                 dtw_results: List[DTW] = None,
+                 shape_dtw_results: ShapeDTWResults = None):
 
-        super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results)
+        super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results, shape_dtw_results)
 
     def _calc_raw_series_distance(self):
         n_dim = self.ts_x.shape[1]
