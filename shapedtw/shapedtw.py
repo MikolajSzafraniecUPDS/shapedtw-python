@@ -420,7 +420,8 @@ class DistanceReconstructor:
 class ShapeDTWResults:
 
     """
-    Dataclass representing shape dtw results
+    Dataclass representing distances between time series calculated
+    using shape dtw warping paths
 
     Attributes
     ---------------
@@ -446,6 +447,30 @@ class ShapeDTWResults:
 
 class ShapeDTW:
 
+    """
+    A class representing the results of the shape dtw and containing
+    a set of methods used to calculate them. It is a parent class for
+    classes representing more specific shape dtw variants (univariate,
+    multivariate dependent and multivariate independent).
+
+    Attributes
+    ---------------
+    ts_x: ndarray:
+        query time series
+    ts_y: ndarray:
+        reference time series
+    step_pattern: str:
+        name of step pattern used to calculate warping paths
+    dist_method: str:
+        type of distance
+    dtw_res: DTW | List[DTW]:
+        results of dtw algorithm applied to shape dtw distance
+        matrix; it contains all needed metadata, such as warping
+        paths, distance, normalized distance, etc.
+    shape_dtw_results: ShapeDTWResults:
+        shape dtw distances in the form of ShapeDTWResults class
+    """
+
     def __init__(self,
                  ts_x: ndarray,
                  ts_y: ndarray,
@@ -453,7 +478,21 @@ class ShapeDTW:
                  dist_method: str = "euclidean",
                  dtw_res: DTW | List[DTW] = None,
                  shape_dtw_results: ShapeDTWResults = None):
+        """
+        Constructs a ShapeDTW object
 
+        Parameters
+        ---------------
+        :param ts_x: query time series
+        :param ts_y: reference time series
+        :param step_pattern: name of step pattern used to calculate warping paths
+        :param dist_method: type of distance
+        :param dtw_res: results of dtw algorithm applied to shape dtw distance
+            matrix; it contains all needed metadata, such as warping
+            paths, distance, normalized distance, etc.
+        :param shape_dtw_results: shape dtw distances in the form of
+            ShapeDTWResults class
+        """
         self._dtw_results = dtw_res
         self.ts_x = ts_x
         self.ts_y = ts_y
@@ -461,7 +500,17 @@ class ShapeDTW:
         self._dist_method = dist_method
         self._shape_dtw_results = shape_dtw_results
 
-    def _calc_raw_series_distance(self):
+    def _calc_raw_series_distance(self) -> float:
+        """
+        Calculates distance between raw values of time series
+        based on warping paths determined using shape dtw
+        algorithm
+
+        Returns
+        ---------------
+        :return: distance between raw time series as a float
+            number
+        """
         dist_reconstructor = DistanceReconstructor(
             step_pattern=self._step_pattern,
             ts_x=self.ts_x,
@@ -473,7 +522,23 @@ class ShapeDTW:
 
         return dist_reconstructor.calc_raw_ts_distance()
 
-    def _calc_raw_series_normalized_distance(self, distance: float):
+    def _calc_raw_series_normalized_distance(self, distance: float) -> float:
+        """
+        Calculates normalized distance between raw values of
+        time series based on warping paths determined using
+        shape dtw algorithm
+
+        Parameters
+        ---------------
+        :param distance: distance between raw values of time series
+            calculated using '_calc_raw_series_distance' method
+
+        Returns
+        ---------------
+        :return: normalized distance between raw values of time series
+            if possible; nan for some types of step patterns for which
+            normalization is not possible
+        """
         step_pattern = Utils.canonicalizeStepPattern(self._step_pattern)
         norm = step_pattern.hint
 
@@ -492,7 +557,20 @@ class ShapeDTW:
 
         return normalized_distance
 
-    def _calc_distances(self):
+    def _calc_distances(self) -> ShapeDTWResults:
+        """
+        Calculates a full set of shape dtw distances
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: a set of distances in the form of ShapeDTWResults
+            object
+        """
         distance = self._calc_raw_series_distance()
         normalized_distance = self._calc_raw_series_normalized_distance(distance)
         shape_distance = self._dtw_results.distance
@@ -503,64 +581,195 @@ class ShapeDTW:
             shape_distance, shape_normalized_distance
         )
 
-    def _get_distance(self):
+    def _get_distance(self) -> float:
+        """
+        Getter - get distance between raw time series if already
+        calculated
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: distance between raw time series
+        """
         if self._shape_dtw_results is not None:
             return self._shape_dtw_results.distance
         else:
             raise ShapeDTWNotCalculatedYet()
 
-    def _get_normalized_distance(self):
+    def _get_normalized_distance(self) -> float:
+        """
+        Getter - get normalized distance between raw time series
+        if already calculated
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: normalized distance between raw time series
+        """
         if self._shape_dtw_results is not None:
             return self._shape_dtw_results.normalized_distance
         else:
             raise ShapeDTWNotCalculatedYet()
 
-    def _get_shape_descriptor_distance(self):
+    def _get_shape_descriptor_distance(self) -> float:
+        """
+        Getter - get distance between shape descriptors of time series
+        if already calculated
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: distance between shape descriptors values
+        """
         if self._shape_dtw_results is not None:
             return self._shape_dtw_results.shape_distance
         else:
             raise ShapeDTWNotCalculatedYet()
 
-    def _get_shape_descriptor_normalized_distance(self):
+    def _get_shape_descriptor_normalized_distance(self) -> float:
+        """
+        Getter - get normalized distance between shape descriptors of
+        time series if already calculated
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: normalized distance between shape descriptors values
+        """
         if self._shape_dtw_results is not None:
             return self._shape_dtw_results.shape_normalized_distance
         else:
             raise ShapeDTWNotCalculatedYet()
 
     def _set_distance(self, value):
+        """
+        Setter preventing from setting distance explicitly, omitting
+        actual process of calculating shape dtw
+
+        Parameters
+        ---------------
+        :param value: distance value
+
+        Raises
+        ---------------
+        :raises DistanceSettingNotPossible: distances can only be set
+            by calculating shape dtw, not by explicit assignment
+        """
         raise DistanceSettingNotPossible(
             "ShapeDTW distance can be set only using 'calc_shape_dtw' method"
         )
 
-    def _get_index1(self):
+    def _get_index1(self) -> List[int]:
+        """
+        Getter - get warping path for query (x) series
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: warping path for query series as a list of integers
+        """
         if self._dtw_results is not None:
             return self._dtw_results.index1
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index2(self):
+    def _get_index2(self) -> List[int]:
+        """
+        Getter - get warping path for reference (y) series
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: warping path for reference series as a list of integers
+        """
         if self._dtw_results is not None:
             return self._dtw_results.index2
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index1s(self):
+    def _get_index1s(self) -> List[int]:
+        """
+        Getter - get warping path for query (x) series with intermediate
+            steps for multi-step patterns (like 'asymmetricP05()') excluded
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: warping path for query series as a list of integers, with
+            intermediate steps excluded
+        """
         if self._dtw_results is not None:
             return self._dtw_results.index1s
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index2s(self):
+    def _get_index2s(self) -> List[int]:
+        """
+        Getter - get warping path for reference (y) series with intermediate
+            steps for multi-step patterns (like 'asymmetricP05()') excluded
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: warping path for reference series as a list of integers, with
+            intermediate steps excluded
+        """
         if self._dtw_results is not None:
             return self._dtw_results.index2s
         else:
             raise DTWNotCalculatedYet()
 
     def _set_index(self, value):
+        """
+        Setter preventing from setting warping paths explicitly, omitting
+        actual process of calculating shape dtw
+
+        Parameters
+        ---------------
+        :param value: warping path value
+
+        Raises
+        ---------------
+        :raises WarpingPathSettingNotPossible: warping paths can only be set
+            by calculating shape dtw, not by explicit assignment
+        """
         raise WarpingPathSettingNotPossible(
             "Warping paths can be set only using 'calc_shape_dtw' method"
         )
 
+    # Properties
     distance = property(_get_distance, _set_distance)
     normalized_distance = property(_get_normalized_distance, _set_distance)
     shape_distance = property(_get_shape_descriptor_distance, _set_distance)
