@@ -419,6 +419,25 @@ class DistanceReconstructor:
 @dataclass
 class ShapeDTWResults:
 
+    """
+    Dataclass representing shape dtw results
+
+    Attributes
+    ---------------
+    distance: float:
+        distance calculated based on raw time series values
+    normalized_distance: float:
+        normalized distance between raw time series - calculated
+        only if it is possible for given step pattern; nan otherwise
+    shape_distance: float:
+        distance between time series calculated based on shape
+        descriptor values
+    shape_normalized_distance: float:
+        normalized distance calculated based on shape descriptor
+        values - - calculated only if it is possible for given
+        step pattern; nan otherwise
+    """
+
     distance: float
     normalized_distance: float
     shape_distance: float
