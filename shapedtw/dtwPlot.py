@@ -33,36 +33,31 @@ from shapedtw.utils import Utils
 def dtwPlot(x, type, axis = None, **kwargs):
     # IMPORT_RDOCSTRING plot.dtw
     """Plotting of dynamic time warp results
-Methods for plotting dynamic time warp alignment objects returned by
-[dtw()].
-**Details**
-``dtwPlot`` displays alignment contained in ``dtw`` objects.
-Various plotting styles are available, passing strings to the ``type``
-argument (may be abbreviated):
--  ``alignment`` plots the warping curve in ``d``;
--  ``twoway`` plots a point-by-point comparison, with matching lines;
-   see [dtwPlotTwoWay()];
--  ``threeway`` vis-a-vis inspection of the timeseries and their warping
-   curve; see [dtwPlotThreeWay()];
--  ``density`` displays the cumulative cost landscape with the warping
-   path overimposed; see [dtwPlotDensity()]
-Additional parameters are passed to the plotting functions: use with
-care.
-Parameters
-----------
-x,d :
-    `dtw` object, usually result of call to [dtw()]
-xlab :
-    label for the query axis
-ylab :
-    label for the reference axis
-type :
-    general style for the plot, see below
-plot_type :
-    type of line to be drawn, used as the `type` argument in the underlying `plot` call
-... :
-    additional arguments, passed to plotting functions
-"""
+    Methods for plotting dynamic time warp alignment objects returned by
+    [dtw()].
+    **Details**
+    ``dtwPlot`` displays alignment contained in ``dtw`` objects.
+    Various plotting styles are available, passing strings to the ``type``
+    argument (may be abbreviated):
+    -  ``alignment`` plots the warping curve in ``d``;
+    -  ``twoway`` plots a point-by-point comparison, with matching lines;
+        see [dtwPlotTwoWay()];
+    -  ``threeway`` vis-a-vis inspection of the timeseries and their warping
+        curve; see [dtwPlotThreeWay()];
+    -  ``density`` displays the cumulative cost landscape with the warping
+        path overimposed; see [dtwPlotDensity()]
+    Additional parameters are passed to the plotting functions: use with
+    care.
+
+    Parameters
+    ---------------
+    :param: x: `dtw` object, usually result of call to [dtw()]
+    :param xlab: label for the query axis
+    :param ylab: label for the reference axis
+    :param type: general style for the plot, see below
+    :param plot_type: type of line to be drawn, used as the `type` argument in the underlying `plot` call
+    :param kwargs: additional arguments, passed to plotting functions
+    """
     # ENDIMPORT
 
     if isinstance(x, MultivariateShapeDTWDependent):
@@ -83,7 +78,24 @@ plot_type :
 
 
 def dtwPlotAlignment(d, axis=None, xlab="Query index", ylab="Reference index", **kwargs):
+    """
+    Alignement plot for univariate time series or particular dimension of
+    multivariate time series
 
+    Parameters
+    ---------------
+    :param d: dtw results as DTW / ShapeDTW class containing all needed
+        metadata (warping paths)
+    :param axis: pyplot axis; if None it will be created
+    :param xlab: label for query series
+    :param ylab: label for reference series
+    :param kwargs: additional keyword params which will be passed to the
+        ploting function
+
+    Returns
+    ---------------
+    :return: pyplot axis
+    """
     if axis is None:
         fig, ax = plt.subplots(figsize=(6, 6))
     else:
