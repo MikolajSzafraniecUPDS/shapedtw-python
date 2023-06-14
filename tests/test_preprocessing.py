@@ -794,7 +794,7 @@ class TestDistanceMatrixCalculator(unittest.TestCase):
             ).calc_distance_matrix()
         except DimensionError as e:
             self.assertTrue(
-                str(e) == "Number of time series dimensions doesn't match"
+                str(e) == "Shapes of time series are different"
             )
 
     def test_number_of_cols_doesnt_match(self):

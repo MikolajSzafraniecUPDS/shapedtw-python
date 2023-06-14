@@ -219,7 +219,7 @@ class TestDistanceReconstructor(unittest.TestCase):
         expected_res = distance_reconstructor.distance_matrix[1, 1]*2
 
         res = distance_reconstructor._calc_single_distance(
-            x_index=x_ind, y_index=y_ind, single_pattern_dict=pattern_dict[pattern][0]
+            x_index=x_ind, y_index=y_ind, step_pattern_segment_dict=pattern_dict[pattern][0]
         )
 
         self.assertEqual(expected_res, res)
@@ -238,7 +238,7 @@ class TestDistanceReconstructor(unittest.TestCase):
 
         expected_res = distance_reconstructor.distance_matrix[2, 3]*2.0
         res = distance_reconstructor._calc_single_distance(
-            x_index=x_ind, y_index=y_ind, single_pattern_dict=pattern_dict[pattern][0]
+            x_index=x_ind, y_index=y_ind, step_pattern_segment_dict=pattern_dict[pattern][0]
         )
 
         self.assertEqual(expected_res, res)
