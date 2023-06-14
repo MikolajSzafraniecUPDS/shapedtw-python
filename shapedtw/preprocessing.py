@@ -226,7 +226,7 @@ class MultivariateSubsequenceBuilder(SubsequenceBuilder):
     [2 2 4 6 6 6 6]]
     """
 
-    def __init__(self, time_series: ndarray, get_shape_descriptors: int):
+    def __init__(self, time_series: ndarray, subsequence_width: int):
         """
         Constructs a MultivariateSubsequenceBuilder object
 

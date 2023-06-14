@@ -671,7 +671,7 @@ class ShapeDTW:
             "ShapeDTW distance can be set only using 'calc_shape_dtw' method"
         )
 
-    def _get_index1(self) -> List[int]:
+    def _get_index1(self) -> ndarray:
         """
         Getter - get warping path for query (x) series
 
@@ -682,14 +682,14 @@ class ShapeDTW:
 
         Returns
         ---------------
-        :return: warping path for query series as a list of integers
+        :return: warping path for query series as a numpy array
         """
         if self._dtw_results is not None:
             return self._dtw_results.index1
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index2(self) -> List[int]:
+    def _get_index2(self) -> ndarray:
         """
         Getter - get warping path for reference (y) series
 
@@ -700,14 +700,14 @@ class ShapeDTW:
 
         Returns
         ---------------
-        :return: warping path for reference series as a list of integers
+        :return: warping path for reference series as a numpy array
         """
         if self._dtw_results is not None:
             return self._dtw_results.index2
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index1s(self) -> List[int]:
+    def _get_index1s(self) -> ndarray:
         """
         Getter - get warping path for query (x) series with intermediate
             steps for multi-step patterns (like 'asymmetricP05()') excluded
@@ -719,7 +719,7 @@ class ShapeDTW:
 
         Returns
         ---------------
-        :return: warping path for query series as a list of integers, with
+        :return: warping path for query series as a numpy array, with
             intermediate steps excluded
         """
         if self._dtw_results is not None:
@@ -727,7 +727,7 @@ class ShapeDTW:
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index2s(self) -> List[int]:
+    def _get_index2s(self) -> ndarray:
         """
         Getter - get warping path for reference (y) series with intermediate
             steps for multi-step patterns (like 'asymmetricP05()') excluded
@@ -739,7 +739,7 @@ class ShapeDTW:
 
         Returns
         ---------------
-        :return: warping path for reference series as a list of integers, with
+        :return: warping path for reference series as a numpy array, with
             intermediate steps excluded
         """
         if self._dtw_results is not None:
@@ -1118,7 +1118,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
         return self
 
-    def _get_index1(self) -> List[List[int]]:
+    def _get_index1(self) -> List[ndarray]:
         """
         Getter - get warping paths for query (x) series
 
@@ -1129,14 +1129,14 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
         Returns
         ---------------
-        :return: warping paths for query series as a list of lists
+        :return: warping paths for query series as a list of numpy arrays
         """
         if self._dtw_results is not None:
             return [dtw_res.index1 for dtw_res in self._dtw_results]
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index2(self) -> List[List[int]]:
+    def _get_index2(self) -> List[ndarray]:
         """
         Getter - get warping paths for reference (y) series
 
@@ -1147,14 +1147,14 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
         Returns
         ---------------
-        :return: warping paths for reference series as a list of lists
+        :return: warping paths for reference series as a list of numpy arrays
         """
         if self._dtw_results is not None:
             return [dtw_res.index2 for dtw_res in self._dtw_results]
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index1s(self) -> List[List[int]]:
+    def _get_index1s(self) -> List[ndarray]:
         """
         Getter - get warping paths for query (x) series with intermediate
             steps for multi-step patterns (like 'asymmetricP05()') excluded
@@ -1166,7 +1166,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
         Returns
         ---------------
-        :return: warping paths for reference series as a list of lists, with
+        :return: warping paths for reference series as a list of numpy arrays, with
             intermediate steps excluded
         """
         if self._dtw_results is not None:
@@ -1174,7 +1174,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index2s(self) -> List[List[int]]:
+    def _get_index2s(self) -> List[ndarray]:
         """
         Getter - get warping paths for reference (y) series with intermediate
             steps for multi-step patterns (like 'asymmetricP05()') excluded
@@ -1186,7 +1186,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
         Returns
         ---------------
-        :return: warping paths for reference series as a list of lists, with
+        :return: warping paths for reference series as a list of numpy arrays, with
             intermediate steps excluded
         """
         if self._dtw_results is not None:
@@ -1442,11 +1442,115 @@ def shape_dtw(x, y, subsequence_width: int,
     ---------------
     :return: ShapeDTW object containing results of calculation
 
+    Examples
+    --------
+    >> import numpy as np
+    >> from shapedtw.shapedtw import shape_dtw
+    >> from shapedtw.shapeDescriptors import SlopeDescriptor, PAADescriptor, CompoundDescriptor
+    >>
+    # Univariate case
+    >> np.random.seed(10)
+    >> ts_x_uni = np.random.randn(50)
+    >> ts_y_uni = np.random.randn(50)
+    >> slope_descriptor = SlopeDescriptor(slope_window=2)
+    >> paa_descriptor = PAADescriptor(piecewise_aggregation_window=2)
+    >> compound_desc = CompoundDescriptor(
+    >>      shape_descriptors = [slope_descriptor, paa_descriptor],
+    >>      descriptors_weights = [2.0, 1.0]
+    >> )
+    >> univariate_results = shape_dtw(
+    >>      x=ts_x_uni,
+    >>      y=ts_y_uni,
+    >>      subsequence_width=3,
+    >>      shape_descriptor=compound_desc
+    >> )
+    >> print(round(univariate_results.distance, 2))
+    75.42
+    >> print(round(univariate_results.normalized_distance, 2))
+    0.75
+    >> print(round(univariate_results.shape_distance, 2))
+    417.99
+    >> print(round(univariate_results.shape_normalized_distance, 2))
+    4.18
+    >> print(univariate_results.index1s)
+    [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+    23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46
+    46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 47 48
+    49 49 49 49]
+
+    # Multivariate, dependent case
+    >> np.random.seed(10)
+    >> ts_x_multi = np.random.randn(50, 2)+10
+    >> ts_y_multi = np.random.randn(50, 2)+10
+    >> slope_descriptor = SlopeDescriptor(slope_window=2)
+    >> paa_descriptor = PAADescriptor(piecewise_aggregation_window=2)
+    >> compound_desc = CompoundDescriptor(
+    >>      shape_descriptors = [slope_descriptor, paa_descriptor],
+    >>      descriptors_weights = [2.0, 1.0]
+    >> )
+    >> multivariate_dependent_results = shape_dtw(
+    >>      x=ts_x_multi,
+    >>      y=ts_y_multi,
+    >>      subsequence_width=3,
+    >>      shape_descriptor=compound_desc,
+    >>      multivariate_version="dependent"
+    >> )
+    >> print(round(multivariate_dependent_results.distance, 2))
+    147.11
+    >> print(round(multivariate_dependent_results.normalized_distance, 2))
+    1.47
+    >> print(round(multivariate_dependent_results.shape_distance, 2))
+    704.26
+    >> print(round(multivariate_dependent_results.shape_normalized_distance, 2))
+    7.04
+    >> print(multivariate_dependent_results.index1s)
+    [ 0  1  2  3  4  5  5  5  5  6  7  8  9 10 10 10 10 11 12 13 14 14 14 15
+    16 16 17 18 18 19 20 21 22 23 24 24 24 24 24 24 24 24 24 24 24 24 24 24
+    25 26 27 28 29 30 31 31 32 33 33 33 34 35 36 37 38 39 40 41 42 43 44 45
+    46 47 48 49]
+
+    # Multivariate, independent case
+    >> np.random.seed(10)
+    >> ts_x_multi = np.random.randn(50, 2)+10
+    >> ts_y_multi = np.random.randn(50, 2)+10
+    >> slope_descriptor = SlopeDescriptor(slope_window=2)
+    >> paa_descriptor = PAADescriptor(piecewise_aggregation_window=2)
+    >> compound_desc = CompoundDescriptor(
+    >>      shape_descriptors = [slope_descriptor, paa_descriptor],
+    >>      descriptors_weights = [2.0, 1.0]
+    >> )
+    >> multivariate_independent_results = shape_dtw(
+    >>      x=ts_x_multi,
+    >>      y=ts_y_multi,
+    >>      subsequence_width=3,
+    >>      shape_descriptor=compound_desc,
+    >>      multivariate_version="independent"
+    >> )
+    >> print(round(multivariate_independent_results.distance, 2))
+    157.64
+    >> print(round(multivariate_independent_results.normalized_distance, 2))
+    1.58
+    >> print(round(multivariate_independent_results.shape_distance, 2))
+    822.61
+    >> print(round(multivariate_independent_results.shape_normalized_distance, 2))
+    8.23
+    >> print(multivariate_independent_results.index1s)
+    [
+        array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 14, 15,
+            16, 17, 18, 19, 19, 20, 21, 22, 23, 24, 24, 25, 26, 26, 27, 28, 29,
+            30, 31, 32, 33, 34, 35, 35, 35, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+            44, 45, 45, 45, 45, 45, 46, 47, 48, 49, 49, 49]),
+        array([ 0,  1,  2,  3,  4,  5,  6,  6,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+            15, 16, 16, 16, 16, 17, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18,
+            18, 18, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+            33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49])
+    ]
+
     References
     ----------
     1. Sakoe, H.; Chiba, S., *Dynamic programming algorithm optimization for
        spoken word recognition*, Acoustics, Speech, and Signal Processing,
-       IEEE Transactions on , vol.26, no.1, pp. 43-49, Feb 1978.
+       IEEE Transactions on , vol.26, no.1, pp. 43-49, Feb 1978.
        http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=1163055
     2. Itti, L.; Zhao, J., *shapeDTW: shape Dynamic Time Warping,*
        Pattern Recognition, Volume 74, pp. 171-184, Feb 2018.
