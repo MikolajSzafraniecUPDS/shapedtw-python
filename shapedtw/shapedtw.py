@@ -7,7 +7,8 @@ from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
 from shapedtw.utils import Utils
 from dataclasses import dataclass
-
+from pandas import Series, DataFrame
+from numpy import ndarray
 
 class StepPatternMatrixTransformator:
 
@@ -561,11 +562,6 @@ class ShapeDTW:
         """
         Calculates a full set of shape dtw distances
 
-        Raises
-        ---------------
-        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
-            shape dtw results were not calculated yet
-
         Returns
         ---------------
         :return: a set of distances in the form of ShapeDTWResults
@@ -878,7 +874,11 @@ class UnivariateShapeDTW(ShapeDTW):
 class MultivariateShapeDTWDependent(ShapeDTW):
     """
     Class representing results of multivariate, dependent shape dtw
-    and containing a method used to calculate them
+    and containing a method used to calculate them.
+
+    For multivariate dependent shape dtw there is one common warping
+    paths for all time series dimensions. Details are described in this
+    paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/
 
     Attributes
     ---------------
@@ -967,6 +967,35 @@ class MultivariateShapeDTWDependent(ShapeDTW):
 
 class MultivariateShapeDTWIndependent(ShapeDTW):
 
+    """
+    Class representing results of multivariate, independent shape dtw
+    and containing a method used to calculate them.
+
+    For multivariate independent shape dtw warping paths are calculated
+    for each time dimension independently. In order to calculate shape
+    dtw results in this case we need to calculate distances individually
+    for all the dimensions (as in case of univariate dtw) and then
+    calculate the sum of all distances. Details are described in this
+    paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/
+
+    Attributes
+    ---------------
+    ts_x: ndarray:
+        query time series
+    ts_y: ndarray:
+        reference time series
+    step_pattern: str:
+        name of step pattern used to calculate warping paths
+    dist_method: str:
+        type of distance
+    dtw_res: DTW:
+        list of results of dtw algorithm applied to shape dtw distance
+        matrices; it contains all needed metadata, such as warping
+        paths, distance, normalized distance, etc.
+    shape_dtw_results: ShapeDTWResults:
+        shape dtw distances in the form of ShapeDTWResults class
+    """
+
     def __init__(self,
                  ts_x: ndarray,
                  ts_y: ndarray,
@@ -974,10 +1003,35 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                  dist_method: str = "euclidean",
                  dtw_results: List[DTW] = None,
                  shape_dtw_results: ShapeDTWResults = None):
+        """
+        Constructs a MultivariateShapeDTWIndependent object
+
+        :param ts_x: query time series
+        :param ts_y: reference time series
+        :param step_pattern: name of step pattern used to calculate warping paths
+        :param dist_method: type of distance
+        :param dtw_results: list of results of dtw algorithm applied to shape dtw distance
+            matrices; it contains all needed metadata, such as warping
+            paths, distance, normalized distance, etc.
+        :param shape_dtw_results: shape dtw distances in the form of
+            ShapeDTWResults class
+        """
 
         super().__init__(ts_x, ts_y, step_pattern, dist_method, dtw_results, shape_dtw_results)
 
-    def _calc_raw_series_distance(self):
+    def _calc_raw_series_distance(self) -> float:
+        """
+        Calculates distance between raw time series values using
+        warping paths calculated by the shape dtw algorithm. For
+        multivariate independent shape dtw warping paths are calculated
+        for each time dimension independently. That's why
+        we calculate distances separately for each dimension and sum
+        them up as a result.
+
+        Returns
+        ---------------
+        :return: distance for raw time series values
+        """
         n_dim = self.ts_x.shape[1]
         dist_reconstructors = [
             DistanceReconstructor(step_pattern=self._step_pattern,
@@ -995,6 +1049,16 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         return res
 
     def _calc_distances(self):
+
+        """
+        Calculates a full set of shape dtw distances
+
+        Returns
+        ---------------
+        :return: a set of distances in the form of ShapeDTWResults
+            object
+        """
+
         distance = self._calc_raw_series_distance()
         normalized_distance = self._calc_raw_series_normalized_distance(distance)
         shape_distance = sum([dtw_res.distance for dtw_res in self._dtw_results])
@@ -1009,6 +1073,28 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                        subsequence_width: int,
                        shape_descriptor: ShapeDescriptor,
                        **kwargs):
+
+        """
+        Calculates multivariate, independent shape dtw and set proper attributes
+        inside a given instance of the class (_dtw_results and _shape_dtw_results).
+        In order to calculate shape dtw we need to get shape descriptors of
+        each dimension of query and reference time series separately and construct
+        distance matrices for them. Afterward, individual warping path is determined
+        for each dimension separately. Finally, we calculate distances for each
+        dimension and sum them up as a result.
+
+        Parameters
+        ---------------
+        :param subsequence_width: width of subsequence
+        :param shape_descriptor: shape descriptor
+        :param kwargs: keyword arguments which will be passed to the 'dtw'
+            function determining the warping paths
+
+        Returns
+        ---------------
+        :return: self - an instance of the MultivariateShapeDTWIndependent with proper attributes
+            assigned ('_dtw_results' and '_shape_dtw_results')
+        """
 
         ts_x_shape_descriptor = MultivariateSubsequenceBuilder(self.ts_x, subsequence_width). \
             transform_time_series_to_subsequences(). \
@@ -1032,25 +1118,77 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
         return self
 
-    def _get_index1(self):
+    def _get_index1(self) -> List[List[int]]:
+        """
+        Getter - get warping paths for query (x) series
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: warping paths for query series as a list of lists
+        """
         if self._dtw_results is not None:
             return [dtw_res.index1 for dtw_res in self._dtw_results]
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index2(self):
+    def _get_index2(self) -> List[List[int]]:
+        """
+        Getter - get warping paths for reference (y) series
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: warping paths for reference series as a list of lists
+        """
         if self._dtw_results is not None:
             return [dtw_res.index2 for dtw_res in self._dtw_results]
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index1s(self):
+    def _get_index1s(self) -> List[List[int]]:
+        """
+        Getter - get warping paths for query (x) series with intermediate
+            steps for multi-step patterns (like 'asymmetricP05()') excluded
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: warping paths for reference series as a list of lists, with
+            intermediate steps excluded
+        """
         if self._dtw_results is not None:
             return [dtw_res.index1s for dtw_res in self._dtw_results]
         else:
             raise DTWNotCalculatedYet()
 
-    def _get_index2s(self):
+    def _get_index2s(self) -> List[List[int]]:
+        """
+        Getter - get warping paths for reference (y) series with intermediate
+            steps for multi-step patterns (like 'asymmetricP05()') excluded
+
+        Raises
+        ---------------
+        :raises ShapeDTWNotCalculatedYet: ShapeDTW object was already created but
+            shape dtw results were not calculated yet
+
+        Returns
+        ---------------
+        :return: warping paths for reference series as a list of lists, with
+            intermediate steps excluded
+        """
         if self._dtw_results is not None:
             return [dtw_res.index2s for dtw_res in self._dtw_results]
         else:
@@ -1063,24 +1201,110 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
 
 class ValuesGetter:
 
+    """
+    Class responsible for transforming input time series into
+    format required by the shape_dtw function. For numpy array
+    no preprocessing is required. For pandas series and data frames
+    we need to retrieve values from the input object. What's more,
+    for data frames containing only 1 column 'flatten' method
+    must be applied.
+
+    Attributes
+    ---------------
+    input_ts: object:
+        input time series as a numpy array, pandas series or pandas
+        data frame. For other types InputTimeSeriesUnsupportedType
+        exception will be raised
+    """
+
+    _SUPPORTED_TYPES = [Series, DataFrame, ndarray]
+
     def __init__(self, input_ts: object):
+        """
+        Constructs a ValuesGetter object
+
+        Raises
+        ---------------
+        :raises InputTimeSeriesUnsupportedType: input must be numpy array, pandas Series
+            or pandas DataFrame
+
+        Parameters
+        ---------------
+        :param input_ts: input time series as a numpy array, pandas series or pandas
+            data frame. For other types InputTimeSeriesUnsupportedType exception
+            will be raised
+        """
         self.input_ts = input_ts
+        if not self._type_is_supported():
+            raise InputTimeSeriesUnsupportedType(
+                self._SUPPORTED_TYPES,
+                self.input_ts.__class__.__name__
+            )
+
+    def _type_is_supported(self) -> bool:
+        """
+        Checks whether type of input object is in the list of supported types
+
+        Returns
+        ---------------
+        :return: bool - a result of test
+        """
+        input_ts_type = type(self.input_ts)
+        return input_ts_type in self._SUPPORTED_TYPES
 
     def _is_numpy_array(self) -> bool:
+        """
+        Checks whether input object is a numpy array
+
+        Returns
+        ---------------
+        :return: bool - a result of test
+        """
         return isinstance(self.input_ts, ndarray)
 
     def _is_pandas_series(self) -> bool:
-        return isinstance(self.input_ts, pd.Series)
+        """
+        Checks whether input object is a pandas Series
+
+        Returns
+        ---------------
+        :return: bool - a result of test
+        """
+        return isinstance(self.input_ts, Series)
 
     def _is_pandas_dataframe(self) -> bool:
-        return isinstance(self.input_ts, pd.DataFrame)
+        """
+        Checks whether input object is a pandas DataFrame
+
+        Returns
+        ---------------
+        :return: bool - a result of test
+        """
+        return isinstance(self.input_ts, DataFrame)
 
     def _is_flatten_needed(self) -> bool:
+        """
+        Checks whether 'flatten' method has to be applied (required
+        for pandas data frames containing only 1 column)
+
+        Returns
+        ---------------
+        :return: bool - a result of test
+        """
         if self._is_pandas_dataframe():
             return True if len(self.input_ts.columns) == 1 else False
         return False
 
     def _flatten_if_needed(self) -> ndarray:
+        """
+        Applies 'flatten' method for pandas data frame if needed. Otherwise,
+        returns raw data frame values.
+
+        Returns
+        ---------------
+        :return: raw values of data frame in the form of numpy array (flattened
+            if needed)
+        """
         if self._is_flatten_needed():
             res = self.input_ts.values.flatten()
         else:
@@ -1088,16 +1312,50 @@ class ValuesGetter:
         return res
 
     def get_values(self) -> ndarray:
+        """
+        Transforms input time series object if needed. For numpy array
+        input object is returned without any changes. For pandas Series
+        and DataFrames values are retrieved in the form of numpy array.
+        For data frames containing only 1 column flattening is applied.
+
+        Returns
+        ---------------
+        :return: input time series, transformed if needed
+
+        Examples
+        --------
+        >> import pandas as pd
+        >> import numpy as np
+        >> from shapedtw.shapedtw import ValuesGetter
+        >>
+        >> np_array = np.array([[1., 2., 3.], [4.5, 5.5, 3.2]])
+        >> pd_series = pd.Series([1.2, 3.3, 4.5])
+        >> pd_df_one_col = pd.DataFrame({"ts_x": [1.2, 2.2, 3.4]})
+        >> pd_df_two_cols = pd.DataFrame({"ts_x": [1.2, 2.2, 3.4], "ts_y": [5.5, 4.4, 3.3]})
+        >>
+        >> vg_array = ValuesGetter(np_array)
+        >> vg_series = ValuesGetter(pd_series)
+        >> vg_df_one_col = ValuesGetter(pd_df_one_col)
+        >> vg_df_two_cols = ValuesGetter(pd_df_two_cols)
+        >>
+        >> vg_array.get_values()
+        array([[1. , 2. , 3. ],
+               [4.5, 5.5, 3.2]])
+        >> vg_series.get_values()
+        array([1.2, 3.3, 4.5])
+        >> vg_df_one_col.get_values()
+        array([1.2, 2.2, 3.4])
+        >> vg_df_two_cols.get_values()
+        array([[1.2, 5.5],
+               [2.2, 4.4],
+               [3.4, 3.3]])
+        """
         if self._is_numpy_array():
             res = self.input_ts
         elif self._is_pandas_series():
             res = self.input_ts.values
         elif self._is_pandas_dataframe():
             res = self._flatten_if_needed()
-        else:
-            raise InputTimeSeriesUnsupportedType(
-                self.input_ts.__class__.__name__
-            )
 
         return res
 
@@ -1105,10 +1363,99 @@ class ValuesGetter:
 def shape_dtw(x, y, subsequence_width: int,
               shape_descriptor: ShapeDescriptor,
               step_pattern: str = "symmetric2",
-              dist_method="euclidean",
+              dist_method: str ="euclidean",
               multivariate_version: str = "dependent",
-              **kwargs):
+              **kwargs) -> ShapeDTW:
+    """
+    Calculates shape dtw for given query and reference time series.
+    In case of multivariate time series parameter 'multivariate_version'
+    allows to decide whether dependent or independent variant will be
+    applied (dependent is a default).
 
+    -----------
+
+    For univariate time series the flow of algorithm looks exactly the
+    same as described in the referenced paper by Zhao and Itti available
+    here: https://arxiv.org/pdf/1606.01601.pdf.
+
+    As a first step time series is transformed to the matrix of subsequences
+    (temporal points and their neighbours). Width of subsequences can be
+    determined with 'subsequence_width' parameter. For subsequence_width=1
+    we've got a subsequence of total length 3 observations
+    (temporal point + one preceding neighbour + one following
+    neighbour). For subsequence_width=2 we've got a subsequence of total length
+    5 observations (temporal point + two precedings neighbours + one following
+    neighbours). In case of temporal points at the beginning and at the end
+    of time series we pad first and, respectively, last temporal points.
+
+    As a next step we calculate shape descriptor for each of the subsequences.
+    Shape descriptor is determined by the 'shape_descriptor' parameter. It can
+    be both simple and compound descriptor.
+
+    Finally, distance matrix between shape descriptors is calculated and passed
+    to the 'dtw' function from the dtw-python package (detailed information about
+    the project: https://dynamictimewarping.github.io/). It determines a warping
+    path, which - usually, according to Zhao and Itti paper - is more relevant than
+    warping path determined based on raw time series values. Please keep in mind that
+    distance calculated by 'dtw' function in such a case is a distance between shape
+    descriptors of query and reference time series. It can be used - for example - to
+    find the nearest neighbour of given time series. However, one might prefer to use
+    distance between raw time series values, calculated using warping path determined
+    by shape dtw algorithm. For this purpose also such distance is reconstructed in
+    the postprocessing phase.
+
+    -----------
+
+    As for multivariate time series we developed a fusion of the shape dtw algorithm
+    and the concept presented in the paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/.
+    It means, that we can apply shape dtw algorithm for multivariate time series using
+    both dependent and independent version of multivariate dtw.
+
+    For multivariate dependent shape dtw there is one common warping paths
+    for all time series dimensions. As a first step we calculate shape descriptors
+    for all the dimensions individually and then determine single, common distance matrix
+    using all the shape descriptors.
+
+    For multivariate independent shape dtw distance matrices between shape descriptors
+    are calculated independently for each time dimension; the same stands for warping paths.
+    Afterward, distances for all dimensions are summed up -  as being said in the
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/ paper:
+    ,,DTW Independet is the cumulative distances of all dimensions independently measured under DTW".
+
+    Parameters
+    ---------------
+    :param x: query time series - numpy array, pandas series or pandas data frame
+    :param y: reference time series - numpy array, pandas series or pandas data frame
+    :param subsequence_width: int - width of the time series subsequences
+    :param shape_descriptor: ShapeDescriptor object defining how shape descriptors
+        will be calculated
+    :param step_pattern: name of the step pattern describing the local warping steps
+        allowed with their cost
+    :param dist_method: name of distance method to apply
+    :param multivariate_version: variant of multidimensional dtw algorithm - must be
+        one of following: 'dependent' or 'independent'
+    :param kwargs: additional keyword arguments which will be passed to the 'dtw'
+        function, such as 'window_type' or 'open_begin'. For more details visit
+        https://dynamictimewarping.github.io/
+
+    Returns
+    ---------------
+    :return: ShapeDTW object containing results of calculation
+
+    References
+    ----------
+    1. Sakoe, H.; Chiba, S., *Dynamic programming algorithm optimization for
+       spoken word recognition*, Acoustics, Speech, and Signal Processing,
+       IEEE Transactions on , vol.26, no.1, pp. 43-49, Feb 1978.
+       http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=1163055
+    2. Itti, L.; Zhao, J., *shapeDTW: shape Dynamic Time Warping,*
+       Pattern Recognition, Volume 74, pp. 171-184, Feb 2018.
+       https://arxiv.org/pdf/1606.01601.pdf
+    3. Hu, B; Jin, H.; Keogh, E.; Shokoohi-Yekta, M., *Generalizing DTW to
+       the multi-dimensional case requires an adaptive approach*,
+       Data Mining and Knowledge Discovery, vol. 31, pp. 1–31, 2017.
+       https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/
+    """
     x = ValuesGetter(x).get_values()
     y = ValuesGetter(y).get_values()
 
