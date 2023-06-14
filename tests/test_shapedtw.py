@@ -494,22 +494,22 @@ class TestShapeDTW(unittest.TestCase):
 
     def test_get_index1(self):
         shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
-        with self.assertRaises(DTWNotCalculatedYet):
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
             return shape_dtw_res.index1
 
     def test_get_index2(self):
         shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
-        with self.assertRaises(DTWNotCalculatedYet):
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
             return shape_dtw_res.index2
 
     def test_get_index1s(self):
         shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
-        with self.assertRaises(DTWNotCalculatedYet):
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
             return shape_dtw_res.index1s
 
     def test_get_index2s(self):
         shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
-        with self.assertRaises(DTWNotCalculatedYet):
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
             return shape_dtw_res.index2s
 
     def test_set_index(self):
@@ -1390,7 +1390,7 @@ class TestShapeDTWMethod(unittest.TestCase):
         with self.assertRaises(IncompatibleDimensionality):
             return shape_dtw(ts_x_pandas, ts_y_pandas, 2, self.shape_desc_slope)
 
-        with self.assertRaises(IncompatibleSeriesNumber):
+        with self.assertRaises(IncompatibleSubseriesNumber):
             return shape_dtw(ts_y_pandas, ts_z_pandas, 2, self.shape_desc_slope)
 
     def test_different_patterns_different_results(self):

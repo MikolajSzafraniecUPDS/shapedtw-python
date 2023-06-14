@@ -750,7 +750,7 @@ class MultivariateSeriesShapeDescriptors:
         Raises
         ---------------
         :raises MultivariateSeriesShapeDescriptorsIncompatibility: numbers of dimensions
-            (columns) of giver time series are different
+            (columns) of given time series are different
         """
         ts_x_dim = len(self)
         ts_y_dim = len(other)

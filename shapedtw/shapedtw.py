@@ -687,7 +687,7 @@ class ShapeDTW:
         if self._dtw_results is not None:
             return self._dtw_results.index1
         else:
-            raise DTWNotCalculatedYet()
+            raise ShapeDTWNotCalculatedYet()
 
     def _get_index2(self) -> ndarray:
         """
@@ -705,7 +705,7 @@ class ShapeDTW:
         if self._dtw_results is not None:
             return self._dtw_results.index2
         else:
-            raise DTWNotCalculatedYet()
+            raise ShapeDTWNotCalculatedYet()
 
     def _get_index1s(self) -> ndarray:
         """
@@ -725,7 +725,7 @@ class ShapeDTW:
         if self._dtw_results is not None:
             return self._dtw_results.index1s
         else:
-            raise DTWNotCalculatedYet()
+            raise ShapeDTWNotCalculatedYet()
 
     def _get_index2s(self) -> ndarray:
         """
@@ -745,7 +745,7 @@ class ShapeDTW:
         if self._dtw_results is not None:
             return self._dtw_results.index2s
         else:
-            raise DTWNotCalculatedYet()
+            raise ShapeDTWNotCalculatedYet()
 
     def _set_index(self, value):
         """
@@ -1134,7 +1134,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         if self._dtw_results is not None:
             return [dtw_res.index1 for dtw_res in self._dtw_results]
         else:
-            raise DTWNotCalculatedYet()
+            raise ShapeDTWNotCalculatedYet()
 
     def _get_index2(self) -> List[ndarray]:
         """
@@ -1152,7 +1152,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         if self._dtw_results is not None:
             return [dtw_res.index2 for dtw_res in self._dtw_results]
         else:
-            raise DTWNotCalculatedYet()
+            raise ShapeDTWNotCalculatedYet()
 
     def _get_index1s(self) -> List[ndarray]:
         """
@@ -1172,7 +1172,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         if self._dtw_results is not None:
             return [dtw_res.index1s for dtw_res in self._dtw_results]
         else:
-            raise DTWNotCalculatedYet()
+            raise ShapeDTWNotCalculatedYet()
 
     def _get_index2s(self) -> List[ndarray]:
         """
@@ -1192,7 +1192,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
         if self._dtw_results is not None:
             return [dtw_res.index2s for dtw_res in self._dtw_results]
         else:
-            raise DTWNotCalculatedYet()
+            raise ShapeDTWNotCalculatedYet()
 
     index1 = property(_get_index1, ShapeDTW._set_index)
     index2 = property(_get_index2, ShapeDTW._set_index)
@@ -1567,7 +1567,7 @@ def shape_dtw(x, y, subsequence_width: int,
         raise IncompatibleDimensionality(x, y)
 
     if not Utils.number_of_series_equal(x, y):
-        raise IncompatibleSeriesNumber(x, y)
+        raise IncompatibleSubseriesNumber(x, y)
 
     ts_x_shape = Utils.get_number_of_dimensions(x)
 
