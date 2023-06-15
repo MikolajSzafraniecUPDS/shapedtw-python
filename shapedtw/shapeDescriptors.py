@@ -14,12 +14,10 @@
 ## License for more details.
 ##
 ## You should have received a copy of the GNU General Public License
-## along with DTW.  If not, see <http://www.gnu.org/licenses/>.
+## along with ShapeDTW.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-"""Classes representing hape descriptors, which are the key koncept of shape dtw algorithm"""
-
-import numpy as np
+"""Classes representing shape descriptors, which are the main koncept of shape dtw algorithm"""
 
 from pywt import Wavelet, wavedec
 from abc import abstractmethod, ABC

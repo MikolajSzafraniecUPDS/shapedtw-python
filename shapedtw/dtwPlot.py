@@ -1,29 +1,27 @@
-## Code taken directly from the https://github.com/DynamicTimeWarping/dtw-python repo and slightly adapted
-## by adding possibility to pass pyplot ax to the plotting functions as parameters. It had to be done in
-## order to generate multiple plots at the same time for the purpose of multivariate DTW.
-
 ##
-## Copyright (c) 2006-2019 of Toni Giorgino
+## Copyright (c) of Mikołaj Szafraniec
 ##
-## This file is part of the DTW package.
+## This file is part of the ShapeDTW package.
 ##
-## DTW is free software: you can redistribute it and/or modify it
+## ShapeDTW is free software: you can redistribute it and/or modify it
 ## under the terms of the GNU General Public License as published by
 ## the Free Software Foundation, either version 3 of the License, or
 ## (at your option) any later version.
 ##
-## DTW is distributed in the hope that it will be useful, but WITHOUT
+## ShapeDTW is distributed in the hope that it will be useful, but WITHOUT
 ## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 ## or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 ## License for more details.
 ##
 ## You should have received a copy of the GNU General Public License
-## along with DTW.  If not, see <http://www.gnu.org/licenses/>.
-##
+## along with ShapeDTW.  If not, see <http://www.gnu.org/licenses/>.
+
+## Code taken directly from the https://github.com/DynamicTimeWarping/dtw-python repo and modified
+## by adding possibility to plot multivariate variants of shape dtw.
+
 
 """DTW plotting functions"""
 
-import numpy
 import math
 import matplotlib.pyplot as plt
 import numpy as np
@@ -148,7 +146,7 @@ def dtwPlotTwoWay(d: DTW,
                   xlab: str = "Index",
                   ylab: str = "Query value",
                   **kwargs) -> None:
-    # IMPORT_RDOCSTRING dtwPlotTwoWay
+
     """Plotting of dynamic time warp results: pointwise comparison
     Display the query and reference time series and their alignment,
     arranged for visual inspection.
@@ -186,7 +184,6 @@ def dtwPlotTwoWay(d: DTW,
     :param ylab: y-axis labels
     :param kwargs: additional keyword arguments, passed to `matplot`
     """
-    # ENDIMPORT
 
     if xts is None or yts is None:
         try:
@@ -201,23 +198,15 @@ def dtwPlotTwoWay(d: DTW,
     if yoffset is not None:
         yts = yts + yoffset
 
-    # ytso = yts + offset
-    # offset = -offset
-
     maxlen = max(len(xts), len(yts))
-    times = numpy.arange(maxlen)
-    xts = numpy.pad(xts, (0, maxlen - len(xts)), "constant", constant_values=numpy.nan)
-    yts = numpy.pad(yts, (0, maxlen - len(yts)), "constant", constant_values=numpy.nan)
+    times = np.arange(maxlen)
+    xts = np.pad(xts, (0, maxlen - len(xts)), "constant", constant_values=np.nan)
+    yts = np.pad(yts, (0, maxlen - len(yts)), "constant", constant_values=np.nan)
 
     if axis is None:
         fig, ax = plt.subplots()
     else:
         ax = axis
-    # if offset != 0:
-    #     ax2 = ax.twinx()
-    #     ax2.tick_params('y', colors='b')
-    # else:
-    #     ax2 = ax
 
     ax.set_xlabel(xlab)
     ax.set_ylabel(ylab)
@@ -225,24 +214,14 @@ def dtwPlotTwoWay(d: DTW,
     ax.plot(times, xts, color='k', **kwargs)
     ax.plot(times, yts, **kwargs)
 
-    ql, qh = ax.get_ylim()
-    rl, rh = ax.get_ylim()
-
-    # if offset > 0:
-    #     ax.set_ylim(ql - offset, qh)
-    #     ax2.set_ylim(rl, rh + offset)
-    # elif offset < 0:
-    #     ax.set_ylim(ql, qh - offset)
-    #     ax2.set_ylim(rl + offset, rh)
-
     # https://stackoverflow.com/questions/21352580/matplotlib-plotting-numerous-disconnected-line-segments-with-different-colors
     if match_indices is None:
-        idx = numpy.linspace(0, len(d.index1) - 1)
+        idx = np.linspace(0, len(d.index1) - 1)
     elif not hasattr(match_indices, "__len__"):
-        idx = numpy.linspace(0, len(d.index1) - 1, num=match_indices)
+        idx = np.linspace(0, len(d.index1) - 1, num=match_indices)
     else:
         idx = match_indices
-    idx = numpy.array(idx).astype(int)
+    idx = np.array(idx).astype(int)
 
     col = []
     for i in idx:
@@ -254,7 +233,6 @@ def dtwPlotTwoWay(d: DTW,
 
     if axis is None:
         plt.show()
-    # return ax
 
 def dtwPlotThreeWay(d: DTW,
                     inner_figure: GridSpecFromSubplotSpec = None,
@@ -265,7 +243,7 @@ def dtwPlotThreeWay(d: DTW,
                     match_col: str="gray",
                     xlab: str="Query index",
                     ylab: str="Reference index") -> None:
-    # IMPORT_RDOCSTRING dtwPlotThreeWay
+
     """Plotting of dynamic time warp results: annotated warping function
     Display the query and reference time series and their warping curve,
     arranged for visual inspection.
@@ -306,7 +284,7 @@ def dtwPlotThreeWay(d: DTW,
     :param xlab: x-axis label
     :param ylab: y-axis label
     """
-    # ENDIMPORT
+
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
     from matplotlib import collections as mc
@@ -320,8 +298,8 @@ def dtwPlotThreeWay(d: DTW,
 
     nn = len(xts)
     mm = len(yts)
-    nn1 = numpy.arange(nn)
-    mm1 = numpy.arange(mm)
+    nn1 = np.arange(nn)
+    mm1 = np.arange(mm)
 
     if inner_figure is None:
         fig = plt.figure()
@@ -338,10 +316,6 @@ def dtwPlotThreeWay(d: DTW,
         ax.set_title("Dimension " + str(dim_num), fontsize=15)
         axq = plt.subplot(inner_figure[3])
 
-    # axr = plt.subplot(gs[0])
-    # ax = plt.subplot(gs[1])
-    # axq = plt.subplot(gs[3])
-
     axq.plot(nn1, xts)  # query, horizontal, bottom
     axq.set_xlabel(xlab)
 
@@ -354,10 +328,10 @@ def dtwPlotThreeWay(d: DTW,
     if match_indices is None:
         idx = []
     elif not hasattr(match_indices, "__len__"):
-        idx = numpy.linspace(0, len(d.index1) - 1, num=match_indices)
+        idx = np.linspace(0, len(d.index1) - 1, num=match_indices)
     else:
         idx = match_indices
-    idx = numpy.array(idx).astype(int)
+    idx = np.array(idx).astype(int)
 
     col = []
     for i in idx:
@@ -371,7 +345,6 @@ def dtwPlotThreeWay(d: DTW,
 
     if inner_figure is None:
         plt.show()
-    # return ax
 
 def dtwPlotDensity(d: DTW,
                    axis: Axes = None,
@@ -379,7 +352,7 @@ def dtwPlotDensity(d: DTW,
                    xlab: str="Query index",
                    ylab: str="Reference index",
                    **kwargs) -> None:
-    # IMPORT_RDOCSTRING dtwPlotDensity
+
     """Display the cumulative cost density with the warping path overimposed
     The plot is based on the cumulative cost matrix. It displays the optimal
     alignment as a “ridge” in the global cost landscape.
@@ -401,7 +374,6 @@ def dtwPlotDensity(d: DTW,
     :param ylab: label for the reference axis
     :param kwargs : additional keyword parameters forwarded to plotting functions
     """
-    # ENDIMPORT
 
     try:
         cm = d.costMatrix
@@ -410,7 +382,7 @@ def dtwPlotDensity(d: DTW,
 
     if normalize:
         norm = d.stepPattern.hint
-        row, col = numpy.indices(cm.shape)
+        row, col = np.indices(cm.shape)
         if norm == "NA":
             raise ValueError("Step pattern has no normalization")
         elif norm == "N":
@@ -784,9 +756,6 @@ class ShapeDTWPlotMultivariateDependent(ShapeDTWPlot):
                 **kwargs
             )
 
-        # if Utils.is_odd(total_dim_num):
-        #     self._clean_unnecessary_ax(outer_fig, total_dim_num)
-
         plt.show()
 
 class ShapeDTWPlotMultivariateIndependent(ShapeDTWPlot):
@@ -961,9 +930,6 @@ class ShapeDTWPlotMultivariateIndependent(ShapeDTWPlot):
                 dim_num=dim_number + 1,
                 **kwargs
             )
-
-        # if Utils.is_odd(total_dim_num):
-        #     self._clean_unnecessary_ax(outer_fig, total_dim_num)
 
         plt.show()
 
