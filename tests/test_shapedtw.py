@@ -1,5 +1,24 @@
+##
+## Copyright (c) of Mikołaj Szafraniec
+##
+## This file is part of the ShapeDTW package.
+##
+## ShapeDTW is free software: you can redistribute it and/or modify it
+## under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## ShapeDTW is distributed in the hope that it will be useful, but WITHOUT
+## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+## or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+## License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with ShapeDTW.  If not, see <http://www.gnu.org/licenses/>.
+
 import unittest
 import math
+import pandas as pd
 
 from shapedtw.shapedtw import *
 from shapedtw.exceptions import *
@@ -219,7 +238,7 @@ class TestDistanceReconstructor(unittest.TestCase):
         expected_res = distance_reconstructor.distance_matrix[1, 1]*2
 
         res = distance_reconstructor._calc_single_distance(
-            x_index=x_ind, y_index=y_ind, single_pattern_dict=pattern_dict[pattern][0]
+            x_index=x_ind, y_index=y_ind, step_pattern_segment_dict=pattern_dict[pattern][0]
         )
 
         self.assertEqual(expected_res, res)
@@ -238,7 +257,7 @@ class TestDistanceReconstructor(unittest.TestCase):
 
         expected_res = distance_reconstructor.distance_matrix[2, 3]*2.0
         res = distance_reconstructor._calc_single_distance(
-            x_index=x_ind, y_index=y_ind, single_pattern_dict=pattern_dict[pattern][0]
+            x_index=x_ind, y_index=y_ind, step_pattern_segment_dict=pattern_dict[pattern][0]
         )
 
         self.assertEqual(expected_res, res)
@@ -494,22 +513,22 @@ class TestShapeDTW(unittest.TestCase):
 
     def test_get_index1(self):
         shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
-        with self.assertRaises(DTWNotCalculatedYet):
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
             return shape_dtw_res.index1
 
     def test_get_index2(self):
         shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
-        with self.assertRaises(DTWNotCalculatedYet):
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
             return shape_dtw_res.index2
 
     def test_get_index1s(self):
         shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
-        with self.assertRaises(DTWNotCalculatedYet):
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
             return shape_dtw_res.index1s
 
     def test_get_index2s(self):
         shape_dtw_res = ShapeDTW(self.ts_x, self.ts_y)
-        with self.assertRaises(DTWNotCalculatedYet):
+        with self.assertRaises(ShapeDTWNotCalculatedYet):
             return shape_dtw_res.index2s
 
     def test_set_index(self):
@@ -1390,7 +1409,7 @@ class TestShapeDTWMethod(unittest.TestCase):
         with self.assertRaises(IncompatibleDimensionality):
             return shape_dtw(ts_x_pandas, ts_y_pandas, 2, self.shape_desc_slope)
 
-        with self.assertRaises(IncompatibleSeriesNumber):
+        with self.assertRaises(IncompatibleSubseriesNumber):
             return shape_dtw(ts_y_pandas, ts_z_pandas, 2, self.shape_desc_slope)
 
     def test_different_patterns_different_results(self):

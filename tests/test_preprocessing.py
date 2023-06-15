@@ -1,68 +1,26 @@
+##
+## Copyright (c) of Mikołaj Szafraniec
+##
+## This file is part of the ShapeDTW package.
+##
+## ShapeDTW is free software: you can redistribute it and/or modify it
+## under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## ShapeDTW is distributed in the hope that it will be useful, but WITHOUT
+## ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+## or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+## License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with ShapeDTW.  If not, see <http://www.gnu.org/licenses/>.
+
 import unittest
 
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
 
-
-class TestPadder(unittest.TestCase):
-    time_series_test = np.array([1, 2, 3, 4, 5])
-
-    def test_left_padding(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=1)
-        expected_val = np.array([1, 1, 2])
-        padded_subsequence = test_padder.pad_left(0)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
-    def test_left_padding_zero_width(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=0)
-        expected_val = np.array([1])
-        padded_subsequence = test_padder.pad_left(0)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
-    def test_right_padding(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=1)
-        expected_val = np.array([4, 5, 5])
-        padded_subsequence = test_padder.pad_right(4)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
-    def test_right_padding_zero_width(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=0)
-        expected_val = np.array([5])
-        padded_subsequence = test_padder.pad_right(4)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
-
-    def test_both_side_padding(self):
-        test_padder = Padder(time_series=self.time_series_test, subsequence_width=5)
-        expected_val = np.array(
-            [1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 5]
-        )
-        padded_subsequence = test_padder.pad_both_side(0)
-
-        self.assertTrue(
-            np.array_equal(
-                expected_val, padded_subsequence
-            )
-        )
 
 
 class TestUnivariateSubsequenceBuilder(unittest.TestCase):
@@ -854,7 +812,7 @@ class TestDistanceMatrixCalculator(unittest.TestCase):
             ).calc_distance_matrix()
         except DimensionError as e:
             self.assertTrue(
-                str(e) == "Number of time series dimensions doesn't match"
+                str(e) == "Shapes of time series are different"
             )
 
     def test_number_of_cols_doesnt_match(self):
