@@ -190,7 +190,7 @@ def dtwPlotTwoWay(d: DTW,
             xts = d.query
             yts = d.reference
         except:
-            raise ValueError("Original timeseries are required")
+            raise ValueError("Original timeseries are required. You should provide 'xts' and 'yts' params or set 'keep_internals' argument as 'True' in dtw call")
 
     if xoffset is not None:
         xts = xts + xoffset
@@ -294,7 +294,7 @@ def dtwPlotThreeWay(d: DTW,
             xts = d.query
             yts = d.reference
         except:
-            raise ValueError("Original timeseries are required")
+            raise ValueError("Original timeseries are required. You should provide 'xts' and 'yts' params or set 'keep_internals' argument as 'True' in dtw call")
 
     nn = len(xts)
     mm = len(yts)
@@ -353,7 +353,7 @@ def dtwPlotDensity(d: DTW,
                    ylab: str="Reference index",
                    **kwargs) -> None:
 
-    """Display the cumulative cost density with the warping path overimposed
+    """Display the cumulative cost density with the warping path overimposed.
     The plot is based on the cumulative cost matrix. It displays the optimal
     alignment as a “ridge” in the global cost landscape.
 
