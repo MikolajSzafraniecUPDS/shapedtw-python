@@ -1,23 +1,26 @@
 # Shape DTW python package
 **shapedtw-python** is an extension to the **[dtw-python](https://github.com/DynamicTimeWarping/dtw-python)** package, implementing
-the shape dtw algorithm described by L. Itii and J. Zhao in their paper (it can be downloaded from here: [shapeDTW: shape Dynamic Time Warping](https://arxiv.org/pdf/1606.01601.pdf))
+the shape dtw algorithm described by L. Itii and J. Zhao in their paper (it can be downloaded from here: [shapeDTW: shape Dynamic Time Warping](https://arxiv.org/pdf/1606.01601.pdf)).
 
 In addition, to enable users to fully exploit the potential of the dtw and shape-dtw algorithms in practical applications, we have enabled the use of both versions of the multidimensional 
-variation of the algorithm (dependent and independent), according to the methodology described in the paper by B. Hu, H. Jin, W. Keogh, M. Shokoohi-Yekta and J. Wang:
-[Generalizing DTW to the multi-dimensional case requires an adaptive approach](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/). Github repository of the project
-can be found here: [shapedtw-python](https://github.com/MikolajSzafraniecUPDS/shapedtw-python)
+variant of the algorithm (dependent and independent), according to the methodology described in the paper by B. Hu, H. Jin, W. Keogh, M. Shokoohi-Yekta and J. Wang:
+[Generalizing DTW to the multi-dimensional case requires an adaptive approach](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/). 
+
+Github repository of the *shapedtw-python* project
+can be found here: [shapedtw-python](https://github.com/MikolajSzafraniecUPDS/shapedtw-python).
 
 # Introduction to the shape dtw algorithm
-In order to fully understand the shape dtw algorithm, one need to learn the methods for calculating standard dtw.
-It is worth to get familiarized with classic work of S. Chiba and H. Sakoe (available online here:
+In order to fully understand the shape dtw algorithm it is good to know the methods for calculating standard dtw.
+We recommend to get familiarized with classic work of S. Chiba and H. Sakoe (available online here:
 [Dynamic Programming Algorithm Optimization for Spoken Word Recognition](https://www.yumpu.com/en/document/view/29791622/dynamic-programming-algorithm-optimization-for-spoken-word-), 
-but there is also this shorter, yet comprehensive guide: [An introduction to Dynamic Time Warping](https://rtavenar.github.io/blog/dtw.html)
+however one can prefer to read this shorter, yet comprehensive guide: [An introduction to Dynamic Time Warping](https://rtavenar.github.io/blog/dtw.html)
 
 ### Shape descriptors
 In case of standard DTW we use raw time series values to determine the alignment (warping) path by which two
 signals (time series) can be aligned in time. Such alignment may be susceptible to local distortion and therefore
 does not fully reflect the correct relationships between signals. Zhao and Itti proposed to solve this problem by 
-using so-called shape descriptors instead of single points of time series:
+using so-called shape descriptors, instead of single points of time series:
+
 > Yet, matching points based solely on their coordinate
 values is unreliable and prone to error, therefore, DTW may
 generate perceptually nonsensible alignments, which wrongly pair
@@ -37,33 +40,41 @@ based on their degree of similarity. (...)
 > Pattern Recognition, Volume 74, pp. 171-184, Feb 2018.
 
 According to Zhao and Itti shape descriptor *encodes local structural information
-around the temporal point t<sub>i</sub>*. In order to calculate shape descriptor,
-as a first step we need to retrieve the **subsequences** for all points of given time series.
+around the temporal point t<sub>i</sub>*. 
+
+In order to calculate shape descriptor we need 
+to - as a first step - retrieve the **subsequences** for all points of given time series.
 Subsequences are simply a subsets of time series, representing neighbourhood of particular
-temporal observation, which is a central point of subsequence. As a next step we calculate shape
-descriptors for all the subsequences. Shape descriptor is simply a function applied to given
-subsequence, which allows to properly describe its local shape properties (like slope, mean
+temporal observation, which is a central point of given subsequence. 
+
+As a next step we need to calculate 
+shape descriptors for all the subsequences. Shape descriptor is simply a function applied to given
+subsequence, which allows to properly describe its local shape's properties (like slope, mean
 values, wavelet coefficients, etc.). The most simple shape descriptor might be a raw subsequence
-itself. Finally, we calculate the distance matrix - required by dtw algorithm - based on obtained
-shape descriptors instead of raw, single values of time series. 
+itself. 
+
+Then, we calculate the distance matrix - required by the dtw algorithm - based on obtained
+shape descriptors instead of raw, single values of time series. Finally warping path is determined based
+on such distance matrix.
 
 #### Types of shape descriptors
-- Raw subsequence - raw subsequence without any transformation applied. 
+- Raw subsequence - raw subsequence; there is no any transformation applied to it. 
 - PAA - subsequence is split into *m* disjoint intervals. For each interval we calculate mean value of temporal points falling into it. Vector of such mean values is our shape descriptor.
-- DWT - Discrete Wavelet Transform is applied to whole subsequence. Wavelet coefficients are bound into the form of vector, which we treat as a shape descriptor.
-- Slope - similarly as in case of PAA we split subsequence into *m* disjoint intervals and fit a line according to points falling within each interval. Slopes of lines are our shape descriptor. This type of shape descriptor is invariant to y-shift.
-- Derivative - first order derivative of given subsequence - similarly as slope descriptor it is invariant to y-shift.
+- DWT - Discrete Wavelet Transform is applied to whole subsequence. Wavelet coefficients are bound into the form of vector, which we use as a shape descriptor.
+- Slope - similarly as in case of PAA we split subsequence into *m* disjoint intervals and fit a line according to points falling within each interval. Slopes of lines are bound to the form of vector and use as a shape descriptor. This type of shape descriptor is invariant to y-shift.
+- Derivative - first order derivatives of given subsequence, calculated using the formula presented in this paper: [Derivative Dynamic Time Warping](https://www.ics.uci.edu/~pazzani/Publications/sdm01.pdf).Similarly as slope descriptor it is invariant to y-shift.
 - Compound descriptor - two or more shape descriptors bound into a form of single vector. We can use weights to compensate for differences in average descriptor values.
 
 All shape descriptors listed above are described in details in Zhao and Itti [paper](https://arxiv.org/pdf/1606.01601.pdf).
 
 # Code examples
 ### Quick example
-A short example to all who just want to quickly jump into shape dtw usage. 
-Let's take a look at a quick example of calculating shape dtw alignment and distance for two time series, 
-one of which is slightly shifted and distorted with respect to the other.
+Below is a brief example for anyone who wants to get started quickly with the 'shape dtw' algorithm.
 
-As a first step let's make necessary imports:
+Let's calculate shape dtw alignment and distance for two time series, one of which is slightly shifted 
+and distorted with respect to the other.
+
+As a first step we need to make necessary imports:
 
 ```python
 import numpy as np
@@ -74,7 +85,7 @@ from shapedtw.shapeDescriptors import SlopeDescriptor, PAADescriptor, CompoundDe
 from shapedtw.dtwPlot import dtwPlot
 ```
 
-Now let's define and take a look at the time series which we will inspect:
+Now let's define input time series and take a look at them:
 
 ```python
 np.random.seed(9)
@@ -92,7 +103,7 @@ df.plot()
 ```
 ![Time series plot](docs/assets/img/readme_fig_1.png)
 
-As a final step we will define our shape descriptor and apply the algorithm to obtain alignment path.
+As a final step we will define shape descriptor and run the algorithm to obtain alignment path.
 We will use compound descriptor, consisting of slope descriptor (y-shift invariant) and PAA descriptor.
 
 ```python
@@ -110,7 +121,7 @@ dtwPlot(shape_dtw_results, plot_type="twoway", yoffset = 30)
 ```
 ![Warping path produced by the shape dtw](docs/assets/img/readme_fig_2.png)
 
-As you can see, despite the shift and distortion of the reference series, the shape-dtw algorithm has reproduced
+As we can see, despite the shift and distortion of the reference series, the shape dtw algorithm has reproduced
 the true alignment path almost completely correctly.
 
 Finally, we can retrieve a distances from *shape_dtw_results* object in the following way:
@@ -136,15 +147,16 @@ explained in the sections below.
 ### Calculation process in details
 The whole process of calculating shape dtw consists out of a few steps:
 - Transform time series to the matrix of subsequences. In multivariate case each dimension is transformed to individual subsequence's matrix.
-- Transform subsequences to shape descriptors using mapping function.
-- Calculate distance matrix between shape descriptors
-- Pass distance matrix to *dtw* function from *dtw-python* package in order to calculate warping path and distance
-- Calculate distance for raw time series values using warping path determined by shape dtw
+- Transform subsequences to shape descriptors using chosen mapping function (shape descriptor).
+- Calculate distance matrix between shape descriptors.
+- Pass distance matrix to *dtw* function from *dtw-python* package in order to calculate warping path and distance.
+- Calculate distance for raw time series values using warping path determined by shape dtw.
 
-Although - as we saw in previous section - *shapedtw-python* package implements whole pipeline described above in a single 
-call to the **shape_dtw** function, we will go through all this steps in this document in order to get better understanding of the whole process.
+Although - as we saw in the previous section - *shapedtw-python* package implements whole pipeline described above in a single 
+call to the **shape_dtw** function, we will go through all this steps in this document in order to get better 
+understanding of the whole process.
 
-As a first step let's define short, univariate time series and transform them to subsequences. In order to
+As a first step we will define short, univariate time series and transform them to subsequences. In order to
 do this we will need to import *UnivariateSubsequenceBuilder* class from *preprocessing* module.
 
 ```python
@@ -177,14 +189,15 @@ print(ts_y_subsequences.subsequences)
  [13 14 14]]
 ```
 
-Parameter *subsequence_width* controls the width of subsequence. For *subsequence_width*=1 the whole
-subsequence is of length 3 (for each temporal point we take one neighbour on the left and one on
-the right). At the beginning and at the end of time series we need to replicate first and last
-observation in order to make subsequences well-defined for all of temporal points. Actually, we can
-consider standard dtw as a special case of shape dtw with *subsequence_width*=0 and *RawSubsequenceDescriptor* as 
-a shape descriptor.
+Parameter *subsequence_width* controls the width of subsequence. For *subsequence_width*=1 the entire
+subsequence has a length of 3 (for each temporal point we take one predecessor and one successor). 
+At the beginning and at the end of time series we need to replicate first and last
+observation in order to make subsequences well-defined for all of temporal points. 
 
-As a next step we will calculate shape descriptors for all subsequences. Let's use PAA descriptor.
+Actually, we can consider standard dtw as a special case of shape dtw with *subsequence_width*=0 
+and *RawSubsequenceDescriptor* as a shape descriptor.
+
+As a next step we will calculate shape descriptors for all subsequences using the PAA descriptor.
 
 ```python
 from shapedtw.shapeDescriptors import PAADescriptor
@@ -206,14 +219,14 @@ print(ts_y_shape_descriptors.shape_descriptors_array)
  [13.5 14. ]]
 ```
 
-*Windowing* descriptors, such as *slope* or *PAA* divide subsequences into disjoint intervals. In a situation as above, 
+*Windowing* descriptors, such as *slope* or *PAA* split subsequences into disjoint intervals. In a situation such as above, 
 when it is not possible to divide the sub-sequence into n intervals of equal length, the length of the last interval is 
-equal to the remainder of the division *length of the subsequence / length of the window*. In our case the first
-value of PAA descriptor is a mean value of two first values of subsequence and the secodnd value of PAA descriptor
-is a third value of subsequence.
+equal to the remainder of the division *length of the subsequence / length of the window*. In this case, the first value 
+of the PAA descriptor is the average value of the first two values of the subsequence, and the second value of the PAA 
+descriptor is the third value of the subsequence.
 
-Finally, the distance matrix between shape descriptors is calculated and passed to the *dtw.dtw* function, along
-with other parameters passed to the *shape_dtw* function.
+Finally, the distance matrix between the shape descriptors is calculated and passed to the *dtw.dtw* function along with 
+other parameters (originally these additional parameters are passed to the *shape_dtw* function).
 
 ```python
 from dtw import dtw
@@ -229,15 +242,16 @@ print(round(dtw_results.normalizedDistance, 2))
 ```
 
 Please bare in mind that distance calculated in such a way is a distance between **shape descriptors** of time
-series, not time series itself. Of course it can be treated as a distance measure itself and used for example
+series, not time series itself. Of course it can be treated as a distance measure and used for example
 to find nearest neighbour in classification tasks, however one can prefer to use distance between raw values
-of time series. In order to reconstruct such distance, using warping path obtained by the shape dtw one can
-use *DistanceReconstructor* class. In case of *shape_dtw* function raw distances are calculated by defult and
+of time series. In order to reconstruct such distance, we can use *DistanceReconstructor* class.
+
+In case of *shape_dtw* function raw distances are calculated by defult and
 available as *distance* and *normalized_distance* attributes of classes representing shape dtw results.
 
-To calculate raw distances one has to provide raw time series, warping path determined by the shape dtw algorithm,
-step pattern and distance method which were used. In the example above we used default step pattern *symmetric2*
-and *euclidean* distance.
+To calculate raw distances we must provide raw time series, warping path determined by the shape dtw algorithm,
+step pattern and distance method which were used. In the example above, we have used the step pattern *symmetric2*
+and *euclidean* distance, as these are the default values for these parameters.
 
 ```python
 from shapedtw.shapedtw import DistanceReconstructor
@@ -256,15 +270,17 @@ print(round(raw_ts_distance, 2))
 8.45
 ```
 
-Normalized raw distance is calculated internally, based on step pattern settings.
+Normalized raw distance is calculated internally by class representing shape dtw results, 
+using the step pattern settings.
 
 # Multidimensional variants of shape dtw
-For multidimensional time series we create dedicated subsequences matrix and shape descriptors matrix for each
+For multidimensional time series we need to create subsequence matrix and shape descriptor matrix for each
 dimension separately. There are two variants of multivariate shape dtw - *dependent* and *independent*. Differences
 between those variants are described in details in the paper mentioned above: 
 [Generalizing DTW to the multi-dimensional case requires an adaptive approach](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/).
+
 The most important information is that in case of multivariate *dependent* shape dtw there is one, common warping
-path for whole time series and for *independent* variant each dimension has his own warping path, calculated
+path for the whole time series. As for *independent* variant, each dimension has his own warping path, calculated
 independently for it. We can select desired variant specifying *multivariate_version* parameter of *shape_dtw*
 function as '*dependent*' or '*independent*':
 
@@ -309,7 +325,7 @@ print(independent_distance)
 956.44
 ```
 
-Differences between warping paths we can clearly see after taking a look at *twoway* plots:
+Differences between warping paths can be clearly seen at the *twoway* plots:
 
 ```python
 dtwPlot(shape_dtw_dependent_results, plot_type="twoway", xoffset=20)
@@ -322,8 +338,8 @@ dtwPlot(shape_dtw_independent_results, plot_type="twoway", xoffset=20)
 ![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_4.png)
 
 # DTW parameters
-In case of shape dtw we can use exactly the same additional parameters as for *dtw* package. Below you can
-see an example of specifying a sakoechiba window with a window size equal to 10:
+For *shape dtw* we can use exactly the same additional parameters as for the *dtw* package. Below you can see
+see an example of specifying a sakoechiba window with a window size of 10:
 
 ```python
 import numpy as np
@@ -354,15 +370,19 @@ dtwPlot(shape_dtw_res, plot_type="density")
 
 # Plots
 We reused ploting mechanism from the *dtw* package in its core, however it was extended in order to
-allow to plot multivariate shape dtw results as well. In case of multivariate dependent shape dtw structure of both
-*alignment* and *density* plots look the same as in univariate version, since there is a single warping path,
-common for all dimensions. We can observe a difference in case of *twoway* and *threeway* plots, as we want
-to show all of time series dimensions. Therefore, instead of single plot we need to use a pyplot grid, containing
-as many plots as many dimensions time series has. As for multivariate independent shape dtw all types of plots 
-require to use a grid, because every single dimension has dedicated warping path.
+allowing to plot multivariate shape dtw results as well. 
+
+In case of multivariate, dependent shape dtw the structure of both *alignment* and *density* plots 
+look the same as in univariate version. The reason is that there is a single warping path,
+common for all dimensions. There are differences - comparing to univariate case - for *twoway* and *threeway* plots, 
+as we want to show matching for all of time series dimensions. Therefore, instead of showing a single plot, we need to 
+use a pyplot grid, containing as many plots as many dimensions time series has. 
+
+As for multivariate independent shape dtw, all types of plots require to use a pyplot grid. The reasin is that
+every single dimension has dedicated warping path, which we would like to show.
 
 ### Plots - univariate case
-As for univariate case shape dtw plots are exactly the same as in case of *dtw* package. Let's calculate shape dtw
+As for univariate case, shape dtw plots are exactly the same as in case of *dtw* package. Let's calculate shape dtw
 for randomly generated time series:
 
 ```python
@@ -401,23 +421,23 @@ dtwPlot(shape_dtw_res, plot_type="twoway", xoffset=20)
 ```
 ![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_7.png)
 
-*threeway* plot displays query and reference time serience values as well as their warping curve:
+*threeway* plot displays query and reference time serience values against their warping curve:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="threeway")
 ```
 ![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_8.png)
 
-*density* plot displays distance matrix in visual form together with warping-curve:
+*density* plot displays distance matrix in visual form together with warping curve:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="density")
 ```
 ![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_9.png)
 
-### Plots - multivariate dependent case
+### Plots - multivariate dependent variant
 
-Let's define random multidimensional time series:
+Let's define random, multidimensional time series:
 
 ```python
 import numpy as np
@@ -443,14 +463,14 @@ shape_dtw_res = shape_dtw(
 ```
 
 *alignment* plot looks exaclty the same as in case of univariate time series, since we've got one common
-warping path for all dimensions:
+warping path for all the dimensions:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="alignment")
 ```
 ![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_10.png)
 
-*twoway* plot shows all of time series dimension and warping path:
+*twoway* plot shows all of time series dimensions and warping path:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="twoway", xoffset=20)
@@ -472,7 +492,7 @@ dtwPlot(shape_dtw_res, plot_type="density")
 ```
 ![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_13.png)
 
-### Plots - multivariate independent case
+### Plots - multivariate independent variant
 
 Let's define the same multidimensional time series as in previous example and calculate shape dtw
 results for them, but this time using independent multivariate version of the algorithm:
@@ -507,8 +527,8 @@ dtwPlot(shape_dtw_res, plot_type="alignment")
 ```
 ![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_14.png)
 
-Similarly as in dependent version, in this case *twoway* plot shows values of all dimensions with
-warping paths calculated for them:
+Similarly as in dependent version, *twoway* plot shows values of all dimensions with
+warping paths. This time each alignment path is different:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="twoway", xoffset=20)
@@ -531,13 +551,12 @@ dtwPlot(shape_dtw_res, plot_type="density")
 
 # Applications
 Shape dtw algorithm can be used wherever standard dtw is used; according to experiments conducted and described
-by Zhao and Itti shape dtw outperforms standard version in almost all cases. As an author of this package I
-personally.
+by Zhao and Itti shape dtw outperforms standard dtw variant in almost all cases.
 
-As the author of this package, I think that the multidimensional version of shape dtw can become an aid for 
+As the author of this package, I think that the multidimensional version of shape dtw can be escpecially helpful for 
 financiers and investors using technical analysis in their work. Since the algorithm takes into account the 
-local shape of the time series, it can become an invaluable aid in the process of finding similar formations 
-from the past, also taking into account several securities simultaneously.
+local shape of the time series, it can supports the process of finding similar formations 
+from the past, also taking into account several securities or several technical analysis indicators simultaneously.
 
 # References
 1. Giorgino, T., Computing and Visualizing Dynamic Time Warping Alignments in R: The dtw Package.
