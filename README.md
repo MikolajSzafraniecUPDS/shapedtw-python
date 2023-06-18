@@ -1,17 +1,17 @@
 # Shape DTW python package
 **shapedtw-python** is an extension to the **[dtw-python](https://github.com/DynamicTimeWarping/dtw-python)** package, implementing
-the shape dtw algorithm described by L. Itii and J. Zhao in their paper, which can be downloaded from here: [shapeDTW: shape Dynamic Time Warping](https://arxiv.org/pdf/1606.01601.pdf)
+the shape dtw algorithm described by L. Itii and J. Zhao in their paper (it can be downloaded from here: [shapeDTW: shape Dynamic Time Warping](https://arxiv.org/pdf/1606.01601.pdf))
 
 In addition, to enable users to fully exploit the potential of the dtw and shape-dtw algorithms in practical applications, we have enabled the use of both versions of the multidimensional 
-variation of the algorithm (dependent and independent), according to the guidelines described in the paper by B. Hu, H. Jin, W. Keogh, M. Shokoohi-Yekta and J. Wang:
+variation of the algorithm (dependent and independent), according to the methodology described in the paper by B. Hu, H. Jin, W. Keogh, M. Shokoohi-Yekta and J. Wang:
 [Generalizing DTW to the multi-dimensional case requires an adaptive approach](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/). Github repository of the project
 can be found here: [shapedtw-python](https://github.com/MikolajSzafraniecUPDS/shapedtw-python)
 
 # Introduction to the shape dtw algorithm
-In order to fully understand the shape-dtw algorithm, one must first learn the methods for calculating standard dtw.
+In order to fully understand the shape dtw algorithm, one need to learn the methods for calculating standard dtw.
 It is worth to get familiarized with classic work of S. Chiba and H. Sakoe (available online here:
 [Dynamic Programming Algorithm Optimization for Spoken Word Recognition](https://www.yumpu.com/en/document/view/29791622/dynamic-programming-algorithm-optimization-for-spoken-word-), 
-but you can also read this shorter, yet comprehensive guide: [An introduction to Dynamic Time Warping](https://rtavenar.github.io/blog/dtw.html)
+but there is also this shorter, yet comprehensive guide: [An introduction to Dynamic Time Warping](https://rtavenar.github.io/blog/dtw.html)
 
 ### Shape descriptors
 In case of standard DTW we use raw time series values to determine the alignment (warping) path by which two
@@ -242,7 +242,7 @@ and *euclidean* distance.
 ```python
 from shapedtw.shapedtw import DistanceReconstructor
 
-distance_reconstructor = dist_reconstructor = DistanceReconstructor(
+dist_reconstructor = DistanceReconstructor(
     step_pattern="symmetric2",
     ts_x=ts_x,
     ts_y=ts_y,
@@ -528,3 +528,28 @@ dtwPlot(shape_dtw_res, plot_type="threeway")
 dtwPlot(shape_dtw_res, plot_type="density")
 ```
 ![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_17.png)
+
+# Applications
+Shape dtw algorithm can be used wherever standard dtw is used; according to experiments conducted and described
+by Zhao and Itti shape dtw outperforms standard version in almost all cases. As an author of this package I
+personally.
+
+As the author of this package, I think that the multidimensional version of shape dtw can become an aid for 
+financiers and investors using technical analysis in their work. Since the algorithm takes into account the 
+local shape of the time series, it can become an invaluable aid in the process of finding similar formations 
+from the past, also taking into account several securities simultaneously.
+
+# References
+1. Giorgino, T., Computing and Visualizing Dynamic Time Warping Alignments in R: The dtw Package.
+   J. Stat. Soft., doi:10.18637/jss.v031.i07.
+2. Hu, B; Jin, H.; Keogh, E.; Shokoohi-Yekta, M., *Generalizing DTW to
+   the multi-dimensional case requires an adaptive approach*,
+   Data Mining and Knowledge Discovery, vol. 31, pp. 1–31, 2017.
+   https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5668684/
+3. Itti, L.; Zhao, J., *shapeDTW: shape Dynamic Time Warping,*
+   Pattern Recognition, Volume 74, pp. 171-184, Feb 2018.
+   https://arxiv.org/pdf/1606.01601.pdf
+4. Sakoe, H.; Chiba, S., *Dynamic programming algorithm optimization for 
+   spoken word recognition*, Acoustics, Speech, and Signal Processing,
+   IEEE Transactions on , vol.26, no.1, pp. 43-49, Feb 1978.
+   http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=1163055
