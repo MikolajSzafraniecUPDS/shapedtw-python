@@ -23,7 +23,7 @@ import sys
 
 import numpy as np
 from shapedtw.exceptions import IncompatibleDimensionality, TooManyDimensions, ProvidedStepPatternDoesNotExists
-from dtw import *
+from dtw.stepPattern import StepPattern
 
 class Utils:
 
@@ -55,8 +55,7 @@ class Utils:
             res = s
         else:
             try:
-                #res = getattr(sys.modules["dtw.stepPattern"], s)
-                res = globals()[s]
+                res = getattr(sys.modules["stepPattern"], s)
             except AttributeError as ae:
                 raise ProvidedStepPatternDoesNotExists(
                     "There is no such step pattern. Please check if there is no typo in the step pattern name."

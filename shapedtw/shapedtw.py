@@ -21,7 +21,7 @@
 
 from __future__ import annotations
 
-from dtw import dtw
+from dtw import *
 
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
