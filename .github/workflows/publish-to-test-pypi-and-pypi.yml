@@ -27,7 +27,7 @@ jobs:
           # Upgrade pip
           python3 -m pip install --upgrade pip
           # Install build deps
-          python3 -m pip install setuptools wheel twine build
+          python3 -m pip install setuptools wheel twine build dtw-python numpy pandas PyWavelets scipy
 
       - name: "Run unittests"
         run: python3 -m unittest discover tests/
