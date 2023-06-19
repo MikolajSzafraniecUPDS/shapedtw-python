@@ -28,7 +28,7 @@ setup(
         'Programming Language :: Python :: 3.12'
     ],
     description="Extension of the dtw-python package, implementing shape dtw variant of the algorithm.",
-    install_requires=['numpy>=1.22', 'scipy>=1.8', 'dtw>=1.1', 'PyWavelets>=1.3', 'pandas>=1.5', 'matplotlib>=3.5'],
+    install_requires=['numpy>=1.22', 'scipy>=1.8', 'dtw-python>=1.3', 'PyWavelets>=1.3', 'pandas>=1.5', 'matplotlib>=3.5'],
     tests_require=["pytest"],
     python_requires='>=3.9',
     license="GNU General Public License v3",

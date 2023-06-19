@@ -25,14 +25,15 @@
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+from dtw.dtw import DTW
 from matplotlib.pyplot import Axes
 from matplotlib import collections as mc
 from shapedtw.shapedtw import ShapeDTW, MultivariateShapeDTWDependent, MultivariateShapeDTWIndependent
 from shapedtw.utils import Utils
-from typing import Tuple, List
+from typing import Tuple, List, Union
 from matplotlib.gridspec import GridSpecFromSubplotSpec
 
-def dtwPlot(x,
+def dtwPlot(x: Union[DTW, ShapeDTW],
             plot_type: str,
             axis: Axes = None,
             **kwargs):
@@ -95,7 +96,7 @@ def dtwPlot(x,
         return dtwPlotDensity(x, axis=axis, **kwargs)
 
 
-def dtwPlotAlignment(d,
+def dtwPlotAlignment(d: DTW,
                      axis: Axes=None,
                      xlab: str = "Query index",
                      ylab: str = "Reference index",
@@ -134,7 +135,7 @@ def dtwPlotAlignment(d,
     return ax
 
 
-def dtwPlotTwoWay(d,
+def dtwPlotTwoWay(d: DTW,
                   axis: Axes = None,
                   xts: np.ndarray=None,
                   yts: np.ndarray=None,
@@ -233,7 +234,7 @@ def dtwPlotTwoWay(d,
     if axis is None:
         plt.show()
 
-def dtwPlotThreeWay(d,
+def dtwPlotThreeWay(d: DTW,
                     inner_figure: GridSpecFromSubplotSpec = None,
                     dim_num: int = None,
                     xts: np.ndarray=None,
@@ -345,7 +346,7 @@ def dtwPlotThreeWay(d,
     if inner_figure is None:
         plt.show()
 
-def dtwPlotDensity(d,
+def dtwPlotDensity(d: DTW,
                    axis: Axes = None,
                    normalize: bool=False,
                    xlab: str="Query index",
@@ -511,7 +512,7 @@ class ShapeDTWPlot:
         ax_ind = ShapeDTWPlot._get_ax_indices(total_dim_num, total_dim_num)
         axis_to_clean[ax_ind].remove()
 
-    def _get_dtw_res_list(self):
+    def _get_dtw_res_list(self) -> DTW:
         """
         Retrieve dtw results from shapedtw object
 

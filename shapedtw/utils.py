@@ -32,7 +32,7 @@ class Utils:
     """
 
     @staticmethod
-    def canonicalizeStepPattern(s: object):
+    def canonicalizeStepPattern(s: object) -> StepPattern:
         """
         Function taken directly from the dtw package due to the
         issues related to importing it from there. It takes StepPattern
@@ -55,7 +55,7 @@ class Utils:
             res = s
         else:
             try:
-                res = getattr(sys.modules["stepPattern"], s)
+                res = getattr(sys.modules["dtw.stepPattern"], s)
             except AttributeError as ae:
                 raise ProvidedStepPatternDoesNotExists(
                     "There is no such step pattern. Please check if there is no typo in the step pattern name."
@@ -173,3 +173,4 @@ class Utils:
         :returns: Bool - a result of check
         """
         return bool(num & 0x1)
+
