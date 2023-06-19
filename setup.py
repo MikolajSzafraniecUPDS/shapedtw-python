@@ -40,6 +40,6 @@ setup(
     packages=['shapedtw'],
     include_dirs=numpy.get_include(),
     url='https://mikolajszafraniecupds.github.io/shapedtw-python/',
-    version='1.2.0',
+    version='1.0.3',
     zip_safe=False,
 )
