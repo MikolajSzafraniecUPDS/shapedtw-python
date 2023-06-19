@@ -21,7 +21,7 @@
 
 from __future__ import annotations
 
-from dtw import dtw, DTW
+from dtw import dtw
 
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
@@ -497,7 +497,7 @@ class ShapeDTW:
                  ts_y: ndarray,
                  step_pattern: str = "symmetric2",
                  dist_method: str = "euclidean",
-                 dtw_res: DTW | List[DTW] = None,
+                 dtw_res = None,
                  shape_dtw_results: ShapeDTWResults = None):
         """
         Constructs a ShapeDTW object
@@ -826,7 +826,7 @@ class UnivariateShapeDTW(ShapeDTW):
                  ts_y: ndarray,
                  step_pattern: str = "symmetric2",
                  dist_method: str = "euclidean",
-                 dtw_results: DTW = None,
+                 dtw_results = None,
                  shape_dtw_results: ShapeDTWResults = None):
         """
         Constructs a UnivariateShapeDTW object
@@ -923,7 +923,7 @@ class MultivariateShapeDTWDependent(ShapeDTW):
                  ts_y: ndarray,
                  step_pattern: str = "symmetric2",
                  dist_method: str = "euclidean",
-                 dtw_results: DTW = None,
+                 dtw_results = None,
                  shape_dtw_results: ShapeDTWResults = None):
         """
         Constructs a MultivariateShapeDTWDependent object
@@ -1021,7 +1021,7 @@ class MultivariateShapeDTWIndependent(ShapeDTW):
                  ts_y: ndarray,
                  step_pattern: str = "symmetric2",
                  dist_method: str = "euclidean",
-                 dtw_results: List[DTW] = None,
+                 dtw_results = None,
                  shape_dtw_results: ShapeDTWResults = None):
         """
         Constructs a MultivariateShapeDTWIndependent object
