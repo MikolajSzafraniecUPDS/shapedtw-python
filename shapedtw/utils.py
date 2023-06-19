@@ -173,3 +173,4 @@ class Utils:
         :returns: Bool - a result of check
         """
         return bool(num & 0x1)
+

@@ -136,3 +136,6 @@ dmypy.json
 
 # Notes
 /notes
+
+# Local requirements file
+requirements.txt
