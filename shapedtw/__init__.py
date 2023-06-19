@@ -4,7 +4,7 @@ Extension of the dtw-python package, implementing shape dtw variant of the algor
 
 __author__ = """Mikołaj Szafraniec"""
 __email__ = 'mikolaj.szafraniec.upds@gmail.com'
-__version__ = '0.0.15'
+__version__ = '0.0.16'
 
 # Imports which will be make after call 'from shapedtw import *'
 from shapedtw.shapedtw import shape_dtw
