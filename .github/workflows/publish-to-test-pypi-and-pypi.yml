@@ -29,11 +29,12 @@ jobs:
           # Install build deps
           python3 -m pip install setuptools wheel twine
 
+      - name: Build package
+        run: python3 -m build --wheel
+
       # Upload to TestPyPI
       - name: Build and Upload to TestPyPI
-        run: |
-          python3 -m build --wheel
-          python3 -m twine upload dist/*
+        run: python3 -m twine upload dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
