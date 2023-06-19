@@ -27,7 +27,7 @@ jobs:
           # Upgrade pip
           python3 -m pip install --upgrade pip
           # Install build deps
-          python3 -m pip install setuptools wheel twine
+          python3 -m pip install setuptools wheel twine build
 
       - name: Build package
         run: python3 -m build --wheel
