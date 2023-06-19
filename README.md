@@ -101,7 +101,7 @@ ts_y = np.concatenate(
 df = pd.DataFrame({"ts_x": ts_x, "ts_y": ts_y})
 df.plot()
 ```
-![Time series plot](docs/assets/img/readme_fig_1.png)
+![Time series plot](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_1.png)
 
 As a final step we will define shape descriptor and run the algorithm to obtain alignment path.
 We will use compound descriptor, consisting of slope descriptor (y-shift invariant) and PAA descriptor.
@@ -119,7 +119,7 @@ shape_dtw_results = shape_dtw(
 
 dtwPlot(shape_dtw_results, plot_type="twoway", yoffset = 30)
 ```
-![Warping path produced by the shape dtw](docs/assets/img/readme_fig_2.png)
+![Warping path produced by the shape dtw](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_2.png)
 
 As we can see, despite the shift and distortion of the reference series, the shape dtw algorithm has reproduced
 the true alignment path almost completely correctly.
@@ -330,12 +330,12 @@ Differences between warping paths can be clearly seen at the *twoway* plots:
 ```python
 dtwPlot(shape_dtw_dependent_results, plot_type="twoway", xoffset=20)
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_3.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_3.png)
 
 ```python
 dtwPlot(shape_dtw_independent_results, plot_type="twoway", xoffset=20)
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_4.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_4.png)
 
 # DTW parameters
 For *shape dtw* we can use exactly the same additional parameters as for the *dtw* package. Below you can see
@@ -366,7 +366,7 @@ shape_dtw_res = shape_dtw(
 
 dtwPlot(shape_dtw_res, plot_type="density")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_5.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_5.png)
 
 # Plots
 We reused ploting mechanism from the *dtw* package in its core, however it was extended in order to
@@ -412,28 +412,28 @@ Alignment plot shows the alignment path between time series indices:
 ```python
 dtwPlot(shape_dtw_res, plot_type="alignment")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_6.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_6.png)
 
 *twoway* plot displays time series values along with the alignment path:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="twoway", xoffset=20)
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_7.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_7.png)
 
 *threeway* plot displays query and reference time serience values against their warping curve:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="threeway")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_8.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_8.png)
 
 *density* plot displays distance matrix in visual form together with warping curve:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="density")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_9.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_9.png)
 
 ### Plots - multivariate dependent variant
 
@@ -468,21 +468,21 @@ warping path for all the dimensions:
 ```python
 dtwPlot(shape_dtw_res, plot_type="alignment")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_10.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_10.png)
 
 *twoway* plot shows all of time series dimensions and warping path:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="twoway", xoffset=20)
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_11.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_11.png)
 
 *threeway* plot displays both dimensions of query and reference series against warping curve:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="threeway")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_12.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_12.png)
 
 *density* plot looks the same as in case of univariate time series, due to the fact that there is one
 common warping path:
@@ -490,7 +490,7 @@ common warping path:
 ```python
 dtwPlot(shape_dtw_res, plot_type="density")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_13.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_13.png)
 
 ### Plots - multivariate independent variant
 
@@ -525,7 +525,7 @@ In this version *alignment* plot shows warping curves calculated for each dimens
 ```python
 dtwPlot(shape_dtw_res, plot_type="alignment")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_14.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_14.png)
 
 Similarly as in dependent version, *twoway* plot shows values of all dimensions with
 warping paths. This time each alignment path is different:
@@ -533,21 +533,21 @@ warping paths. This time each alignment path is different:
 ```python
 dtwPlot(shape_dtw_res, plot_type="twoway", xoffset=20)
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_15.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_15.png)
 
 *threeway* plot also looks similarly as in multivariate dependent case:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="threeway")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_16.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_16.png)
 
 *density* plot displays as many distance matrices and warping curves as many dimensions time series has:
 
 ```python
 dtwPlot(shape_dtw_res, plot_type="density")
 ```
-![Warping paths for multivariate, dependent variant](docs/assets/img/readme_fig_17.png)
+![Warping paths for multivariate, dependent variant](https://raw.githubusercontent.com/MikolajSzafraniecUPDS/shapedtw-python/master/docs/assets/img/readme_fig_17.png)
 
 # Applications
 Shape dtw algorithm can be used wherever standard dtw is used; according to experiments conducted and described

@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12'
     ],
-    description="Extension of the dtw-python package, implementing shape dtw variant of the algorithm.",
+    description="An extension to the dtw-python package, implementing a variant of the dtw algorithm called 'shape dtw'.",
     install_requires=['numpy>=1.22', 'scipy>=1.8', 'dtw-python>=1.3', 'PyWavelets>=1.3', 'pandas>=1.5', 'matplotlib>=3.5'],
     tests_require=["pytest"],
     python_requires='>=3.9',
@@ -40,6 +40,6 @@ setup(
     packages=['shapedtw'],
     include_dirs=numpy.get_include(),
     url='https://mikolajszafraniecupds.github.io/shapedtw-python/',
-    version='1.0.1',
+    version='1.1.0',
     zip_safe=False,
 )
