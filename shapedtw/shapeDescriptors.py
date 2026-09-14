@@ -26,6 +26,7 @@ from scipy.stats import linregress
 from shapedtw.exceptions import *
 from itertools import repeat
 from typing import List
+from typing import Literal
 
 class ShapeDescriptor(ABC):
     """
@@ -261,28 +262,43 @@ class SlopeDescriptor(ShapeDescriptor):
     vector representation, which is the slope representation of si, i.e.,
     F(·) = Slope, di = Slope(si).'
 
+    Ordinary least squares (OLS) regression is used by default for compatibility
+    with earlier versions. Total least squares (TLS) regression can be selected
+    with regression='tls'. TLS minimizes squared perpendicular distances to the
+    fitted line, using sample indices with unit spacing as time coordinates.
+    If the TLS fit is non-finite, numerically vertical or has no unique direction,
+    OLS regression is used for that window instead.
+
     Attributes
     ---------------
     slope_window: int:
         width of a single interval (window) on which slope will be calculated
+    regression: str:
+        regression method used to calculate slopes: 'ols' (default) or 'tls'
     """
 
-    def __init__(self, slope_window: int = 2):
+    def __init__(self, slope_window: int = 2, regression: Literal["ols", "tls"] = 'ols'):
         """
         Constructs a SlopeDescriptor object
 
         Parameters
         ---------------
         :param slope_window: width of a single interval (window) on which slope will be calculated
+        :param regression: regression method: 'ols' (default) for ordinary least squares
+            or 'tls' for total least squares with OLS fallback for problematic fits
 
         Raises
         ---------------
         :raise WrongSlopeWindow: Slope window need to be integer greater than 1,
             otherwise this exception will be raised
+        :raise WrongSlopeRegression: Regression method must be 'ols' or 'tls'
         """
         if not self._is_slope_correct(slope_window):
             raise WrongSlopeWindow(slope_window)
+        if regression not in ('ols', 'tls'):
+            raise WrongSlopeRegression(regression)
         self.slope_window = slope_window
+        self.regression = regression
 
     @staticmethod
     def _is_slope_correct(slope_window):
@@ -301,10 +317,10 @@ class SlopeDescriptor(ShapeDescriptor):
         return slope_correct
 
     @staticmethod
-    def _get_single_slope(input_vector: ndarray) -> float:
+    def _get_single_ols_slope(input_vector: ndarray) -> float:
         """
-        Get a value of slope for single window as a result of linear
-        regression
+        Get a value of slope for single window using ordinary least squares
+        regression. A single-point window is assigned a slope of zero.
 
         Parameters
         ---------------
@@ -322,9 +338,57 @@ class SlopeDescriptor(ShapeDescriptor):
         return float(linregress_res.slope)
 
     @staticmethod
-    def _get_windows_slopes(windows: List[ndarray]) -> ndarray:
+    def _get_single_tls_slope(input_vector: ndarray) -> float:
         """
-        Calculate slopes for all windows
+        Get a value of slope for single window using analytical total least
+        squares regression. The fitted direction is calculated from the centered
+        sums of squares and cross-products of sample indices and values.
+
+        A single-point window is assigned a slope of zero. Non-finite fits,
+        numerically vertical lines and non-unique directions fall back to OLS.
+        This fallback does not guarantee finite output for non-finite input.
+
+        Parameters
+        ---------------
+        :param input_vector: single window of subsequence as a numpy array
+
+        Returns
+        ---------------
+        :return: TLS slope for given window, or OLS slope if TLS fit is problematic
+        """
+        vector_length = len(input_vector)
+        if vector_length == 1:
+            return float(0)
+
+        x_vec = np.arange(vector_length, dtype=float)
+        y_vec = np.asarray(input_vector, dtype=float)
+        with np.errstate(over='ignore', invalid='ignore', divide='ignore'):
+            x_centered = x_vec - x_vec.mean()
+            y_centered = y_vec - y_vec.mean()
+            s_xx = np.dot(x_centered, x_centered)
+            s_yy = np.dot(y_centered, y_centered)
+            s_xy = np.dot(x_centered, y_centered)
+            difference = s_xx - s_yy
+            cross_product = 2 * s_xy
+            separation = np.hypot(difference, cross_product)
+            scale = max(s_xx, s_yy)
+
+            # Equal eigenvalues have no preferred direction; vertical fits have no finite slope.
+            tolerance = 16 * np.finfo(float).eps
+            if not np.isfinite(separation) or separation <= tolerance * scale:
+                return SlopeDescriptor._get_single_ols_slope(input_vector)
+
+            angle = 0.5 * np.arctan2(cross_product, difference)
+            slope = np.tan(angle)
+            if not np.isfinite(slope) or abs(np.cos(angle)) <= tolerance:
+                return SlopeDescriptor._get_single_ols_slope(input_vector)
+
+        return float(slope)
+
+    def _get_windows_slopes(self, windows: List[ndarray]) -> ndarray:
+        """
+        Calculate slopes for all windows using the selected regression method.
+        Problematic TLS fits fall back to OLS independently for each window.
 
         Parameters
         ---------------
@@ -335,12 +399,14 @@ class SlopeDescriptor(ShapeDescriptor):
         ---------------
         :return: slopes as a numpy array
         """
-        windows_slopes = np.array([SlopeDescriptor._get_single_slope(window) for window in windows])
+        slope_method = self._get_single_tls_slope if self.regression == 'tls' else self._get_single_ols_slope
+        windows_slopes = np.array([slope_method(window) for window in windows])
         return windows_slopes
 
     def get_shape_descriptor(self, ts_subsequence: ndarray) -> ndarray:
         """
-        Calculate slope shape descriptor for given subsequence
+        Calculate slope shape descriptor for given subsequence by concatenating
+        window slopes obtained with the selected regression method.
 
         Parameters
         ---------------
