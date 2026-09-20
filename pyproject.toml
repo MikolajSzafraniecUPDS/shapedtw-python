@@ -1,7 +1,55 @@
 [build-system]
 requires = [
-    "setuptools",
-    "wheel",
-    "oldest-supported-numpy"
+    "setuptools>=77",
+    "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "shapedtw"
+dynamic = ["version"]
+description = "An extension to the dtw-python package, implementing a variant of the dtw algorithm called 'shape dtw'."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Mikołaj Szafraniec", email = "mikolaj.szafraniec.upds@gmail.com" }
+]
+keywords = ["dtw", "shapedtw", "timeseries"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Topic :: Scientific/Engineering",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "dtw-python>=1.3",
+    "PyWavelets>=1.3",
+    "pandas>=1.5",
+    "matplotlib>=3.5"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest"
+]
+
+[project.urls]
+Homepage = "https://mikolajszafraniecupds.github.io/shapedtw-python/"
+Repository = "https://github.com/MikolajSzafraniecUPDS/shapedtw-python"
+
+[tool.setuptools]
+packages = ["shapedtw"]
+include-package-data = false
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = { attr = "shapedtw.__version__" }
