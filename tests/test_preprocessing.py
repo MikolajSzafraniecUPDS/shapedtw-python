@@ -103,9 +103,15 @@ class TestUnivariateSeriesSubsequences(unittest.TestCase):
     def test_raw_subsequence_descriptor(self):
         raw_subsequences_desc = RawSubsequenceDescriptor()
         expected_res = self.subsequences_array.copy()
-        shape_descriptors_returned = self.univariate_series_subsequences. \
+        univariate_series_subsequences = UnivariateSeriesSubsequences(
+            subsequences_array=self.subsequences_array.copy(),
+            origin_ts=self.origin_ts
+        )
+        shape_descriptors_returned = univariate_series_subsequences. \
             get_shape_descriptors(shape_descriptor=raw_subsequences_desc). \
             shape_descriptors_array
+
+        univariate_series_subsequences.subsequences[0, 0] = -1
 
         self.assertTrue(
             np.array_equal(

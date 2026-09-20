@@ -30,7 +30,7 @@ from shapedtw.exceptions import *
 from scipy.spatial.distance import cdist
 from typing import List
 from abc import ABC, abstractmethod
-from shapedtw.shapeDescriptors import ShapeDescriptor
+from shapedtw.shapeDescriptors import RawSubsequenceDescriptor, ShapeDescriptor
 from shapedtw.utils import Utils
 
 
@@ -366,10 +366,13 @@ class UnivariateSeriesSubsequences(Subsequences):
         if not isinstance(shape_descriptor, ShapeDescriptor):
             raise NotShapeDescriptor(shape_descriptor)
 
-        shape_descriptors = np.array([
-            shape_descriptor.get_shape_descriptor(subsequence) for
-            subsequence in self.subsequences
-        ])
+        if isinstance(shape_descriptor, RawSubsequenceDescriptor):
+            shape_descriptors = self.subsequences.copy()
+        else:
+            shape_descriptors = np.array([
+                shape_descriptor.get_shape_descriptor(subsequence) for
+                subsequence in self.subsequences
+            ])
 
         return UnivariateSeriesShapeDescriptors(shape_descriptors, self.origin_ts)
 
