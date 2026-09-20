@@ -258,24 +258,10 @@ class MultivariateSubsequenceBuilder(SubsequenceBuilder):
         [2 2 2 4 6 6 6]
         [2 2 4 6 6 6 6]]
         """
-        subsequence_length = self.subsequence_width * 2 + 1
-        padded_time_series = np.pad(
-            self.time_series,
-            ((self.subsequence_width, self.subsequence_width), (0, 0)),
-            mode="edge"
-        )
-        subsequences_array = sliding_window_view(
-            padded_time_series,
-            window_shape=subsequence_length,
-            axis=0
-        )
-        subsequences = [
-            UnivariateSeriesSubsequences(
-                subsequences_array[:, i, :].copy(),
-                self.time_series[:, i].copy()
-            )
-            for i in range(self.dimensions_number)
-        ]
+        sub_builders = [UnivariateSubsequenceBuilder(self.time_series[:, i], self.subsequence_width)
+                        for i in range(self.dimensions_number)]
+        subsequences = [sub_builder.transform_time_series_to_subsequences()
+                        for sub_builder in sub_builders]
         return MultivariateSeriesSubsequences(subsequences, self.time_series)
 
 
