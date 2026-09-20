@@ -19,7 +19,14 @@
 import unittest
 import math
 import pandas as pd
+from scipy.spatial.distance import cdist
 
+from shapedtw.shapeDescriptors import (
+    CompoundDescriptor,
+    PAADescriptor,
+    RawSubsequenceDescriptor,
+    SlopeDescriptor
+)
 from shapedtw.shapedtw import *
 from shapedtw.exceptions import *
 
