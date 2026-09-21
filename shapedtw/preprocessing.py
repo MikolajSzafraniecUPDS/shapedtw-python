@@ -24,15 +24,12 @@ subsequences and shape descriptors and help to properly calculate distance matri
 
 from __future__ import annotations
 
-import operator
-
 from numpy import ndarray
 from shapedtw.exceptions import *
 from scipy.spatial.distance import cdist
 from typing import List
 from abc import ABC, abstractmethod
 from shapedtw.shapeDescriptors import ShapeDescriptor
-from functools import reduce
 from shapedtw.utils import Utils
 
 
@@ -649,7 +646,7 @@ class MultivariateSeriesShapeDescriptors:
     instances of MultivariateSeriesShapeDescriptors class. It has a capability
     to calculate a list of distance matrices separately for each dimension
     of time series (useful in case of multidimensional, independent dtw)
-    as well as common distance matrix for all dimensions, used in case of
+    as well as a common distance matrix for all dimensions, used in case of
     multidimensional, dependent dtw.
 
     Attributes
@@ -863,51 +860,36 @@ class MultivariateSeriesShapeDescriptors:
         )
 
     @staticmethod
-    def _calc_sum_of_distance_matrices_euclidean(
-            univariate_dist_matrices: List[UnivariateSeriesDistanceMatrix]
+    def _concatenate_shape_descriptors(
+            multivariate_shape_descriptors: MultivariateSeriesShapeDescriptors
     ) -> ndarray:
         """
-        Calculates a sum of distance matrices for Euclidean distance
+        Concatenates shape descriptors calculated for all time series dimensions.
+        It is used in case of multidimensional, dependent shape dtw, where a single
+        common distance matrix is calculated on the basis of complete multivariate
+        shape descriptors.
 
         Parameters
         ---------------
-        :param univariate_dist_matrices: list of distance matrices calculated for
-            all dimensions of given time series
+        :param multivariate_shape_descriptors: MultivariateSeriesShapeDescriptors object
+            for which shape descriptors are to be concatenated
 
         Returns
         ---------------
-        :return: sum of distance matrices as a numpy array
+        :return: concatenated shape descriptors as a numpy array
         """
-        distance_matrices_list = [uni_mat.dist_matrix ** 2 for uni_mat in univariate_dist_matrices]
-        distance_matrix = np.sqrt(reduce(operator.add, distance_matrices_list))
-        return distance_matrix
-
-    @staticmethod
-    def _calc_sum_of_distance_matrices_non_euclidean(
-            univariate_dist_matrices: List[UnivariateSeriesDistanceMatrix]
-    ) -> np.ndarray:
-        """
-        Calculates a sum of distance matrices for non-euclidean distance
-
-        Parameters
-        ---------------
-        :param univariate_dist_matrices: list of distance matrices calculated for
-            all dimensions of given time series
-
-        Returns
-        ---------------
-        :return: sum of distance matrices as a numpy array
-        """
-        distance_matrices_list = [uni_mat.dist_matrix for uni_mat in univariate_dist_matrices]
-        distance_matrix = reduce(operator.add, distance_matrices_list)
-        return distance_matrix
+        descriptors_arrays = [
+            uni_sd.shape_descriptors_array
+            for uni_sd in multivariate_shape_descriptors.descriptors_list
+        ]
+        return np.hstack(descriptors_arrays)
 
     def calc_summed_distance_matrix(self, series_y_descriptor: MultivariateSeriesShapeDescriptors,
                                     dist_method: str = "euclidean") -> MultivariateDistanceMatrixDependent:
         """
-        Calculates distance matrices between shape descriptors for each
-        dimension of the time series and adds them up. Used in case of
-        multidimensional, dependent shape dtw.
+        Calculates distance matrix between concatenated shape descriptors
+        from all dimensions of the time series. Used in case of multidimensional,
+        dependent shape dtw.
 
         Parameters
         ---------------
@@ -956,15 +938,21 @@ class MultivariateSeriesShapeDescriptors:
          [3.13926743 2.89525474 3.44673759]]
         """
 
-        univariate_dist_matrices = self.calc_distance_matrices(
-            series_y_descriptor,
-            dist_method
-        ).distance_matrices_list
+        if not Utils.are_objects_of_same_classes(self, series_y_descriptor):
+            raise ObjectOfWrongClass(
+                actual_cls=series_y_descriptor.__class__,
+                expected_cls=self.__class__
+            )
 
-        if dist_method == "euclidean":
-            distance_matrix = self._calc_sum_of_distance_matrices_euclidean(univariate_dist_matrices)
-        else:
-            distance_matrix = self._calc_sum_of_distance_matrices_non_euclidean(univariate_dist_matrices)
+        self._verify_dimension_compatibility(series_y_descriptor)
+
+        ts_x_descriptors = self._concatenate_shape_descriptors(self)
+        ts_y_descriptors = self._concatenate_shape_descriptors(series_y_descriptor)
+        distance_matrix = DistanceMatrixCalculator(
+            ts_x_descriptors,
+            ts_y_descriptors,
+            method=dist_method
+        ).calc_distance_matrix()
 
         return MultivariateDistanceMatrixDependent(distance_matrix, self.origin_ts, series_y_descriptor.origin_ts)
 

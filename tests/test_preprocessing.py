@@ -20,6 +20,7 @@ import unittest
 
 from shapedtw.preprocessing import *
 from shapedtw.shapeDescriptors import *
+from scipy.spatial.distance import cdist
 
 
 
@@ -748,6 +749,65 @@ class TestMultivariateSeriesShapeDescriptor(unittest.TestCase):
             np.allclose(
                 results_cityblock.distance_matrix,
                 expected_cityblock_dist
+            )
+        )
+
+    def test_multivariate_dependent_distance_matrix_is_calculated_on_concatenated_descriptors(self):
+        origin_ts_multidim_1 = np.array([
+            [1., 0.],
+            [0., 1.]
+        ])
+        origin_ts_multidim_2 = np.array([
+            [1., 0.],
+            [1., 1.]
+        ])
+
+        usd_1_1 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=np.array([[1.], [0.]]),
+            origin_ts=origin_ts_multidim_1[:, 0]
+        )
+        usd_1_2 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=np.array([[0.], [1.]]),
+            origin_ts=origin_ts_multidim_1[:, 1]
+        )
+        usd_2_1 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=np.array([[1.], [1.]]),
+            origin_ts=origin_ts_multidim_2[:, 0]
+        )
+        usd_2_2 = UnivariateSeriesShapeDescriptors(
+            descriptors_array=np.array([[0.], [1.]]),
+            origin_ts=origin_ts_multidim_2[:, 1]
+        )
+
+        msd_1 = MultivariateSeriesShapeDescriptors(
+            descriptors_list=[usd_1_1, usd_1_2],
+            origin_ts=origin_ts_multidim_1
+        )
+        msd_2 = MultivariateSeriesShapeDescriptors(
+            descriptors_list=[usd_2_1, usd_2_2],
+            origin_ts=origin_ts_multidim_2
+        )
+
+        expected_x_descriptors = np.array([
+            [1., 0.],
+            [0., 1.]
+        ])
+        expected_y_descriptors = np.array([
+            [1., 0.],
+            [1., 1.]
+        ])
+        expected_cosine_dist = cdist(
+            expected_x_descriptors,
+            expected_y_descriptors,
+            metric="cosine"
+        )
+
+        results_cosine = msd_1.calc_summed_distance_matrix(msd_2, dist_method="cosine")
+
+        self.assertTrue(
+            np.allclose(
+                results_cosine.distance_matrix,
+                expected_cosine_dist
             )
         )
 

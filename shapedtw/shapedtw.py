@@ -948,10 +948,11 @@ class MultivariateShapeDTWDependent(ShapeDTW):
         Calculates multivariate, dependent shape dtw and set proper attributes
         inside a given instance of the class (_dtw_results and _shape_dtw_results).
         In order to calculate shape dtw we need to get shape descriptors of
-        each dimension of query and reference time series separately, construct
-        distance matrices for them, sum them up and pass such summed distance matrix
-        to the 'dtw' function from dtw-python package. It calculates warping path,
-        common for all the time series dimensions.
+        each dimension of query and reference time series separately, concatenate
+        them into single multivariate shape descriptors, construct common distance
+        matrix and pass this distance matrix to the 'dtw' function from dtw-python
+        package. It calculates warping path, common for all the time series
+        dimensions.
 
         Parameters
         ---------------
