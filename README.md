@@ -63,7 +63,7 @@ on such distance matrix.
 - DWT - Discrete Wavelet Transform is applied to whole subsequence. Wavelet coefficients are bound into the form of vector, which we use as a shape descriptor.
 - Slope - similarly as in case of PAA we split subsequence into *m* disjoint intervals and fit a line according to points falling within each interval. Slopes of lines are bound to the form of vector and use as a shape descriptor. This type of shape descriptor is invariant to y-shift.
 - Derivative - first order derivatives of given subsequence, calculated using the formula presented in this paper: [Derivative Dynamic Time Warping](https://www.ics.uci.edu/~pazzani/Publications/sdm01.pdf).Similarly as slope descriptor it is invariant to y-shift.
-- Compound descriptor - two or more shape descriptors bound into a form of single vector. We can use weights to compensate for differences in average descriptor values.
+- Compound descriptor - two or more shape descriptors bound into a form of single vector. We can use weights to compensate for differences in average descriptor values. These weights are applied directly to descriptor values before concatenation, so they should be interpreted as descriptor scaling factors rather than weights of final distances. For example, when Euclidean distance is used, scaling descriptor values by weight *w* changes their squared contribution to the distance by a factor of *w*<sup>2</sup>.
 
 All shape descriptors listed above are described in details in Zhao and Itti [paper](https://arxiv.org/pdf/1606.01601.pdf).
 

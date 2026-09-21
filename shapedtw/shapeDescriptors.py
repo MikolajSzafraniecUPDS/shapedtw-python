@@ -519,7 +519,10 @@ class CompoundDescriptor(ShapeDescriptor):
     """
     Compound shape descriptor is a simple concatenation of provided shape descriptors. It is possible
     to specify a weights for each of them - it is worth to do if scales of values of chosen descriptors
-    differs significantly.
+    differs significantly. Weights are applied directly to descriptor values before concatenation,
+    so they should be interpreted as descriptor scaling factors rather than weights of final
+    distances. For example, when Euclidean distance is used later, scaling descriptor values by
+    weight w changes their squared contribution to the distance by a factor of w^2.
 
     Attributes
     ---------------
@@ -537,7 +540,8 @@ class CompoundDescriptor(ShapeDescriptor):
         ---------------
         :param shape_descriptors: list of shape descriptors (instances of classes which inherits after ShapeDescriptor class)
         :param descriptors_weights: list of weights for all given descriptors. It will be equal to 1 for all
-            descriptors as a default.
+            descriptors as a default. Weights scale descriptor values before concatenation and distance
+            calculation.
 
         Raises
         ---------------
