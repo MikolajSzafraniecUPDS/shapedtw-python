@@ -35,12 +35,12 @@ jobs:
         run: python3 -m twine check dist/*
 
       # Upload to TestPyPI
-      - name: Build and Upload to TestPyPI
-        run: python3 -m twine upload --verbose dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          TWINE_REPOSITORY: testpypi
+#      - name: Build and Upload to TestPyPI
+#        run: python3 -m twine upload --verbose dist/*
+#        env:
+#          TWINE_USERNAME: __token__
+#          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+#          TWINE_REPOSITORY: testpypi
 
       # Upload to PyPi
       - name: Build and Upload to PyPi
