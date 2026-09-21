@@ -859,9 +859,8 @@ class MultivariateSeriesShapeDescriptors:
             series_y_descriptor.origin_ts
         )
 
-    @staticmethod
     def _concatenate_shape_descriptors(
-            multivariate_shape_descriptors: MultivariateSeriesShapeDescriptors
+            self
     ) -> ndarray:
         """
         Concatenates shape descriptors calculated for all time series dimensions.
@@ -869,18 +868,13 @@ class MultivariateSeriesShapeDescriptors:
         common distance matrix is calculated on the basis of complete multivariate
         shape descriptors.
 
-        Parameters
-        ---------------
-        :param multivariate_shape_descriptors: MultivariateSeriesShapeDescriptors object
-            for which shape descriptors are to be concatenated
-
         Returns
         ---------------
         :return: concatenated shape descriptors as a numpy array
         """
         descriptors_arrays = [
             uni_sd.shape_descriptors_array
-            for uni_sd in multivariate_shape_descriptors.descriptors_list
+            for uni_sd in self.descriptors_list
         ]
         return np.hstack(descriptors_arrays)
 
@@ -946,8 +940,8 @@ class MultivariateSeriesShapeDescriptors:
 
         self._verify_dimension_compatibility(series_y_descriptor)
 
-        ts_x_descriptors = self._concatenate_shape_descriptors(self)
-        ts_y_descriptors = self._concatenate_shape_descriptors(series_y_descriptor)
+        ts_x_descriptors = self._concatenate_shape_descriptors()
+        ts_y_descriptors = series_y_descriptor._concatenate_shape_descriptors()
         distance_matrix = DistanceMatrixCalculator(
             ts_x_descriptors,
             ts_y_descriptors,
