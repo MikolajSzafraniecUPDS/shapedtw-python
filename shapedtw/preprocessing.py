@@ -1010,7 +1010,7 @@ class DistanceMatrixCalculator:
         ---------------
         :return: bool - result of test
         """
-        return (np.size(self.ts_x) == 0) | (np.size(self.ts_x) == 0)
+        return (np.size(self.ts_x) == 0) | (np.size(self.ts_y) == 0)
 
     def _two_dim_at_most(self):
         """
