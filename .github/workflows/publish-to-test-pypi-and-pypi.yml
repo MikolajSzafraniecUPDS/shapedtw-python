@@ -36,7 +36,7 @@ jobs:
 
       # Upload to TestPyPI
       - name: Build and Upload to TestPyPI
-        run: python3 -m twine upload dist/*
+        run: python3 -m twine upload --verbose dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
@@ -44,7 +44,7 @@ jobs:
 
       # Upload to PyPi
       - name: Build and Upload to PyPi
-        run: python3 -m twine upload dist/*
+        run: python3 -m twine upload --verbose dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
