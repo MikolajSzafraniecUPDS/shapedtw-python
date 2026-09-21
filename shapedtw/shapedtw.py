@@ -23,12 +23,28 @@ from __future__ import annotations
 
 from dtw import dtw, DTW
 
-from shapedtw.preprocessing import *
-from shapedtw.shapeDescriptors import *
+import numpy as np
+from shapedtw.exceptions import (
+    DistanceSettingNotPossible,
+    IncompatibleDimensionality,
+    IncompatibleSubseriesNumber,
+    InputTimeSeriesUnsupportedType,
+    SegmentIndexOutOfRange,
+    ShapeDTWNotCalculatedYet,
+    WarpingPathSettingNotPossible,
+    WrongMultivariateVersionSpecified
+)
+from shapedtw.preprocessing import (
+    DistanceMatrixCalculator,
+    MultivariateSubsequenceBuilder,
+    UnivariateSubsequenceBuilder
+)
+from shapedtw.shapeDescriptors import ShapeDescriptor
 from shapedtw.utils import Utils
 from dataclasses import dataclass
 from pandas import Series, DataFrame
 from numpy import ndarray
+from typing import List
 
 class StepPatternMatrixTransformator:
 
