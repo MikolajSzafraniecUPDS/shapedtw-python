@@ -387,6 +387,22 @@ class WrongSlopeWindow(ShapeDescriptorError):
 
         super().__init__(error_msg)
 
+class WrongSlopeRegression(ShapeDescriptorError):
+    """
+    Exception informing that provided regression method for slope shape descriptor
+    is neither 'ols' nor 'tls'.
+    """
+    def __init__(self, regression):
+        """
+        Constructs WrongSlopeRegression exception
+
+        Parameters
+        ---------------
+        :param regression: provided regression method
+        """
+        error_msg = "Slope regression must be 'ols' or 'tls', got {0} instead".format(regression)
+        super().__init__(error_msg)
+
 class ProvidedStepPatternDoesNotExists(Exception):
     """
     Exception informing that the name of step pattern provided by user

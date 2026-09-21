@@ -166,6 +166,75 @@ class TestDWTDescriptor(unittest.TestCase):
 
 class TestSlopeDescriptor(unittest.TestCase):
 
+    def test_regression_selection(self):
+        input_subsequence = np.array([0., 1., 4., 4., 1., 0., 7.])
+        for regression, expected in [('ols', 2.), ('tls', (5 + np.sqrt(61)) / 6)]:
+            with self.subTest(regression=regression):
+                descriptor = SlopeDescriptor(slope_window=3, regression=regression)
+                np.testing.assert_allclose(
+                    descriptor.get_shape_descriptor(input_subsequence),
+                    [expected, -expected, 0.]
+                )
+        np.testing.assert_allclose(
+            SlopeDescriptor(slope_window=3).get_shape_descriptor(input_subsequence),
+            [2., -2., 0.]
+        )
+
+    def test_tls_matches_svd_for_different_window_lengths(self):
+        rng = np.random.default_rng(42)
+        for window_length in [3, 5, 20, 100]:
+            for direction in [-1, 1]:
+                with self.subTest(window_length=window_length, direction=direction):
+                    x = np.arange(window_length, dtype=float)
+                    y = direction * x + rng.normal(size=window_length)
+                    points = np.column_stack((x - x.mean(), y - y.mean()))
+                    _, _, vh = np.linalg.svd(points, full_matrices=False)
+                    expected = vh[0, 1] / vh[0, 0]
+                    self.assertAlmostEqual(SlopeDescriptor._get_single_tls_slope(y), expected)
+
+    def test_tls_linear_and_constant_windows(self):
+        for window_length in [2, 3, 10]:
+            for slope in [-10., 0., 0.5, 10.]:
+                with self.subTest(window_length=window_length, slope=slope):
+                    y = 4. + slope * np.arange(window_length)
+                    self.assertAlmostEqual(SlopeDescriptor._get_single_tls_slope(y), slope)
+
+    def test_tls_y_shift_invariance(self):
+        y = np.array([0., 1., 4., 2., 8.])
+        self.assertAlmostEqual(
+            SlopeDescriptor._get_single_tls_slope(y),
+            SlopeDescriptor._get_single_tls_slope(y + 100.)
+        )
+
+    def test_tls_problematic_direction_falls_back_to_ols(self):
+        for y in [np.array([0., 10., 0.]), np.array([0., np.sqrt(3), 0.])]:
+            with self.subTest(y=y):
+                self.assertEqual(
+                    SlopeDescriptor._get_single_tls_slope(y),
+                    SlopeDescriptor._get_single_ols_slope(y)
+                )
+
+    def test_tls_fallback_applies_only_to_problematic_window(self):
+        descriptor = SlopeDescriptor(slope_window=3, regression='tls')
+        np.testing.assert_allclose(
+            descriptor.get_shape_descriptor(np.array([0., 10., 0., 0., 1., 4.])),
+            [0., (5 + np.sqrt(61)) / 6]
+        )
+
+    def test_tls_nonfinite_intermediate_result_falls_back_to_ols(self):
+        y = np.array([0., 1.e155, 2.e155])
+        with np.errstate(over='ignore', invalid='ignore'):
+            expected = SlopeDescriptor._get_single_ols_slope(y)
+            result = SlopeDescriptor._get_single_tls_slope(y)
+        self.assertTrue(np.isfinite(result))
+        self.assertEqual(result, expected)
+
+    def test_wrong_regression_error(self):
+        for regression in ['unknown', '', None]:
+            with self.subTest(regression=regression):
+                with self.assertRaises(WrongSlopeRegression):
+                    SlopeDescriptor(regression=regression)
+
     def test_subsequence_even_length(self):
         input_subsequence = np.array([1, 1, 1, 2, 1, 0, 0, 10])
         expected_output = np.array(
